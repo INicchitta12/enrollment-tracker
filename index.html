@@ -11,7 +11,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --aha-navy:#002F87;--aha-crimson:#8B1A30;--aha-gold:#C9A84C;
+  --brand-dark:#002F87;--brand-accent:#8B1A30;--brand-amber:#C9A84C;
   --bg:#F0F4F9;--surface:#FFFFFF;--surface-2:#E8EFF7;
   --text:#0D1B3E;--muted:#5A6A84;--border:#D0DBE8;
   --mcaid:#002F87;--mcaid-light:#E8EFF8;
@@ -23,14 +23,12 @@
 }
 html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;overflow:hidden;}
 .shell{display:flex;flex-direction:column;width:100vw;height:100vh;}
-.header{display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:52px;background:var(--aha-navy);flex-shrink:0;}
+.header{display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:52px;background:var(--brand-dark);flex-shrink:0;}
 .header-left{display:flex;align-items:center;gap:14px;}
-.aha-badge{display:flex;align-items:center;gap:8px;border-right:1px solid rgba(255,255,255,.2);padding-right:14px;}
-.aha-h-box{width:26px;height:26px;background:#fff;border-radius:3px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:var(--aha-navy);line-height:1;flex-shrink:0;}
-.aha-name{font-size:10px;font-weight:600;color:#fff;line-height:1.25;letter-spacing:.02em;}
-.header-title{font-size:13px;font-weight:600;color:#fff;letter-spacing:.02em;}
+.header-title{font-size:14px;font-weight:700;color:#fff;letter-spacing:.02em;}
+.header-sub{font-size:10.5px;color:rgba(255,255,255,.6);border-left:1px solid rgba(255,255,255,.22);padding-left:12px;}
 .period-badge{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.75);padding:3px 10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:4px;}
-.tabs{display:flex;align-items:center;height:40px;background:var(--aha-navy);border-bottom:3px solid var(--aha-crimson);padding:0 18px;gap:2px;flex-shrink:0;}
+.tabs{display:flex;align-items:center;height:40px;background:var(--brand-dark);border-bottom:3px solid var(--brand-accent);padding:0 18px;gap:2px;flex-shrink:0;}
 .tab{display:flex;align-items:center;gap:7px;padding:5px 16px;border-radius:4px 4px 0 0;cursor:pointer;font-size:12px;font-weight:500;color:rgba(255,255,255,.6);border:1px solid transparent;border-bottom:none;transition:all .15s;user-select:none;}
 .tab:hover{color:#fff;background:rgba(255,255,255,.08);}
 .tab-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
@@ -116,7 +114,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .st-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding:0 8px;}
 .st-count{font-family:var(--mono);font-size:10px;font-weight:600;color:#fff;white-space:nowrap;}
 .st-pct{width:38px;flex-shrink:0;font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:600;text-align:right;}
-.data-note{flex-shrink:0;border-radius:5px;padding:6px 11px;background:#FFFBEA;border:1px solid #E8D080;border-left:3px solid var(--aha-gold);font-size:10px;color:#5A4A1A;display:flex;align-items:flex-start;gap:7px;}
+.data-note{flex-shrink:0;border-radius:5px;padding:6px 11px;background:#FFFBEA;border:1px solid #E8D080;border-left:3px solid var(--brand-amber);font-size:10px;color:#5A4A1A;display:flex;align-items:flex-start;gap:7px;}
 .prem-row{display:flex;align-items:center;gap:9px;margin-bottom:5px;}
 .prem-lbl{width:100px;flex-shrink:0;text-align:right;}
 .prem-name{font-size:10.5px;font-weight:600;color:var(--text);}
@@ -137,7 +135,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .yoy-cell-lbl{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px;}
 .yoy-cell-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--warn);line-height:1;}
 .yoy-cell-sub{font-size:9px;color:var(--muted);margin-top:2px;}
-.footer{height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--aha-crimson);font-size:10px;color:rgba(255,255,255,.8);font-family:var(--mono);}
+.footer{height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--brand-accent);font-size:10px;color:rgba(255,255,255,.8);font-family:var(--mono);}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 </style>
@@ -147,11 +145,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 <div class="header">
   <div class="header-left">
-    <div class="aha-badge">
-      <div class="aha-h-box">H</div>
-      <div class="aha-name">American Hospital<br>Association&trade;</div>
-    </div>
     <span class="header-title">Enrollment Tracker</span>
+    <span class="header-sub">Medicaid &middot; BHP &middot; ACA Marketplace</span>
   </div>
   <span class="period-badge" id="hdrPeriod">Medicaid &middot; Mar 2026</span>
 </div>
@@ -292,7 +287,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       <div class="kpi" style="border-top:3px solid #B0307A"><div class="kpi-label">District of Columbia</div><div class="kpi-value" style="color:#B0307A">15,722</div><div class="kpi-sub"><b>0.8%</b> of national &middot; Jan 2026</div></div>
     </div>
     <div class="data-note">
-      <span style="color:var(--aha-gold);flex-shrink:0;font-size:13px">&#9888;</span>
+      <span style="color:var(--brand-amber);flex-shrink:0;font-size:13px">&#9888;</span>
       <span>Reporting coverage varies. <b style="color:#5A4A1A">Minnesota</b> reports through Jul 2026 and <b style="color:#5A4A1A">Oregon</b> through Jun 2026; <b style="color:#5A4A1A">New York</b> through Apr 2026; <b style="color:#5A4A1A">DC</b> has reported Jan 2026 only. National total reflects January, the one month all four states report.</span>
     </div>
     <div class="lower l-bhp">
