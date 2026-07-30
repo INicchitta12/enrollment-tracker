@@ -51,6 +51,20 @@ MCAID_COLS = {
     'pending': 'Beneficiaries with a Pending Renewal',
 }
 
+# California revised its Medicaid reporting in March 2026 to exclude
+# limited-benefit enrollees and did not restate prior months, which makes March
+# onward non-comparable to earlier months and inflates the apparent national
+# decline. We apply a continuity adjustment: California's average monthly
+# enrollment change over Dec 2025-Feb 2026 was -106,996 total and -78,132 adult;
+# treating that as the expected March change and attributing the excess decline
+# to the reclassification gives the add-backs below (expected March value minus
+# the value California actually reported). These are estimates, not CMS figures.
+# The revision is permanent, so the adjustment applies to March 2026 and every
+# later month. Enrollment counts only -- renewal fields are never touched.
+CA_ADJUST_FROM = '2026-03'
+CA_ENROLL_ADJUST = 384186
+CA_ADULT_ADJUST = 372782
+
 MKT_COLS = {
     'total': 'Number of Consumers with an Exchange Plan Selection',
     'new': 'New Consumers', 'reenroll': 'Total Re-enrollees',
@@ -86,6 +100,33 @@ def mix_percentages(rec):
     return [round(p / total * 100, 1) for p in pcts]
 
 
+def apply_california_adjustment(periods, national, states):
+    """Continuity add-back for California's March 2026 reporting revision.
+
+    Adjusts California's own enrollment counts from CA_ADJUST_FROM onward, then
+    re-derives the national enrollment counts from state totals so the national
+    row stays the exact sum of states. Renewal fields are left untouched. Raises
+    if the national == sum-of-states identity does not hold on the raw data.
+    """
+    def sum_states(key, field):
+        return sum(s[key][field] for s in states.values()
+                   if key in s and s[key][field] is not None)
+
+    for key in periods:
+        for field in ('enroll', 'adult'):
+            if national[key][field] != sum_states(key, field):
+                sys.exit(f"ERROR: national {field} != sum of states at {key}; "
+                         "cannot re-derive national after California adjustment")
+
+    ca = states.get('California', {})
+    for key in periods:
+        if key >= CA_ADJUST_FROM and key in ca:
+            ca[key]['enroll'] += CA_ENROLL_ADJUST
+            ca[key]['adult'] += CA_ADULT_ADJUST
+            national[key]['enroll'] = sum_states(key, 'enroll')
+            national[key]['adult'] = sum_states(key, 'adult')
+
+
 def load_medicaid(xl):
     df = pd.read_excel(xl, sheet_name="Mcaid")
     df['State'] = df['State'].astype(str).map(normalize_dc)
@@ -102,6 +143,8 @@ def load_medicaid(xl):
             national[row['key']] = rec
         else:
             states.setdefault(row['State'], {})[row['key']] = rec
+
+    apply_california_adjustment(periods, national, states)
 
     # Top 12 states by disenrollment rate in the most recent month
     latest = periods[-1]

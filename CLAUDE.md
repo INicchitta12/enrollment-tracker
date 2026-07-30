@@ -63,10 +63,21 @@ outcome mix is workbook-only and covers the workbook's months.
 **Outcome-mix components are rescaled to sum to exactly 100** so stacked bars render
 cleanly. Adjustments are under ~0.25pt.
 
-**California revised its reporting in March 2026** to exclude limited-benefit enrollees and
-did not restate prior months. This inflates the apparent Feb→Mar national decline by roughly
-491,000. Any multi-month enrollment change spanning March 2026 needs this caveat, or should
-be quoted excluding California.
+**California enrollment carries a continuity adjustment from March 2026 onward.** California
+revised its Medicaid reporting in March 2026 to exclude limited-benefit enrollees and did not
+restate prior months, making March-onward non-comparable to earlier months and inflating the
+apparent national decline. To keep the trend comparable, `load_medicaid()` adds back a fixed
+amount to California's `enroll` and `adult` counts for March 2026 and every later month (the
+revision is permanent). The add-backs are derived by taking California's average monthly change
+over Dec 2025–Feb 2026 (−106,996 total, −78,132 adult), treating that as the expected March
+change, and attributing the excess decline to the reclassification:
+`CA_ENROLL_ADJUST = 384186` (Total Medicaid Enrollment) and `CA_ADULT_ADJUST = 372782` (Total
+Medicaid Adult Enrollment). **These are estimates, not CMS figures** — as reported, March
+California enrollment was 10,715,787. The adjustment touches enrollment counts only; no renewal
+field is altered. The national row is the exact sum of states, so national enrollment is
+re-derived from state totals after the adjustment rather than adjusted separately, and the
+sum-of-states identity is checked before the adjustment is applied. A visible note on the
+Medicaid tab discloses the adjustment to viewers.
 
 **BHP reporting coverage is uneven** — states report through different months. Charts plot
 only each state's reported range. NY's figure is Essential Plan Expansion under a 1332

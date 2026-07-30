@@ -114,6 +114,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .st-count{font-family:var(--mono);font-size:10px;font-weight:600;color:#fff;white-space:nowrap;}
 .st-pct{width:38px;flex-shrink:0;font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:600;text-align:right;}
 .data-note{flex-shrink:0;border-radius:5px;padding:6px 11px;background:#FFFBEA;border:1px solid #E8D080;border-left:3px solid var(--brand-amber);font-size:10px;color:#5A4A1A;display:flex;align-items:flex-start;gap:7px;}
+.data-note.compact{padding:4px 9px;font-size:9px;gap:6px;margin:2px 0 4px;}
 .prem-row{display:flex;align-items:center;gap:9px;margin-bottom:5px;}
 .prem-lbl{width:100px;flex-shrink:0;text-align:right;}
 .prem-name{font-size:10.5px;font-weight:600;color:var(--text);}
@@ -167,6 +168,11 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       <div class="kpi" id="mk-renewed" style="border-top:3px solid var(--ok)"><div class="kpi-label">Renewed</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mk-renewed-d"></span></div><div class="kpi-sub">&mdash;</div></div>
       <div class="kpi" id="mk-disen" style="border-top:3px solid var(--warn)"><div class="kpi-label">Disenrolled</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mk-disen-d"></span></div><div class="kpi-sub">&mdash;</div></div>
       <div class="kpi" id="mk-pend" style="border-top:3px solid var(--pend)"><div class="kpi-label">Pending Renewal</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mk-pend-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+    </div>
+
+    <div class="data-note compact">
+      <span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">&#9888;</span>
+      <span><b style="color:#5A4A1A">California</b> enrollment adjusted from Mar 2026 forward (<b style="color:#5A4A1A">+384,186</b> total, <b style="color:#5A4A1A">+372,782</b> adult) for continuity, after a CMS reporting revision excluded limited-benefit enrollees without restating prior months. As reported, March California enrollment was 10,715,787.</span>
     </div>
 
     <div class="state-bar"><span class="state-bar-label">View:</span>
