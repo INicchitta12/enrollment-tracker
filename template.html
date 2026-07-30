@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enrollment Tracker Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --brand-dark:#002F87;--brand-accent:#8B1A30;--brand-amber:#C9A84C;
+  --bg:#F0F4F9;--surface:#FFFFFF;--surface-2:#E8EFF7;
+  --text:#0D1B3E;--muted:#5A6A84;--border:#D0DBE8;
+  --mcaid:#002F87;--mcaid-light:#E8EFF8;
+  --bhp:#007C8C;--bhp-light:#E5F4F6;
+  --mkt:#8B1A30;--mkt-light:#F5E8EB;
+  --ok:#1A7A4A;--ok-light:#E6F4EC;
+  --warn:#C0392B;--pend:#5A6A84;
+  --font:'Arial',sans-serif;--mono:'JetBrains Mono','Courier New',monospace;
+}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;overflow:hidden;}
+.shell{display:flex;flex-direction:column;width:100vw;height:100vh;}
+.header{display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:52px;background:var(--brand-dark);flex-shrink:0;}
+.header-left{display:flex;align-items:center;gap:14px;}
+.header-title{font-size:14px;font-weight:700;color:#fff;letter-spacing:.02em;}
+.header-sub{font-size:10.5px;color:rgba(255,255,255,.6);border-left:1px solid rgba(255,255,255,.22);padding-left:12px;}
+.period-badge{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.75);padding:3px 10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:4px;}
+.tabs{display:flex;align-items:center;height:40px;background:var(--brand-dark);border-bottom:3px solid var(--brand-accent);padding:0 18px;gap:2px;flex-shrink:0;}
+.tab{display:flex;align-items:center;gap:7px;padding:5px 16px;border-radius:4px 4px 0 0;cursor:pointer;font-size:12px;font-weight:500;color:rgba(255,255,255,.6);border:1px solid transparent;border-bottom:none;transition:all .15s;user-select:none;}
+.tab:hover{color:#fff;background:rgba(255,255,255,.08);}
+.tab-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tab.active-mcaid{background:var(--mcaid-light);color:var(--mcaid);border-color:var(--border);border-bottom-color:var(--mcaid-light);font-weight:600;}
+.tab.active-bhp{background:var(--bhp-light);color:var(--bhp);border-color:var(--border);border-bottom-color:var(--bhp-light);font-weight:600;}
+.tab.active-mkt{background:var(--mkt-light);color:var(--mkt);border-color:var(--border);border-bottom-color:var(--mkt-light);font-weight:600;}
+.panels{flex:1;overflow:hidden;position:relative;}
+.panel{position:absolute;inset:0;padding:10px 14px;display:flex;flex-direction:column;gap:8px;opacity:0;pointer-events:none;transition:opacity .15s;}
+.panel.active{opacity:1;pointer-events:auto;}
+.panel.mcaid-panel{background:var(--mcaid-light);}
+.panel.bhp-panel{background:var(--bhp-light);}
+.panel.mkt-panel{background:var(--mkt-light);}
+.state-bar{display:flex;align-items:center;gap:4px;flex-shrink:0;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;box-shadow:0 1px 3px rgba(0,0,0,.06);max-height:66px;overflow-y:auto;}
+.state-bar-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);flex-shrink:0;margin-right:3px;}
+.state-pill{font-family:var(--font);font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap;}
+.state-pill:hover{background:var(--surface-2);color:var(--text);}
+.mcaid-panel .state-pill.active{background:var(--mcaid);color:#fff;border-color:var(--mcaid);font-weight:600;}
+.mkt-panel .state-pill.active{background:var(--mkt);color:#fff;border-color:var(--mkt);font-weight:600;}
+.kpi-row{display:flex;gap:8px;flex-shrink:0;}
+.kpi{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.kpi-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:4px;}
+.kpi-value{font-family:var(--mono);font-size:19px;font-weight:700;color:var(--text);line-height:1;}
+.kpi-value.big{font-size:23px;}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+.kpi-sub b{font-weight:600;color:var(--text);}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.kpi-delta{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0;}
+.kpi-delta.good{background:var(--ok-light);color:var(--ok);}
+.kpi-delta.bad{background:#FDECEA;color:var(--warn);}
+.kpi-delta.flat{background:var(--surface-2);color:var(--muted);}
+.cum-strip{display:flex;gap:7px;flex-shrink:0;margin-top:7px;}
+.cum-cell{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:6px 9px;}
+.cum-lbl{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px;}
+.cum-val{font-family:var(--mono);font-size:16px;font-weight:700;line-height:1;}
+.cum-sub{font-size:9px;color:var(--muted);margin-top:3px;}
+.cum-hd{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mcaid);margin-top:8px;flex-shrink:0;}
+.cum-hd span{color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;}
+.lower{flex:1;display:grid;gap:9px;min-height:0;}
+.l-55-45{grid-template-columns:55fr 45fr;}
+.l-50-50{grid-template-columns:1fr 1fr;}
+.l-bhp{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;}
+.l-mkt{grid-template-columns:34fr 30fr 36fr;grid-template-rows:1fr 1fr;}
+.span-rows{grid-row:span 2;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 13px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);min-height:0;}
+.chart-card-header{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-shrink:0;}
+.card-accent-bar{width:3px;height:15px;border-radius:2px;flex-shrink:0;}
+.chart-title{font-size:10px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em;}
+.chart-title span{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);}
+.chart-sub{font-size:9.5px;color:var(--muted);font-style:italic;margin-bottom:7px;flex-shrink:0;padding-left:11px;}
+.chart-wrap{flex:1;position:relative;min-height:0;}
+.chart-wrap canvas{position:absolute;inset:0;}
+.col-stack{display:flex;flex-direction:column;gap:9px;min-height:0;}
+.col-stack>.chart-card{flex:1;}
+.duo{flex:1;display:flex;gap:8px;min-height:0;}
+.duo-half{flex:1;display:flex;flex-direction:column;min-height:0;}
+.duo-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:center;margin-bottom:2px;flex-shrink:0;}
+.bars-panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:11px 15px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.bars-hd{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:7px;flex-shrink:0;display:flex;align-items:center;gap:6px;}
+.bars-hd span{color:var(--text);font-family:var(--mono);font-weight:600;text-transform:none;letter-spacing:0;}
+.bar-row{display:flex;align-items:center;gap:9px;margin-bottom:4px;}
+.bar-name{width:88px;flex-shrink:0;font-size:10.5px;font-weight:500;color:var(--text);text-align:right;}
+.bar-track{flex:1;height:23px;background:var(--surface-2);border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding:0 9px;min-width:2px;transition:width .4s ease;}
+.bar-count{font-family:var(--mono);font-size:10px;font-weight:600;color:#fff;white-space:nowrap;}
+.bar-pct{width:42px;flex-shrink:0;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);text-align:right;}
+.bars-divider{border:none;border-top:1px solid var(--border);margin:6px 0;}
+.sub-note{font-size:10px;color:var(--muted);font-style:italic;margin-bottom:6px;padding-left:4px;}
+.sub-note b{font-style:normal;font-family:var(--mono);color:var(--warn);}
+.insight-box{margin-top:auto;padding-top:7px;flex-shrink:0;}
+.insight-inner{background:linear-gradient(135deg,rgba(0,47,135,.07),rgba(0,47,135,.02));border:1px solid rgba(0,47,135,.18);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:5px;}
+.insight-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--mcaid);}
+.insight-body{display:flex;align-items:center;gap:14px;}
+.waffle-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;flex-shrink:0;width:128px;}
+.waffle-dot{width:10px;height:10px;border-radius:50%;}
+.insight-stat{font-family:var(--mono);font-size:23px;font-weight:700;line-height:1;color:var(--warn);}
+.insight-text{font-size:10px;color:var(--text);font-weight:500;line-height:1.4;margin-top:4px;}
+.insight-legend{display:flex;gap:12px;}
+.insight-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
+.insight-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.st-row{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+.st-label{width:130px;flex-shrink:0;font-size:10.5px;font-weight:500;color:var(--text);text-align:right;}
+.st-track{flex:1;height:23px;background:var(--surface-2);border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.st-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding:0 8px;}
+.st-count{font-family:var(--mono);font-size:10px;font-weight:600;color:#fff;white-space:nowrap;}
+.st-pct{width:38px;flex-shrink:0;font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:600;text-align:right;}
+.data-note{flex-shrink:0;border-radius:5px;padding:6px 11px;background:#FFFBEA;border:1px solid #E8D080;border-left:3px solid var(--brand-amber);font-size:10px;color:#5A4A1A;display:flex;align-items:flex-start;gap:7px;}
+.prem-row{display:flex;align-items:center;gap:9px;margin-bottom:5px;}
+.prem-lbl{width:100px;flex-shrink:0;text-align:right;}
+.prem-name{font-size:10.5px;font-weight:600;color:var(--text);}
+.prem-desc{font-size:9px;color:var(--muted);margin-top:1px;}
+.prem-track{flex:1;height:27px;background:var(--surface-2);border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.prem-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding:0 9px;transition:width .4s ease;}
+.prem-count{font-family:var(--mono);font-size:11px;font-weight:700;white-space:nowrap;}
+.prem-divider{border:none;border-top:1px dashed var(--border);margin:5px 0;}
+.prem-sec-hd{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px;}
+.aptc-box{display:flex;align-items:center;justify-content:space-between;background:var(--ok-light);border:1px solid #A8D9BC;border-radius:5px;padding:8px 12px;margin-top:auto;}
+.aptc-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#2A7A4A;}
+.aptc-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ok);}
+.aptc-sub{font-size:9.5px;color:var(--muted);}
+.aptc-rlbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:1px;}
+.aptc-rval{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ok);}
+.yoy-strip{display:flex;gap:8px;flex-shrink:0;margin-bottom:7px;}
+.yoy-cell{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:6px 9px;}
+.yoy-cell-lbl{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px;}
+.yoy-cell-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--warn);line-height:1;}
+.yoy-cell-sub{font-size:9px;color:var(--muted);margin-top:2px;}
+.footer{height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--brand-accent);font-size:10px;color:rgba(255,255,255,.8);font-family:var(--mono);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<div class="header">
+  <div class="header-left">
+    <span class="header-title">Enrollment Tracker</span>
+    <span class="header-sub">Medicaid &middot; BHP &middot; ACA Marketplace</span>
+  </div>
+  <span class="period-badge" id="hdrPeriod">Medicaid &middot; Mar 2026</span>
+</div>
+
+<div class="tabs">
+  <div class="tab active-mcaid" data-tab="mcaid" onclick="switchTab('mcaid')"><div class="tab-dot" style="background:#4A72C0"></div>Medicaid</div>
+  <div class="tab" data-tab="bhp" onclick="switchTab('bhp')"><div class="tab-dot" style="background:#3AA8B8"></div>Basic Health Program</div>
+  <div class="tab" data-tab="mkt" onclick="switchTab('mkt')"><div class="tab-dot" style="background:#C04060"></div>ACA Marketplace</div>
+</div>
+
+<div class="panels">
+
+  <!-- ══ MEDICAID ══ -->
+  <div class="panel mcaid-panel active" id="panel-mcaid">
+    <div class="kpi-row">
+      <div class="kpi" id="mk-enroll" style="border-top:3px solid var(--mcaid)"><div class="kpi-label">Total Enrollment</div><div class="kpi-top"><div class="kpi-value big">&mdash;</div><span class="kpi-delta flat" id="mk-enroll-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mk-adult" style="border-top:3px solid #65B1E2"><div class="kpi-label">Adult Enrollment</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mk-adult-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mk-due" style="border-top:3px solid var(--pend)"><div class="kpi-label">Renewals Due</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mk-due-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mk-renewed" style="border-top:3px solid var(--ok)"><div class="kpi-label">Renewed</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mk-renewed-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mk-disen" style="border-top:3px solid var(--warn)"><div class="kpi-label">Disenrolled</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mk-disen-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mk-pend" style="border-top:3px solid var(--pend)"><div class="kpi-label">Pending Renewal</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mk-pend-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+    </div>
+
+    <div class="state-bar"><span class="state-bar-label">View:</span>
+      MCAID_PILLS
+    </div>
+
+    <div class="lower l-55-45">
+      <div class="col-stack">
+      <div class="bars-panel" style="flex:1.75">
+        <div class="bars-hd" id="mk-hd-outcomes" style="color:var(--mcaid)">Renewal Outcomes <span></span></div>
+        <div class="bar-row"><div class="bar-name">Renewed</div><div class="bar-track"><div class="bar-fill" id="mk-bar-renewed" style="width:0;background:linear-gradient(90deg,#0F6B35,#27AE60)"><span class="bar-count"></span></div></div><div class="bar-pct" id="mk-pct-renewed"></div></div>
+        <div class="bar-row"><div class="bar-name">Disenrolled</div><div class="bar-track"><div class="bar-fill" id="mk-bar-disen" style="width:0;background:linear-gradient(90deg,#8B1A30,#C0392B)"><span class="bar-count"></span></div></div><div class="bar-pct" id="mk-pct-disen"></div></div>
+        <div class="bar-row"><div class="bar-name">Pending</div><div class="bar-track"><div class="bar-fill" id="mk-bar-pend" style="width:0;background:linear-gradient(90deg,#3A4A62,#6B7EA8)"><span class="bar-count"></span></div></div><div class="bar-pct" id="mk-pct-pend"></div></div>
+        <hr class="bars-divider">
+        <div class="bars-hd" id="mk-hd-reason" style="color:var(--warn)">Reason for Disenrollment <span></span></div>
+        <div class="sub-note" id="mk-proc-note"></div>
+        <div class="bar-row"><div class="bar-name">Procedural</div><div class="bar-track"><div class="bar-fill" id="mk-bar-proc" style="width:0;background:linear-gradient(90deg,#7A3000,#E07030)"><span class="bar-count"></span></div></div><div class="bar-pct" id="mk-pct-proc"></div></div>
+        <div class="bar-row"><div class="bar-name">Ineligible</div><div class="bar-track"><div class="bar-fill" id="mk-bar-inelig" style="width:0;background:linear-gradient(90deg,#8B1A30,#C0392B)"><span class="bar-count"></span></div></div><div class="bar-pct" id="mk-pct-inelig"></div></div>
+        <div class="cum-hd" id="mk-cum-hd">Cumulative Impact <span></span></div>
+        <div class="cum-strip">
+          <div class="cum-cell"><div class="cum-lbl">Net Enrollment Change</div><div class="cum-val" id="mk-cum-net">&mdash;</div><div class="cum-sub" id="mk-cum-net-sub">&mdash;</div></div>
+          <div class="cum-cell"><div class="cum-lbl">Total Disenrolled</div><div class="cum-val" id="mk-cum-disen">&mdash;</div><div class="cum-sub" id="mk-cum-disen-sub">&mdash;</div></div>
+          <div class="cum-cell"><div class="cum-lbl">Procedural Disenrollments</div><div class="cum-val" id="mk-cum-proc">&mdash;</div><div class="cum-sub" id="mk-cum-proc-sub">&mdash;</div></div>
+        </div>
+        <div class="insight-box"><div class="insight-inner">
+          <div class="insight-label">Disenrollment Spotlight</div>
+          <div class="insight-body">
+            <div class="waffle-grid" id="mk-waffle"></div>
+            <div><div class="insight-stat" id="mk-insight-stat"></div><div class="insight-text" id="mk-insight-text"></div></div>
+          </div>
+          <div class="insight-legend">
+            <div class="insight-legend-item"><div class="insight-legend-dot" style="background:#E07030"></div>Procedural</div>
+            <div class="insight-legend-item"><div class="insight-legend-dot" style="background:#C0392B"></div>Ineligible</div>
+          </div>
+        </div></div>
+      </div>
+      <div class="chart-card" style="flex:1">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mcaid)"></div><div class="chart-title" id="mk-mix-title">Renewal Outcome Mix</div></div>
+        <div class="chart-sub" id="mk-mix-sub"></div>
+        <div class="chart-wrap"><canvas id="mcaidMixChart"></canvas></div>
+      </div>
+      </div>
+
+      <div class="col-stack">
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mcaid)"></div><div class="chart-title" id="mk-ts-title">Enrollment <span>Trend</span></div></div>
+          <div class="chart-sub" id="mk-ts-sub"></div>
+          <div class="chart-wrap"><canvas id="mcaidTsChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mcaid)"></div><div class="chart-title" id="mk-chart-title"></div></div>
+          <div class="chart-sub" id="mk-chart-sub"></div>
+          <div class="chart-wrap"><canvas id="mcaidRateChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BHP ══ -->
+  <div class="panel bhp-panel" id="panel-bhp">
+    <div class="kpi-row">
+      <div class="kpi" style="border-top:3px solid var(--bhp)"><div class="kpi-label">National BHP Enrollment</div><div class="kpi-value big" style="color:var(--bhp)">1,852,758</div><div class="kpi-sub">Jan 2026 &middot; 4 participating states</div></div>
+      <div class="kpi" style="border-top:3px solid #4F46C8"><div class="kpi-label">New York</div><div class="kpi-value" style="color:#4F46C8">1,720,756</div><div class="kpi-sub"><b>92.9%</b> of national &middot; Jan 2026</div></div>
+      <div class="kpi" style="border-top:3px solid var(--bhp)"><div class="kpi-label">Minnesota</div><div class="kpi-value">78,540</div><div class="kpi-sub"><b>4.2%</b> of national &middot; Jan 2026</div></div>
+      <div class="kpi" style="border-top:3px solid #1A7A4A"><div class="kpi-label">Oregon</div><div class="kpi-value" style="color:#1A7A4A">37,740</div><div class="kpi-sub"><b>2.0%</b> of national &middot; Jan 2026</div></div>
+      <div class="kpi" style="border-top:3px solid #B0307A"><div class="kpi-label">District of Columbia</div><div class="kpi-value" style="color:#B0307A">15,722</div><div class="kpi-sub"><b>0.8%</b> of national &middot; Jan 2026</div></div>
+    </div>
+    <div class="data-note">
+      <span style="color:var(--brand-amber);flex-shrink:0;font-size:13px">&#9888;</span>
+      <span>Reporting coverage varies. <b style="color:#5A4A1A">Minnesota</b> reports through Jul 2026 and <b style="color:#5A4A1A">Oregon</b> through Jun 2026; <b style="color:#5A4A1A">New York</b> through Apr 2026; <b style="color:#5A4A1A">DC</b> has reported Jan 2026 only. National total reflects January, the one month all four states report.</span>
+    </div>
+    <div class="lower l-bhp">
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:#4F46C8"></div><div class="chart-title">New York <span>&middot; EP Expansion</span></div></div>
+        <div class="chart-sub">Reported Jan &ndash; Apr 2026</div>
+        <div class="chart-wrap"><canvas id="bhpNY"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:#007C8C"></div><div class="chart-title">Minnesota</div></div>
+        <div class="chart-sub">Reported Jan &ndash; Jul 2026</div>
+        <div class="chart-wrap"><canvas id="bhpMN"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:#1A7A4A"></div><div class="chart-title">Oregon</div></div>
+        <div class="chart-sub">Reported Jan &ndash; Jun 2026</div>
+        <div class="chart-wrap"><canvas id="bhpOR"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:#B0307A"></div><div class="chart-title">District of Columbia</div></div>
+        <div class="chart-sub">Launched Jan 2026 &middot; one month reported</div>
+        <div class="chart-wrap"><canvas id="bhpDC"></canvas></div>
+      </div>
+      <div class="chart-card" style="grid-column:span 2">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--bhp)"></div><div class="chart-title">State Share &middot; <span>January 2026</span></div></div>
+        <div class="chart-sub">New York accounts for 92.9% of national BHP enrollment</div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:7px;">
+          <div class="st-row"><div class="st-label">New York</div><div class="st-track"><div class="st-fill" style="width:92.9%;background:linear-gradient(90deg,#2E1EA8,#4F46C8)"><span class="st-count">1,720,756</span></div></div><div class="st-pct">92.9%</div></div>
+          <div class="st-row"><div class="st-label">Minnesota</div><div class="st-track"><div class="st-fill" style="width:4.2%;background:linear-gradient(90deg,#005A68,#007C8C)"><span class="st-count">78,540</span></div></div><div class="st-pct">4.2%</div></div>
+          <div class="st-row"><div class="st-label">Oregon</div><div class="st-track"><div class="st-fill" style="width:2.0%;background:linear-gradient(90deg,#0F5A30,#1A7A4A)"><span class="st-count">37,740</span></div></div><div class="st-pct">2.0%</div></div>
+          <div class="st-row"><div class="st-label">District of Columbia</div><div class="st-track"><div class="st-fill" style="width:0.8%;background:linear-gradient(90deg,#801058,#B0307A)"><span class="st-count">15,722</span></div></div><div class="st-pct">0.8%</div></div>
+          <div style="border-top:1px solid var(--border);margin-top:3px;padding-top:7px;display:flex;align-items:center;gap:10px;">
+            <div class="st-label" style="color:var(--bhp);font-weight:700">National Total</div>
+            <span style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--bhp)">1,852,758</span>
+            <span style="font-size:10px;color:var(--muted)">Jan 2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MARKETPLACE ══ -->
+  <div class="panel mkt-panel" id="panel-mkt">
+    <div class="kpi-row">
+      <div class="kpi" id="mp-total" style="border-top:3px solid var(--mkt)"><div class="kpi-label">OEP Plan Selections</div><div class="kpi-value big">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mp-latest" style="border-top:3px solid #C04060"><div class="kpi-label">Latest Effectuated</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mp-new" style="border-top:3px solid #B07A00"><div class="kpi-label">New Consumers</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mp-active" style="border-top:3px solid #1A4FA8"><div class="kpi-label">Active Re-enrollees</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mp-auto" style="border-top:3px solid #5A3A9A"><div class="kpi-label">Automatic Re-enrollees</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mp-aptc" style="border-top:3px solid var(--ok)"><div class="kpi-label">Consumers with APTC</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+    </div>
+
+    <div class="state-bar"><span class="state-bar-label">View:</span>
+      MKT_PILLS
+    </div>
+
+    <div class="lower l-mkt">
+      <!-- col 1 row 1 -->
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title" id="mp-ts-title">Enrollment <span>Trend</span></div></div>
+        <div class="chart-sub" id="mp-ts-sub">OEP plan selections, then monthly effectuated enrollment</div>
+        <div class="chart-wrap"><canvas id="mktTs"></canvas></div>
+      </div>
+      <!-- col 2 row 1 -->
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title" id="mp-states-title">Top 12 States</div></div>
+        <div class="chart-sub" id="mp-states-sub"></div>
+        <div class="chart-wrap"><canvas id="mktStates"></canvas></div>
+      </div>
+      <!-- col 3 spans both rows -->
+      <div class="chart-card span-rows">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">Avg Monthly Premium <span>Before &amp; After APTC</span></div></div>
+        <div style="flex:1;display:flex;flex-direction:column;padding-top:4px;">
+          <div class="prem-sec-hd">All Enrollees</div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Gross Premium</div></div><div class="prem-track"><div class="prem-fill" id="mp-pg1" style="width:100%;background:linear-gradient(90deg,#6B1020,#8B1A30)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Net Premium</div><div class="prem-desc">after APTC</div></div><div class="prem-track"><div class="prem-fill" id="mp-pn1" style="width:24%;background:linear-gradient(90deg,#9A6800,#C09020)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <hr class="prem-divider">
+          <div class="prem-sec-hd">APTC Recipients Only &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)" id="mp-aptc-count"></span></div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Gross Premium</div></div><div class="prem-track"><div class="prem-fill" id="mp-pg2" style="width:100%;background:linear-gradient(90deg,#6B1020,#8B1A30)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">APTC Subsidy</div><div class="prem-desc">avg credit applied</div></div><div class="prem-track"><div class="prem-fill" id="mp-aptc-bar" style="width:87%;background:linear-gradient(90deg,#0F5A30,#1A7A4A)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Net Premium</div><div class="prem-desc">after APTC applied</div></div><div class="prem-track"><div class="prem-fill" id="mp-pn2" style="width:13%;background:linear-gradient(90deg,#0A3070,#1A4FA8)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <div class="aptc-box" style="margin-top:auto;">
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <div class="aptc-lbl">APTC reduces gross premium by</div>
+              <div class="aptc-val" id="mp-aptc-pct"></div>
+              <div class="aptc-sub" id="mp-aptc-sub"></div>
+            </div>
+            <div style="text-align:right;">
+              <div class="aptc-rlbl">Avg Net (APTC recip.)</div>
+              <div class="aptc-rval" id="mp-net-val"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- col 1 row 2 -->
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title" id="mp-yoy-title">Effectuated Enrollment <span>Year over Year</span></div></div>
+        <div class="chart-sub">2025 vs. 2026 &middot; January &amp; February</div>
+        <div class="yoy-strip">
+          <div class="yoy-cell"><div class="yoy-cell-lbl">January change</div><div class="yoy-cell-val" id="mp-yoy-jan">&mdash;</div><div class="yoy-cell-sub" id="mp-yoy-jan-sub">&mdash;</div></div>
+          <div class="yoy-cell"><div class="yoy-cell-lbl">February change</div><div class="yoy-cell-val" id="mp-yoy-feb">&mdash;</div><div class="yoy-cell-sub" id="mp-yoy-feb-sub">&mdash;</div></div>
+        </div>
+        <div class="chart-wrap"><canvas id="mktYoy"></canvas></div>
+      </div>
+      <!-- col 2 row 2 -->
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">Plan Composition <span>&middot; OEP 2026</span></div></div>
+        <div class="duo" style="margin-top:6px;">
+          <div class="duo-half"><div class="duo-lbl">Metal Tier</div><div class="chart-wrap"><canvas id="metalDonut"></canvas></div></div>
+          <div class="duo-half"><div class="duo-lbl">Enrollment Type</div><div class="chart-wrap"><canvas id="enrollDonut"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div id="ftrSrc"><span>CMS Medicaid &amp; CHIP Renewal Tracker &middot; Mar 2026</span></div>
+  <span id="ftrDate"></span>
+</div>
+</div>
+
+<script>
+// ══ DATA ══
+const MCAID_PERIODS = __MCAID_PERIODS__;
+const MCAID_LABELS  = __MCAID_LABELS__;
+const MCAID_LATEST  = __MCAID_LATEST__;
+const MCAID_NAT     = __MCAID_NAT__;
+const MCAID_STATES  = __MCAID_STATES__;
+const TOP12         = __TOP12__;
+const MIX           = __MIX__;
+const MKT_OEP       = __MKT_OEP__;
+const MKT_NAT_OEP   = __MKT_NAT_OEP__;
+const POST_LABELS   = __POST_LABELS__;
+const POST_OEP      = __POST_OEP__;
+const YOY           = __YOY__;
+const BHP_LABELS    = __BHP_LABELS__;
+const BHP_SERIES    = __BHP_SERIES__;
+
+const charts = {};
+function makeChart(id, cfg){ if(charts[id]){charts[id].destroy(); delete charts[id];}
+  const el = document.getElementById(id); if(!el) return null;
+  charts[id] = new Chart(el, cfg); return charts[id]; }
+
+const fmt = n => n==null ? '\u2014' : n>=1e6 ? (n/1e6).toFixed(2)+'M' : n>=1e3 ? (n/1e3).toFixed(0)+'K' : n.toLocaleString();
+const pct = (a,b) => b ? (a/b*100).toFixed(1)+'%' : '\u2014';
+const T = {backgroundColor:'#fff',titleColor:'#0D1B3E',bodyColor:'#5A6A84',borderColor:'#D0DBE8',borderWidth:1,padding:8};
+// Axis tick formatters -- always whole numbers, never decimals
+function axisFmt(v,i,ticks){
+  const step = (ticks && ticks.length>1) ? Math.abs(ticks[1].value-ticks[0].value) : Math.abs(v);
+  if(step>=1e6) return Math.round(v/1e6)+'M';
+  if(step>=1e3) return Math.round(v/1e3).toLocaleString()+'K';
+  return Math.round(v).toLocaleString();
+}
+function logFmt(v){
+  const a=Math.abs(v);
+  if(a>=1e6) return Math.round(v/1e6)+'M';
+  if(a>=1e3) return Math.round(v/1e3)+'K';
+  return String(Math.round(v));
+}
+const pctFmt = v => Math.round(v)+'%';
+
+function setKpi(id,val,sub,color){ const el=document.getElementById(id); if(!el) return;
+  const v=el.querySelector('.kpi-value'); v.textContent=val; if(color) v.style.color=color;
+  el.querySelector('.kpi-sub').innerHTML=sub; }
+function setDelta(id, cur, prev, polarity){
+  const el=document.getElementById(id); if(!el) return;
+  if(cur==null||prev==null||prev===0){ el.textContent=''; el.className='kpi-delta flat'; return; }
+  const diff=cur-prev, p=diff/prev*100;
+  const arrow = diff>0 ? '\u25b2' : diff<0 ? '\u25bc' : '\u2013';
+  el.textContent = arrow+' '+Math.abs(p).toFixed(1)+'%';
+  let cls='flat';
+  if(polarity==='up'   && diff!==0) cls = diff>0 ? 'good' : 'bad';
+  if(polarity==='down' && diff!==0) cls = diff>0 ? 'bad'  : 'good';
+  el.className='kpi-delta '+cls;
+  el.title='vs. prior month: '+prev.toLocaleString()+' \u2192 '+cur.toLocaleString();
+}
+
+function setCum(valId, subId, val, sub, color){
+  const v=document.getElementById(valId), s2=document.getElementById(subId);
+  if(v){ v.textContent=val; if(color) v.style.color=color; }
+  if(s2) s2.textContent=sub;
+}
+
+function setBar(id,w,label,pctId){ const el=document.getElementById(id); if(!el) return;
+  el.style.width=Math.max(w,0.5).toFixed(1)+'%';
+  const c=el.querySelector('.bar-count'); if(c) c.textContent=label;
+  if(pctId){const p=document.getElementById(pctId); if(p) p.textContent=w.toFixed(1)+'%';} }
+function setPrem(id,w,label){ const el=document.getElementById(id); if(!el) return;
+  el.style.width=Math.max(w,3).toFixed(1)+'%';
+  const c=el.querySelector('.prem-count'); if(c) c.textContent=label; }
+
+// ══ MEDICAID ══
+function mcaidSeries(state, field){
+  return MCAID_PERIODS.map(p => {
+    const rec = state ? (MCAID_STATES[state]||{})[p] : MCAID_NAT[p];
+    return rec ? rec[field] : null;
+  });
+}
+
+function renderMcaidTs(state){
+  document.getElementById('mk-ts-title').innerHTML =
+    (state ? state : 'National') + ' Enrollment <span>Trend</span>';
+  document.getElementById('mk-ts-sub').textContent =
+    'Total & adult Medicaid enrollment \u00b7 ' + MCAID_LABELS[0] + ' \u2013 ' + MCAID_LABELS[MCAID_LABELS.length-1];
+  makeChart('mcaidTsChart',{
+    type:'line',
+    data:{labels:MCAID_LABELS,datasets:[
+      {label:'Total Enrollment',data:mcaidSeries(state,'enroll'),borderColor:'#002F87',
+       backgroundColor:'rgba(0,47,135,.08)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#002F87',
+       pointBorderColor:'#fff',pointBorderWidth:2,tension:.25,fill:true},
+      {label:'Adult Enrollment',data:mcaidSeries(state,'adult'),borderColor:'#65B1E2',
+       backgroundColor:'rgba(101,177,226,.10)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#65B1E2',
+       pointBorderColor:'#fff',pointBorderWidth:2,tension:.25,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:9,font:{size:10.5},color:'#5A6A84'}},
+        tooltip:{...T,callbacks:{label:c=>c.raw==null?'':' '+c.dataset.label+': '+c.raw.toLocaleString()}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}},
+        y:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}
+  });
+}
+
+function renderMcaidRate(){
+  document.getElementById('mk-chart-title').innerHTML='State Disenrollment <span>Rate at Renewal</span>';
+  document.getElementById('mk-chart-sub').textContent='Disenrolled \u00f7 renewals due \u00b7 top 12 states \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1];
+  makeChart('mcaidRateChart',{
+    type:'bar',
+    data:{labels:TOP12.labels,datasets:[{data:TOP12.rates,backgroundColor:'rgba(0,47,135,.65)',
+      hoverBackgroundColor:'rgba(0,47,135,.9)',borderRadius:3,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...T,callbacks:{title:c=>c[0].label,
+        label:c=>[' Rate: '+c.raw+'%',' '+TOP12.disen[c.dataIndex].toLocaleString()+' of '+TOP12.due[c.dataIndex].toLocaleString()+' renewals due']}}},
+      scales:{x:{grid:{color:'#E8EFF7'},ticks:{callback:pctFmt,color:'#5A6A84',font:{size:10}},border:{display:false},max:50},
+        y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}}}}
+  });
+}
+
+function renderMcaidCompare(state,d){
+  const nat = MCAID_NAT[MCAID_LATEST];
+  document.getElementById('mk-chart-title').innerHTML=state+' <span>vs. National Average</span>';
+  document.getElementById('mk-chart-sub').textContent='Key renewal metrics \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1];
+  const sv=[+(d.disenrolled/d.due*100).toFixed(1),+(d.procedural/d.disenrolled*100).toFixed(1),+(d.due/d.enroll*100).toFixed(1)];
+  const nv=[+(nat.disenrolled/nat.due*100).toFixed(1),+(nat.procedural/nat.disenrolled*100).toFixed(1),+(nat.due/nat.enroll*100).toFixed(1)];
+  makeChart('mcaidRateChart',{
+    type:'bar',
+    data:{labels:['Disenrollment Rate','Procedural Share','% with Renewal Due'],datasets:[
+      {label:state,data:sv,backgroundColor:'rgba(0,47,135,.8)',borderRadius:3,borderSkipped:false},
+      {label:'National',data:nv,backgroundColor:'rgba(0,47,135,.25)',borderRadius:3,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:9,font:{size:10.5},color:'#5A6A84'}},
+        tooltip:{...T,callbacks:{label:c=>' '+c.dataset.label+': '+c.raw+'%'}}},
+      scales:{x:{grid:{color:'#E8EFF7'},ticks:{callback:pctFmt,color:'#5A6A84',font:{size:10}},border:{display:false}},
+        y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}}}}
+  });
+}
+
+function updateInsight(proc,disen){
+  const p = disen>0 ? proc/disen : 0, dots = Math.round(p*10);
+  const w = document.getElementById('mk-waffle'); w.innerHTML='';
+  for(let i=0;i<10;i++){ const d=document.createElement('div'); d.className='waffle-dot';
+    d.style.background = i<dots ? '#E07030' : '#C0392B'; w.appendChild(d); }
+  document.getElementById('mk-insight-stat').textContent = dots+' in 10';
+  document.getElementById('mk-insight-text').textContent = dots>=7
+    ? 'disenrolled beneficiaries ('+(p*100).toFixed(1)+'%) lost coverage due to administrative paperwork failures \u2014 not because they were found ineligible'
+    : 'of disenrolled beneficiaries ('+(p*100).toFixed(1)+'%) lost coverage for procedural reasons; the remainder were determined ineligible';
+}
+
+function selectMcaidState(state){
+  document.querySelectorAll('#panel-mcaid .state-pill').forEach(b=>b.classList.remove('active'));
+  const id = state ? 'mcaid-btn-'+state.replace(/ /g,'-').replace(/\./g,'') : 'mcaid-btn-national';
+  const b = document.getElementById(id); if(b) b.classList.add('active');
+
+  const rec = state ? (MCAID_STATES[state]||{}) : MCAID_NAT;
+  let key = MCAID_LATEST;
+  if(!rec[key]){ for(let i=MCAID_PERIODS.length-1;i>=0;i--){ if(rec[MCAID_PERIODS[i]]){key=MCAID_PERIODS[i];break;} } }
+  const d = rec[key]; if(!d) return;
+  const lbl = MCAID_LABELS[MCAID_PERIODS.indexOf(key)];
+  const loc = state || 'National';
+
+  setKpi('mk-enroll', fmt(d.enroll), loc+' \u00b7 '+lbl, 'var(--mcaid)');
+  setKpi('mk-adult',  fmt(d.adult),  '<b>'+pct(d.adult,d.enroll)+'</b> of total enrollment', '#2E7CC0');
+  setKpi('mk-due',    fmt(d.due),    '<b>'+pct(d.due,d.enroll)+'</b> of total enrollment', null);
+  setKpi('mk-renewed',fmt(d.renewed),'<b>'+pct(d.renewed,d.due)+'</b> of renewals due', 'var(--ok)');
+  setKpi('mk-disen',  fmt(d.disenrolled),'<b>'+pct(d.disenrolled,d.due)+'</b> of renewals due', 'var(--warn)');
+  setKpi('mk-pend',   fmt(d.pending),'<b>'+pct(d.pending,d.due)+'</b> of renewals due', 'var(--pend)');
+
+  // month-over-month deltas
+  const ki = MCAID_PERIODS.indexOf(key);
+  const prev = ki>0 ? rec[MCAID_PERIODS[ki-1]] : null;
+  setDelta('mk-enroll-d',  d.enroll,      prev?prev.enroll:null,      'up');
+  setDelta('mk-adult-d',   d.adult,       prev?prev.adult:null,       'up');
+  setDelta('mk-due-d',     d.due,         prev?prev.due:null,         'none');
+  setDelta('mk-renewed-d', d.renewed,     prev?prev.renewed:null,     'up');
+  setDelta('mk-disen-d',   d.disenrolled, prev?prev.disenrolled:null, 'down');
+  setDelta('mk-pend-d',    d.pending,     prev?prev.pending:null,     'none');
+
+  // cumulative impact across all reported months
+  let cD=0, cP=0, first=null, last=null, nMon=0;
+  MCAID_PERIODS.forEach(p=>{ const r=rec[p]; if(!r) return;
+    cD+=r.disenrolled; cP+=r.procedural; nMon++;
+    if(first===null) first=r.enroll; last=r.enroll; });
+  const span = MCAID_LABELS[0]+' \u2013 '+MCAID_LABELS[MCAID_LABELS.length-1];
+  document.getElementById('mk-cum-hd').innerHTML='Cumulative Impact <span>\u00b7 '+span+'</span>';
+  const netChg = last-first;
+  setCum('mk-cum-net','mk-cum-net-sub',
+    (netChg>=0?'+':'\u2212')+fmt(Math.abs(netChg)),
+    (netChg>=0?'+':'')+(netChg/first*100).toFixed(1)+'% since '+MCAID_LABELS[0],
+    netChg<0?'var(--warn)':'var(--ok)');
+  setCum('mk-cum-disen','mk-cum-disen-sub', fmt(cD),
+    'across '+nMon+' reporting months', 'var(--warn)');
+  setCum('mk-cum-proc','mk-cum-proc-sub', fmt(cP),
+    pct(cP,cD)+' of all disenrollments', '#C2610C');
+
+  document.getElementById('mk-hd-outcomes').innerHTML='Renewal Outcomes <span>of '+d.due.toLocaleString()+' renewals due \u00b7 '+lbl+'</span>';
+  document.getElementById('mk-hd-reason').innerHTML='Reason for Disenrollment <span>of '+d.disenrolled.toLocaleString()+' disenrolled</span>';
+  document.getElementById('mk-proc-note').innerHTML='\u21b3 Procedural disenrollments \u2014 coverage lost to paperwork failures, not ineligibility \u2014 account for <b>'+pct(d.procedural,d.disenrolled)+'</b> of all disenrollments';
+
+  setBar('mk-bar-renewed',d.renewed/d.due*100,d.renewed.toLocaleString(),'mk-pct-renewed');
+  setBar('mk-bar-disen',  d.disenrolled/d.due*100,d.disenrolled.toLocaleString(),'mk-pct-disen');
+  setBar('mk-bar-pend',   d.pending/d.due*100,d.pending.toLocaleString(),'mk-pct-pend');
+  setBar('mk-bar-proc',   d.procedural/d.disenrolled*100,d.procedural.toLocaleString(),'mk-pct-proc');
+  setBar('mk-bar-inelig', d.ineligible/d.disenrolled*100,d.ineligible.toLocaleString(),'mk-pct-inelig');
+  updateInsight(d.procedural,d.disenrolled);
+
+  renderMcaidTs(state);
+  renderMix(state);
+  if(state) renderMcaidCompare(state,d); else renderMcaidRate();
+}
+
+// ── Renewal outcome mix (ex parte data, CMS snapshot) ──
+const MIX_SERIES = [
+  {k:'exparte', label:'Renewed \u2013 Ex Parte',   color:'#1668C4'},
+  {k:'form',    label:'Renewed \u2013 Form',       color:'#A8D3F0'},
+  {k:'inelig',  label:'Ineligible \u2013 Form',    color:'#B4530A'},
+  {k:'proc',    label:'Disenrolled \u2013 Procedural', color:'#F0C33C'},
+  {k:'pend',    label:'Pending',                   color:'#123B4F'},
+];
+const MIX_OPTS = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{
+    legend:{position:'bottom',labels:{boxWidth:9,padding:6,font:{size:9},color:'#5A6A84'}},
+    tooltip:{...T,callbacks:{label:c=>' '+c.dataset.label+': '+c.raw+'%'}}
+  },
+  scales:{
+    x:{stacked:true,grid:{display:false},ticks:{color:'#0D1B3E',font:{size:8.5},autoSkip:false,maxRotation:0},border:{display:false}},
+    y:{stacked:true,max:100,grid:{color:'#E8EFF7'},ticks:{callback:pctFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}
+  }
+};
+
+function renderMix(state){
+  const t=document.getElementById('mk-mix-title'), sub=document.getElementById('mk-mix-sub');
+  const src = state ? MIX.states[state] : MIX.nat;
+  const labels = state ? MIX.stLabels : MIX.natLabels;
+  if(!src){
+    t.innerHTML=state+' <span>\u00b7 Renewal Outcome Mix</span>';
+    sub.textContent='Not reported for this state';
+    makeChart('mcaidMixChart',{type:'bar',data:{labels:[],datasets:[]},options:MIX_OPTS});
+    return;
+  }
+  if(state){
+    t.innerHTML=state+' <span>\u00b7 Renewal Outcome Mix</span>';
+    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1];
+  } else {
+    t.innerHTML='Renewal Outcome Mix <span>\u00b7 National Trend</span>';
+    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1];
+  }
+  const short = labels.map(l=>l.replace(' 20',"\u2019"));
+  makeChart('mcaidMixChart',{
+    type:'bar',
+    data:{labels:short,datasets:MIX_SERIES.map(sv=>({
+      label:sv.label,data:src[sv.k],backgroundColor:sv.color,borderRadius:1,borderSkipped:false}))},
+    options:{...MIX_OPTS, plugins:{...MIX_OPTS.plugins,
+      tooltip:{...T,callbacks:{
+        title:c=>labels[c[0].dataIndex],
+        label:c=>' '+c.dataset.label+': '+c.raw+'%'}}}}
+  });
+}
+
+// ══ MARKETPLACE ══
+function latestPost(series){
+  for(let i=series.length-1;i>=1;i--) if(series[i]!=null) return {v:series[i],lbl:POST_LABELS[i]};
+  return null;
+}
+
+function renderMktTs(state){
+  const key = state || 'United States';
+  const s = POST_OEP[key];
+  document.getElementById('mp-ts-title').innerHTML=(state||'National')+' Enrollment <span>Trend</span>';
+  if(!s){ makeChart('mktTs',{type:'line',data:{labels:[],datasets:[]},options:{responsive:true,maintainAspectRatio:false}}); return; }
+  makeChart('mktTs',{
+    type:'line',
+    data:{labels:POST_LABELS,datasets:[{label:'Enrollment',data:s,borderColor:'#8B1A30',
+      backgroundColor:'rgba(139,26,48,.09)',borderWidth:2.5,
+      pointRadius:s.map(v=>v==null?0:4),pointBackgroundColor:'#8B1A30',pointBorderColor:'#fff',
+      pointBorderWidth:2,tension:.25,spanGaps:false,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{...T,callbacks:{title:c=>c[0].label==='OEP'?'OEP plan selections':c[0].label+' effectuated',
+          label:c=>c.raw==null?' Not yet reported':' '+c.raw.toLocaleString()}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}},
+        y:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}
+  });
+}
+
+function renderMktYoy(state){
+  const key = state || 'United States';
+  const y = YOY[key] || {};
+  const has = y.jan25!=null && y.jan26!=null;
+  document.getElementById('mp-yoy-title').innerHTML=(state||'National')+' Effectuated <span>Year over Year</span>';
+
+  function cell(id,subId,a,b){
+    const el=document.getElementById(id), sub=document.getElementById(subId);
+    if(a==null||b==null){ el.textContent='\u2014'; el.style.color='var(--muted)'; sub.textContent='not reported'; return; }
+    const diff=b-a, p=(diff/a*100);
+    el.textContent=(diff>=0?'+':'\u2212')+fmt(Math.abs(diff));
+    el.style.color = diff<0 ? 'var(--warn)' : 'var(--ok)';
+    sub.textContent=(diff>=0?'+':'')+p.toFixed(1)+'% vs. 2025';
+  }
+  cell('mp-yoy-jan','mp-yoy-jan-sub',y.jan25,y.jan26);
+  cell('mp-yoy-feb','mp-yoy-feb-sub',y.feb25,y.feb26);
+
+  makeChart('mktYoy',{
+    type:'bar',
+    data:{labels:['January','February'],datasets:[
+      {label:'2025',data:[y.jan25??null,y.feb25??null],backgroundColor:'rgba(139,26,48,.32)',borderRadius:3,borderSkipped:false},
+      {label:'2026',data:[y.jan26??null,y.feb26??null],backgroundColor:'rgba(139,26,48,.85)',borderRadius:3,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:8,font:{size:10.5},color:'#5A6A84'}},
+        tooltip:{...T,callbacks:{label:c=>c.raw==null?'':' '+c.dataset.label+': '+c.raw.toLocaleString()}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}},
+        y:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}
+  });
+}
+
+function renderMktStates(state){
+  const title=document.getElementById('mp-states-title'), sub=document.getElementById('mp-states-sub');
+  if(!state){
+    const top = Object.entries(MKT_OEP).sort((a,b)=>b[1].total-a[1].total).slice(0,12);
+    title.innerHTML='Top 12 States <span>\u00b7 OEP Plan Selections</span>';
+    sub.textContent='New consumers vs. re-enrollees \u00b7 OEP 2026';
+    makeChart('mktStates',{
+      type:'bar',
+      data:{labels:top.map(t=>t[0]),datasets:[
+        {label:'Re-enrollees',data:top.map(t=>t[1].reenroll),backgroundColor:'rgba(139,26,48,.75)',borderRadius:2},
+        {label:'New Consumers',data:top.map(t=>t[1].new),backgroundColor:'rgba(192,160,0,.85)',borderRadius:2}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:8,font:{size:10.5},color:'#5A6A84'}},
+          tooltip:{...T,callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toLocaleString()}}},
+        scales:{x:{stacked:true,grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}},
+          y:{stacked:true,grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9.5}},border:{display:false}}}}
+    });
+  } else {
+    const others=Object.entries(MKT_OEP).sort((a,b)=>b[1].total-a[1].total).filter(t=>t[0]!==state).slice(0,3).map(t=>t[0]);
+    const labels=[state,...others];
+    title.innerHTML=state+' <span>vs. Largest States</span>';
+    sub.textContent='OEP plan selections \u00b7 2026';
+    makeChart('mktStates',{
+      type:'bar',
+      data:{labels:labels,datasets:[
+        {label:'Re-enrollees',data:labels.map(s=>MKT_OEP[s]?.reenroll||0),
+         backgroundColor:labels.map(s=>s===state?'rgba(139,26,48,.85)':'rgba(139,26,48,.35)'),borderRadius:2},
+        {label:'New Consumers',data:labels.map(s=>MKT_OEP[s]?.new||0),
+         backgroundColor:labels.map(s=>s===state?'rgba(192,160,0,.9)':'rgba(192,160,0,.4)'),borderRadius:2}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:8,font:{size:10.5},color:'#5A6A84'}},
+          tooltip:{...T,callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toLocaleString()}}},
+        scales:{x:{stacked:true,grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}},
+          y:{stacked:true,grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}}}}
+    });
+  }
+}
+
+function renderDonuts(d){
+  const mt=d.silver+d.bronze+d.gold+d.plat+d.cat;
+  makeChart('metalDonut',{
+    type:'doughnut',
+    data:{labels:['Silver','Bronze','Gold','Platinum','Catastrophic'],
+      datasets:[{data:[d.silver,d.bronze,d.gold,d.plat,d.cat],
+        backgroundColor:['#5A3A9A','#1A4FA8','#B07A00','#8B1A30','#5A6A84'],
+        borderColor:'#fff',borderWidth:2,spacing:1,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:4,font:{size:9},color:'#5A6A84'}},
+        tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()+' ('+(c.raw/mt*100).toFixed(1)+'%)'}}}}
+  });
+  const et=d.active+d.auto+d.new;
+  makeChart('enrollDonut',{
+    type:'doughnut',
+    data:{labels:['Active Re-enroll','Auto Re-enroll','New'],
+      datasets:[{data:[d.active,d.auto,d.new],
+        backgroundColor:['#1A4FA8','#5A3A9A','#B07A00'],
+        borderColor:'#fff',borderWidth:2,spacing:1,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:4,font:{size:9},color:'#5A6A84'}},
+        tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()+' ('+(c.raw/et*100).toFixed(1)+'%)'}}}}
+  });
+}
+
+function updatePrem(d){
+  const gp=d.avgPrem, np=d.avgNet, amt=gp-np;
+  setPrem('mp-pg1',100,'$'+gp+' / mo');
+  setPrem('mp-pn1',Math.round(np/gp*100),'$'+np);
+  document.getElementById('mp-aptc-count').textContent='('+fmt(d.aptc)+' consumers)';
+  setPrem('mp-pg2',100,'$'+gp+' / mo');
+  setPrem('mp-aptc-bar',Math.round(amt/gp*100),'\u2212$'+amt+' / mo');
+  setPrem('mp-pn2',Math.round(np/gp*100),'$'+np);
+  document.getElementById('mp-aptc-pct').textContent=Math.round(amt/gp*100)+'%';
+  document.getElementById('mp-aptc-sub').textContent='for the '+pct(d.aptc,d.total)+' of enrollees receiving the credit';
+  document.getElementById('mp-net-val').innerHTML='$'+np+'<span style="font-size:12px;color:var(--muted)">/mo</span>';
+}
+
+function selectMktState(state){
+  document.querySelectorAll('#panel-mkt .state-pill').forEach(b=>b.classList.remove('active'));
+  const id = state ? 'mkt-btn-'+state.replace(/ /g,'-').replace(/\./g,'') : 'mkt-btn-national';
+  const b = document.getElementById(id); if(b) b.classList.add('active');
+
+  const d = state ? MKT_OEP[state] : MKT_NAT_OEP;
+  const loc = state || 'National';
+  if(!d) return;
+
+  const lp = latestPost(POST_OEP[state||'United States']||[]);
+  setKpi('mp-total', fmt(d.total), loc+' \u00b7 OEP 2026', 'var(--mkt)');
+  setKpi('mp-latest', lp?fmt(lp.v):'\u2014',
+    lp ? '<b>'+pct(lp.v,d.total)+'</b> of OEP \u00b7 '+lp.lbl+' 2026' : 'not yet reported', '#C04060');
+  setKpi('mp-new',   fmt(d.new),   '<b>'+pct(d.new,d.total)+'</b> of OEP selections','#B07A00');
+  setKpi('mp-active',fmt(d.active),'<b>'+pct(d.active,d.total)+'</b> \u00b7 manually renewed','#1A4FA8');
+  setKpi('mp-auto',  fmt(d.auto),  '<b>'+pct(d.auto,d.total)+'</b> \u00b7 auto-renewed','#5A3A9A');
+  setKpi('mp-aptc',  fmt(d.aptc),  '<b>'+pct(d.aptc,d.total)+'</b> of OEP enrollees','var(--ok)');
+
+  renderMktTs(state);
+  renderMktYoy(state);
+  renderMktStates(state);
+  renderDonuts(d);
+  updatePrem(d);
+}
+
+// ══ BHP ══
+function bhpMini(canvasId, state, color){
+  const v = BHP_SERIES[state] || [];
+  const idx = v.map((x,i)=>x==null?-1:i).filter(i=>i>=0);
+  const lo = idx.length?idx[0]:0, hi = idx.length?idx[idx.length-1]:v.length-1;
+  const labels = BHP_LABELS.slice(lo,hi+1).map(l=>l.replace(' 2026',''));
+  const data   = v.slice(lo,hi+1);
+  const single = idx.length===1;
+  makeChart(canvasId,{
+    type:'line',
+    data:{labels:labels,datasets:[{
+      label:state,data:data,borderColor:color,backgroundColor:color+'22',
+      borderWidth:2.5,pointRadius:data.map(x=>x==null?0:(single?7:4)),
+      pointBackgroundColor:color,pointBorderColor:'#fff',pointBorderWidth:2,
+      tension:.25,spanGaps:false,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{...T,callbacks:{label:c=>c.raw==null?' not reported':' '+c.raw.toLocaleString()}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9.5}},border:{display:false}},
+        y:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:9.5},maxTicksLimit:5},border:{display:false}}}}
+  });
+}
+function renderBhp(){
+  bhpMini('bhpNY','New York','#4F46C8');
+  bhpMini('bhpMN','Minnesota','#007C8C');
+  bhpMini('bhpOR','Oregon','#1A7A4A');
+  bhpMini('bhpDC','District of Columbia','#B0307A');
+}
+
+// ══ TABS ══
+const META={
+  mcaid:{p:'Medicaid \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Renewal Tracker \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1]},
+  bhp:{p:'BHP \u00b7 Jan\u2013Jul 2026',s:'CMS Basic Health Program Enrollment Data \u00b7 2026'},
+  mkt:{p:'ACA Marketplace \u00b7 OEP + Effectuated 2026',s:'CMS Marketplace OEP Snapshot &amp; Effectuated Enrollment \u00b7 2026'}
+};
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>{t.className='tab';if(t.dataset.tab===tab)t.classList.add('active-'+tab);});
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  document.getElementById('hdrPeriod').textContent=META[tab].p;
+  document.getElementById('ftrSrc').innerHTML='<span>'+META[tab].s+'</span>';
+}
+
+document.getElementById('ftrDate').textContent='Generated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+requestAnimationFrame(()=>{ selectMcaidState(null); selectMktState(null); renderBhp(); });
+</script>
+</body>
+</html>
