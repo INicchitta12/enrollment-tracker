@@ -44,6 +44,14 @@ effectuated coverage. Different measures — label them distinctly and never des
 gap between them as pure attrition. Confirmed by matching `Marketplace (2)` monthly values
 against the effectuated sheet exactly.
 
+**National post-OEP data is limited to reported months.** The United States post-OEP
+series carries only OEP, Jan, and Feb 2026 — the months CMS actually reported national
+effectuated totals. The workbook has no March figure, and its April value (19,200,000) is
+a rounded placeholder, not a reported count, so both are excluded to avoid a misleading
+isolated dot on the national trend line. The exclusion is an explicit, documented cutoff in
+`load_marketplace()` (`NATIONAL_POST_OEP_EXCLUDE_FROM`), applied to the national series only.
+State series are untouched — 12 states report genuine March, April, and May figures.
+
 **Renewal denominators.** Renewed / disenrolled / pending are shares of *renewals due* that
 month, not of total enrollment. Procedural and ineligible are shares of *total disenrolled*.
 

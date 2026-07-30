@@ -60,6 +60,15 @@ MKT_COLS = {
     'bronze': 'Bronze', 'silver': 'Silver ', 'gold': 'Gold', 'platinum': 'Platinum',
 }
 
+# The national (United States) post-OEP Marketplace series is limited to reported
+# effectuated months. CMS reported national effectuated totals only through
+# February 2026: the workbook has no March figure, and the April value
+# (19,200,000) is a rounded placeholder, not a reported count. Publishing them
+# would render a misleading isolated dot on the national trend line, so we
+# explicitly exclude March 2026 onward for the United States series only. State
+# series are unaffected — 12 states report genuine March, April, and May figures.
+NATIONAL_POST_OEP_EXCLUDE_FROM = pd.Timestamp('2026-03-01')
+
 
 def to_int(v):
     return None if pd.isna(v) else int(v)
@@ -162,7 +171,12 @@ def load_marketplace(xl):
         base = national_oep if name == 'United States' else oep[name]
         vals = [base['total']]
         for m in months:
-            vals.append(to_int(sub.loc[m, MKT_COLS['total']]) if m in sub.index else None)
+            # National post-OEP data is limited to reported months (through Feb 2026);
+            # exclude the missing/placeholder March-onward values for United States only.
+            if name == 'United States' and pd.Timestamp(m) >= NATIONAL_POST_OEP_EXCLUDE_FROM:
+                vals.append(None)
+            else:
+                vals.append(to_int(sub.loc[m, MKT_COLS['total']]) if m in sub.index else None)
         if any(v is not None for v in vals[1:]):
             series[name] = vals
 
