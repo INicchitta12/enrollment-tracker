@@ -28,6 +28,12 @@ CS_BENEFIT_YEAR = "2026"
 # Marketplace tabs: "Marketplace (2)" supersedes "Marketplace"
 MKT_SHEET = "Marketplace (2)"
 
+# March 2023 pre-unwinding peak enrollment baseline (reference point, not a
+# series). Total Medicaid enrollment only — the sheet has no adult or renewal
+# breakout, so no adult/renewal code path may read from it.
+PEAK_SHEET = "Mcaid Peak Baseline"
+PEAK_LABEL = "Mar 2023"
+
 STATE_ABBR = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
     'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'DC': 'District of Columbia',
@@ -163,6 +169,31 @@ def load_medicaid(xl):
         'due': [int(v) for v in top[MCAID_COLS['due']]],
     }
     return periods, labels, latest, national, states, top12
+
+
+def load_peak_baseline(xl):
+    """March 2023 pre-unwinding peak TOTAL Medicaid enrollment by state + US.
+
+    Returns {stateName|'United States': peak_total}. This is a reference point,
+    NOT a trend series — it is never added to MCAID_PERIODS or any series. The
+    sheet carries total enrollment only (no adult, no renewal fields), so nothing
+    here feeds an adult- or renewal-enrollment path. The March 2023 baseline
+    predates California's reporting revision, so California's peak still includes
+    the limited-benefit enrollees its current figure excludes; the current-side
+    California continuity adjustment only partly offsets that, and the peak strip
+    discloses the residual non-comparability rather than restating the peak.
+    """
+    if PEAK_SHEET not in xl.sheet_names:
+        sys.exit(f"ERROR: '{PEAK_SHEET}' sheet missing from workbook")
+    df = pd.read_excel(xl, sheet_name=PEAK_SHEET)
+    df['State'] = df['State'].astype(str).map(normalize_dc)
+    peak = {row['State']: to_int(row['Total Medicaid Enrollment']) for _, row in df.iterrows()}
+
+    states_sum = sum(v for k, v in peak.items() if k != 'United States' and v is not None)
+    if peak.get('United States') != states_sum:
+        sys.exit(f"ERROR: peak baseline United States {peak.get('United States')} "
+                 f"!= sum of states {states_sum}")
+    return peak
 
 
 def build_mix(periods, labels, national, states):
@@ -304,6 +335,7 @@ def main():
     xl = pd.ExcelFile(WORKBOOK)
     periods, labels, latest, mc_nat, mc_states, top12 = load_medicaid(xl)
     mix = build_mix(periods, labels, mc_nat, mc_states)
+    peak = load_peak_baseline(xl)
     mkt_oep, mkt_nat, post_labels, post_series = load_marketplace(xl)
     yoy = load_effectuated(xl)
     cost_sharing = load_cost_sharing()
@@ -320,6 +352,8 @@ def main():
         '__MCAID_STATES__': compact(mc_states),
         '__TOP12__': compact(top12),
         '__MIX__': compact(mix),
+        '__MCAID_PEAK__': compact(peak),
+        '__PEAK_LABEL__': compact(PEAK_LABEL),
         '__MKT_OEP__': compact(mkt_oep),
         '__MKT_NAT_OEP__': compact(mkt_nat),
         '__POST_LABELS__': compact(post_labels),
@@ -343,6 +377,7 @@ def main():
 
     print(f"Built {OUTPUT.name}  ({len(html) // 1024} KB)")
     print(f"  Medicaid    {labels[0]} - {labels[-1]}  ({len(mc_states)} states)")
+    print(f"  Peak base   {PEAK_LABEL} pre-unwinding  ({len([s for s in peak if s != 'United States'])} states + US)")
     print(f"  BHP         {bhp_labels[0]} - {bhp_labels[-1]}  ({len(bhp_series)} states)")
     print(f"  Marketplace OEP + {len(post_labels) - 1} months  ({len(mkt_oep)} states)")
     cs_states = [s for s in cost_sharing if s != 'United States']
