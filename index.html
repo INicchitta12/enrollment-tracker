@@ -124,6 +124,15 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .prem-count{font-family:var(--mono);font-size:11px;font-weight:700;white-space:nowrap;}
 .prem-divider{border:none;border-top:1px dashed var(--border);margin:5px 0;}
 .prem-sec-hd{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px;}
+.cs-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.cs-table th{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:right;padding:4px 7px 5px;border-bottom:1px solid var(--border);}
+.cs-table th:first-child{text-align:left;}
+.cs-table td{padding:6px 7px;text-align:right;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--surface-2);}
+.cs-table tr:last-child td{border-bottom:none;}
+.cs-table td.cs-tier{text-align:left;font-family:var(--font);font-size:11px;font-weight:600;padding-left:9px;border-left:3px solid transparent;}
+.cs-na{color:var(--muted);font-weight:400;}
+.cs-note{font-size:9px;line-height:1.35;color:var(--muted);margin-top:auto;padding-top:8px;}
+.cs-empty{text-align:center;color:var(--muted);padding:22px 8px;font-size:11px;line-height:1.5;}
 .aptc-box{display:flex;align-items:center;justify-content:space-between;background:var(--ok-light);border:1px solid #A8D9BC;border-radius:5px;padding:8px 12px;margin-top:auto;}
 .aptc-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#2A7A4A;}
 .aptc-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ok);}
@@ -413,8 +422,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div class="chart-sub" id="mp-states-sub"></div>
         <div class="chart-wrap"><canvas id="mktStates"></canvas></div>
       </div>
-      <!-- col 3 spans both rows -->
-      <div class="chart-card span-rows">
+      <!-- col 3 row 1 -->
+      <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">Avg Monthly Premium <span>Before &amp; After APTC</span></div></div>
         <div style="flex:1;display:flex;flex-direction:column;padding-top:4px;">
           <div class="prem-sec-hd">All Enrollees</div>
@@ -456,6 +465,16 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
           <div class="duo-half"><div class="duo-lbl">Enrollment Type</div><div class="chart-wrap"><canvas id="enrollDonut"></canvas></div></div>
         </div>
       </div>
+      <!-- col 3 row 2 -->
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">Avg Cost Sharing <span>by Metal Tier</span></div></div>
+        <div class="chart-sub" id="mp-cs-sub">Plan-level simple average &middot; standard on-exchange plans</div>
+        <table class="cs-table">
+          <thead><tr><th>Tier</th><th>Deductible</th><th>OOP Max</th><th>PC Copay</th></tr></thead>
+          <tbody id="mp-cs-rows"></tbody>
+        </table>
+        <div class="cs-note" id="mp-cs-note"></div>
+      </div>
     </div>
   </div>
 
@@ -481,6 +500,8 @@ const MKT_NAT_OEP   = {"total":23130860,"new":3603771,"reenroll":19527089,"activ
 const POST_LABELS   = ["OEP","Jan","Feb","Mar","Apr","May"];
 const POST_OEP      = {"Alaska":[26079,23000,23546,null,null,null],"Alabama":[455776,392275,324504,null,null,null],"Arkansas":[160307,133280,129699,136415,137309,138440],"Arizona":[357144,293314,255927,null,null,null],"California":[1927371,1861308,1847315,null,null,null],"Colorado":[277238,231903,242970,243446,null,null],"Connecticut":[156745,138457,148596,null,null,null],"District of Columbia":[16053,12784,12973,null,null,null],"Delaware":[44663,38391,36282,null,null,null],"Florida":[4538772,4011394,3849587,null,null,null],"Georgia":[1324295,1112774,1188140,942864,950000,null],"Hawaii":[23380,20328,20974,null,null,null],"Iowa":[123304,111634,103253,null,null,null],"Idaho":[120426,114819,113957,null,null,null],"Illinois":[448568,404942,421852,372104,373327,373065],"Indiana":[300049,256548,203119,null,null,null],"Kansas":[192811,165435,143880,null,null,null],"Kentucky":[89028,73940,77526,null,null,null],"Louisiana":[296648,259591,195759,null,null,null],"Massachusetts":[403624,325683,338197,351595,347353,null],"Maryland":[255612,230300,223483,239707,221488,null],"Maine":[58523,53606,54800,null,null,null],"Michigan":[497064,366880,357350,null,null,null],"Minnesota":[139251,98472,104788,null,null,null],"Missouri":[365734,314024,260999,null,null,null],"Mississippi":[313392,255342,191631,null,null,null],"Montana":[73255,65993,63975,null,null,null],"North Carolina":[761457,651513,609544,null,null,null],"North Dakota":[41014,37690,37472,null,null,null],"Nebraska":[128492,98922,100622,null,null,null],"New Hampshire":[66024,58541,57716,null,null,null],"New Jersey":[509192,447676,471801,438380,440362,null],"New Mexico":[83103,76511,80047,79116,76279,76433],"Nevada":[104286,95841,99663,94652,93487,92271],"New York":[210704,179443,186497,206957,202548,202757],"Ohio":[469616,405517,336058,null,null,null],"Oklahoma":[261887,227215,179600,null,null,null],"Oregon":[118372,106427,105911,null,null,null],"Pennsylvania":[501459,462778,472627,471289,462751,452525],"Rhode Island":[43446,34973,39991,null,null,null],"South Carolina":[587567,490321,387145,null,null,null],"South Dakota":[50951,46329,45888,null,null,null],"Tennessee":[569310,496456,441515,null,null,null],"Texas":[4172233,3607239,3277198,null,null,null],"Utah":[387336,330357,337266,null,null,null],"Virginia":[370086,342094,338768,null,null,null],"Vermont":[30344,29120,28968,28472,28535,null],"Washington":[290109,258137,269993,null,null,null],"Wisconsin":[291336,257619,245753,null,null,null],"West Virginia":[55879,48312,49508,null,null,null],"Wyoming":[41545,36011,34514,null,null,null],"United States":[23130860,20191459,19169147,null,null,null]};
 const YOY           = {"Alabama":{"jan25":433089,"feb25":418815,"jan26":392275,"feb26":324504},"Alaska":{"jan25":26264,"feb25":27052,"jan26":23000,"feb26":23546},"Arizona":{"jan25":382577,"feb25":363110,"jan26":293314,"feb26":255927},"Arkansas":{"jan25":145558,"feb25":144140,"jan26":133280,"feb26":129699},"California":{"jan25":1896608,"feb25":1971965,"jan26":1861308,"feb26":1847315},"Colorado":{"jan25":242689,"feb25":260973,"jan26":231903,"feb26":242970},"Connecticut":{"jan25":140769,"feb25":150483,"jan26":138457,"feb26":148596},"Delaware":{"jan25":47443,"feb25":44290,"jan26":38391,"feb26":36282},"District of Columbia":{"jan25":13020,"feb25":13432,"jan26":12784,"feb26":12973},"Florida":{"jan25":4347532,"feb25":4292372,"jan26":4011394,"feb26":3849587},"Georgia":{"jan25":1357793,"feb25":1298071,"jan26":1112774,"feb26":1188140},"Hawaii":{"jan25":22375,"feb25":23025,"jan26":20328,"feb26":20974},"Idaho":{"jan25":116563,"feb25":116478,"jan26":114819,"feb26":113957},"Illinois":{"jan25":409939,"feb25":423727,"jan26":404942,"feb26":421852},"Indiana":{"jan25":302169,"feb25":281215,"jan26":256548,"feb26":203119},"Iowa":{"jan25":126209,"feb25":124311,"jan26":111634,"feb26":103253},"Kansas":{"jan25":182475,"feb25":179920,"jan26":165435,"feb26":143880},"Kentucky":{"jan25":82826,"feb25":90443,"jan26":73940,"feb26":77526},"Louisiana":{"jan25":265714,"feb25":264790,"jan26":259591,"feb26":195759},"Maine":{"jan25":60197,"feb25":62381,"jan26":53606,"feb26":54800},"Maryland":{"jan25":227414,"feb25":235924,"jan26":230300,"feb26":223483},"Massachusetts":{"jan25":337177,"feb25":351117,"jan26":325683,"feb26":338197},"Michigan":{"jan25":485176,"feb25":488139,"jan26":366880,"feb26":357350},"Minnesota":{"jan25":135859,"feb25":145967,"jan26":98472,"feb26":104788},"Mississippi":{"jan25":307387,"feb25":260289,"jan26":255342,"feb26":191631},"Missouri":{"jan25":383570,"feb25":347424,"jan26":314024,"feb26":260999},"Montana":{"jan25":71417,"feb25":72195,"jan26":65993,"feb26":63975},"Nebraska":{"jan25":126839,"feb25":130407,"jan26":98922,"feb26":100622},"Nevada":{"jan25":102013,"feb25":107749,"jan26":95841,"feb26":99663},"New Hampshire":{"jan25":64602,"feb25":62584,"jan26":58541,"feb26":57716},"New Jersey":{"jan25":468081,"feb25":499872,"jan26":447676,"feb26":471801},"New Mexico":{"jan25":66599,"feb25":69915,"jan26":76511,"feb26":80047},"New York":{"jan25":193668,"feb25":201997,"jan26":179443,"feb26":186497},"North Carolina":{"jan25":890940,"feb25":774226,"jan26":651513,"feb26":609544},"North Dakota":{"jan25":39988,"feb25":40650,"jan26":37690,"feb26":37472},"Ohio":{"jan25":529391,"feb25":497443,"jan26":405517,"feb26":336058},"Oklahoma":{"jan25":284909,"feb25":265157,"jan26":227215,"feb26":179600},"Oregon":{"jan25":128075,"feb25":129546,"jan26":106427,"feb26":105911},"Pennsylvania":{"jan25":454721,"feb25":478353,"jan26":462778,"feb26":472627},"Rhode Island":{"jan25":39961,"feb25":41994,"jan26":34973,"feb26":39991},"South Carolina":{"jan25":572600,"feb25":546335,"jan26":490321,"feb26":387145},"South Dakota":{"jan25":51358,"feb25":51268,"jan26":46329,"feb26":45888},"Tennessee":{"jan25":583708,"feb25":513772,"jan26":496456,"feb26":441515},"Texas":{"jan25":3597445,"feb25":3423543,"jan26":3607239,"feb26":3277198},"United States":{"jan25":22216133,"feb25":21776626,"jan26":20191459,"feb26":19169147},"Utah":{"jan25":394099,"feb25":400330,"jan26":330357,"feb26":337266},"Vermont":{"jan25":31124,"feb25":32287,"jan26":29120,"feb26":28968},"Virginia":{"jan25":365194,"feb25":368519,"jan26":342094,"feb26":338768},"Washington":{"jan25":287985,"feb25":296073,"jan26":258137,"feb26":269993},"West Virginia":{"jan25":60024,"feb25":56962,"jan26":48312,"feb26":49508},"Wisconsin":{"jan25":290117,"feb25":291329,"jan26":257619,"feb26":245753},"Wyoming":{"jan25":42883,"feb25":44267,"jan26":36011,"feb26":34514}};
+const COST_SHARING  = {"United States":{"Bronze":{"ded":6725,"oop":9926,"copay":44},"Silver":{"ded":4993,"oop":9129,"copay":31},"Gold":{"ded":1705,"oop":8106,"copay":22},"Platinum":{"ded":185,"oop":4370,"copay":10},"Catastrophic":{"ded":10600,"oop":10600,"copay":26}},"Alaska":{"Bronze":{"ded":6525,"oop":8958,"copay":49},"Silver":{"ded":5250,"oop":8412,"copay":34},"Gold":{"ded":1700,"oop":7000,"copay":29}},"Alabama":{"Bronze":{"ded":5972,"oop":9997,"copay":49},"Silver":{"ded":4704,"oop":9102,"copay":28},"Gold":{"ded":1306,"oop":7400,"copay":22},"Platinum":{"ded":100,"oop":4000,"copay":20},"Catastrophic":{"ded":10600,"oop":10600,"copay":null}},"Arkansas":{"Bronze":{"ded":6638,"oop":9866,"copay":51},"Silver":{"ded":6529,"oop":8547,"copay":44},"Gold":{"ded":1706,"oop":7383,"copay":21},"Platinum":{"ded":738,"oop":3625,"copay":15},"Catastrophic":{"ded":10600,"oop":10600,"copay":null}},"Arizona":{"Bronze":{"ded":7578,"oop":9502,"copay":43},"Silver":{"ded":6191,"oop":8946,"copay":28},"Gold":{"ded":2418,"oop":7503,"copay":19},"Catastrophic":{"ded":10600,"oop":10600,"copay":null}},"Delaware":{"Bronze":{"ded":6812,"oop":9738,"copay":47},"Silver":{"ded":3710,"oop":8910,"copay":42},"Gold":{"ded":1282,"oop":8029,"copay":22},"Platinum":{"ded":0,"oop":5150,"copay":10},"Catastrophic":{"ded":10600,"oop":10600,"copay":0}},"Florida":{"Bronze":{"ded":5481,"oop":10034,"copay":38},"Silver":{"ded":5507,"oop":8914,"copay":24},"Gold":{"ded":1580,"oop":7685,"copay":22},"Platinum":{"ded":120,"oop":4464,"copay":6},"Catastrophic":{"ded":10600,"oop":10600,"copay":38}},"Hawaii":{"Bronze":{"ded":7025,"oop":9125,"copay":55},"Silver":{"ded":4750,"oop":8900,"copay":42},"Gold":{"ded":1140,"oop":8440,"copay":32},"Platinum":{"ded":0,"oop":4800,"copay":8},"Catastrophic":{"ded":10600,"oop":10600,"copay":35}},"Iowa":{"Bronze":{"ded":6422,"oop":10138,"copay":44},"Silver":{"ded":4854,"oop":9267,"copay":29},"Gold":{"ded":1651,"oop":7794,"copay":22},"Catastrophic":{"ded":10600,"oop":10600,"copay":0}},"Indiana":{"Bronze":{"ded":6862,"oop":9977,"copay":34},"Silver":{"ded":5367,"oop":9154,"copay":31},"Gold":{"ded":1878,"oop":7761,"copay":19},"Platinum":{"ded":0,"oop":5200,"copay":10},"Catastrophic":{"ded":10600,"oop":10600,"copay":40}},"Kansas":{"Bronze":{"ded":6046,"oop":10090,"copay":42},"Silver":{"ded":4936,"oop":8932,"copay":31},"Gold":{"ded":1225,"oop":7515,"copay":21},"Catastrophic":{"ded":10600,"oop":10600,"copay":100}},"Louisiana":{"Bronze":{"ded":7341,"oop":10186,"copay":49},"Silver":{"ded":4667,"oop":8958,"copay":33},"Gold":{"ded":1578,"oop":8484,"copay":21}},"Michigan":{"Bronze":{"ded":7939,"oop":9490,"copay":30},"Silver":{"ded":4985,"oop":9070,"copay":37},"Gold":{"ded":1248,"oop":8210,"copay":25},"Catastrophic":{"ded":10600,"oop":10600,"copay":30}},"Missouri":{"Bronze":{"ded":6602,"oop":10272,"copay":38},"Silver":{"ded":4861,"oop":9182,"copay":28},"Gold":{"ded":1774,"oop":7902,"copay":22},"Catastrophic":{"ded":10600,"oop":10600,"copay":60}},"Mississippi":{"Bronze":{"ded":6278,"oop":9928,"copay":44},"Silver":{"ded":4625,"oop":9566,"copay":22},"Gold":{"ded":1464,"oop":8279,"copay":22}},"Montana":{"Bronze":{"ded":7283,"oop":9754,"copay":38},"Silver":{"ded":5593,"oop":8543,"copay":37},"Gold":{"ded":1716,"oop":8044,"copay":20},"Catastrophic":{"ded":10600,"oop":10600,"copay":20}},"North Carolina":{"Bronze":{"ded":6340,"oop":10082,"copay":58},"Silver":{"ded":4639,"oop":9595,"copay":36},"Gold":{"ded":1768,"oop":9009,"copay":23}},"North Dakota":{"Bronze":{"ded":7383,"oop":9758,"copay":40},"Silver":{"ded":4379,"oop":9315,"copay":30},"Gold":{"ded":2006,"oop":7756,"copay":16},"Catastrophic":{"ded":10600,"oop":10600,"copay":50}},"Nebraska":{"Bronze":{"ded":6048,"oop":9885,"copay":40},"Silver":{"ded":4937,"oop":8745,"copay":25},"Gold":{"ded":1503,"oop":7402,"copay":21}},"New Hampshire":{"Bronze":{"ded":6646,"oop":9043,"copay":56},"Silver":{"ded":4436,"oop":8638,"copay":35},"Gold":{"ded":1626,"oop":7200,"copay":23},"Platinum":{"ded":250,"oop":3500,"copay":10},"Catastrophic":{"ded":10600,"oop":10600,"copay":40}},"Ohio":{"Bronze":{"ded":7196,"oop":10037,"copay":40},"Silver":{"ded":5533,"oop":9165,"copay":26},"Gold":{"ded":1699,"oop":8222,"copay":20}},"Oklahoma":{"Bronze":{"ded":6340,"oop":9981,"copay":43},"Silver":{"ded":4610,"oop":9364,"copay":28},"Gold":{"ded":1542,"oop":8270,"copay":20},"Catastrophic":{"ded":10600,"oop":10600,"copay":22}},"Oregon":{"Bronze":{"ded":8400,"oop":9075,"copay":56},"Silver":{"ded":5458,"oop":9039,"copay":34},"Gold":{"ded":1639,"oop":8542,"copay":20}},"South Carolina":{"Bronze":{"ded":7175,"oop":10058,"copay":48},"Silver":{"ded":6188,"oop":9265,"copay":31},"Gold":{"ded":1667,"oop":8091,"copay":25}},"South Dakota":{"Bronze":{"ded":7281,"oop":9267,"copay":56},"Silver":{"ded":4545,"oop":9330,"copay":44},"Gold":{"ded":1620,"oop":8375,"copay":24},"Catastrophic":{"ded":10600,"oop":10600,"copay":null}},"Tennessee":{"Bronze":{"ded":6748,"oop":10279,"copay":49},"Silver":{"ded":5911,"oop":8504,"copay":40},"Gold":{"ded":1659,"oop":8009,"copay":25},"Platinum":{"ded":0,"oop":5200,"copay":10}},"Texas":{"Bronze":{"ded":7080,"oop":10111,"copay":48},"Silver":{"ded":4103,"oop":9567,"copay":32},"Gold":{"ded":1661,"oop":8903,"copay":20},"Catastrophic":{"ded":10600,"oop":10600,"copay":21}},"Utah":{"Bronze":{"ded":6671,"oop":9871,"copay":46},"Silver":{"ded":5824,"oop":8890,"copay":32},"Gold":{"ded":1699,"oop":8256,"copay":21},"Platinum":{"ded":0,"oop":7075,"copay":5}},"Wisconsin":{"Bronze":{"ded":6466,"oop":9780,"copay":35},"Silver":{"ded":5182,"oop":8879,"copay":30},"Gold":{"ded":2099,"oop":7275,"copay":25},"Platinum":{"ded":562,"oop":2406,"copay":24},"Catastrophic":{"ded":10600,"oop":10600,"copay":null}},"West Virginia":{"Bronze":{"ded":7562,"oop":10025,"copay":35},"Silver":{"ded":4646,"oop":9400,"copay":36},"Gold":{"ded":1669,"oop":7915,"copay":19},"Platinum":{"ded":0,"oop":5200,"copay":10},"Catastrophic":{"ded":10600,"oop":10600,"copay":0}},"Wyoming":{"Bronze":{"ded":5629,"oop":9800,"copay":46},"Silver":{"ded":4844,"oop":9728,"copay":36},"Gold":{"ded":1786,"oop":8086,"copay":21}}};
+const CS_YEAR       = "2026";
 const BHP_LABELS    = ["Jan 2026","Feb 2026","Mar 2026","Apr 2026","May 2026","Jun 2026","Jul 2026"];
 const BHP_SERIES    = {"District of Columbia":[15722,null,null,null,null,null,null],"Minnesota":[78540,73536,79760,84636,87391,87752,85225],"New York":[1720756,1714745,1691590,1679154,null,null,null],"Oregon":[37740,39281,41845,44743,46104,47003,null]};
 
@@ -855,6 +876,36 @@ function updatePrem(d){
   document.getElementById('mp-net-val').innerHTML='$'+np+'<span style="font-size:12px;color:var(--muted)">/mo</span>';
 }
 
+// Metal-tier colors, matching the Plan Composition donut.
+const CS_TIER_COLORS={Bronze:'#A9662F',Silver:'#A8ADB4',Gold:'#C9A227',Platinum:'#C3D2E0',Catastrophic:'#4A5568'};
+const CS_TIERS=['Bronze','Silver','Gold','Platinum','Catastrophic'];
+
+function renderCostSharing(state){
+  const key=state||'United States';
+  const loc=state||'National';
+  const data=COST_SHARING[key];
+  const rows=document.getElementById('mp-cs-rows');
+  const sub=document.getElementById('mp-cs-sub');
+  const note=document.getElementById('mp-cs-note');
+  if(!data){
+    rows.innerHTML='<tr><td colspan="4"><div class="cs-empty">No plan-level cost-sharing data for <b>'+loc+'</b>'
+      +'<br><span style="font-size:9px">state-based exchange — not in the CMS Exchange PUF</span></div></td></tr>';
+    sub.textContent='Plan-level simple average · standard on-exchange plans';
+    note.innerHTML='';
+    return;
+  }
+  const money=v=>(v==null)?'<span class="cs-na">n/a</span>':'$'+Number(v).toLocaleString();
+  rows.innerHTML=CS_TIERS.filter(t=>data[t]).map(t=>{
+    const r=data[t];
+    return '<tr>'
+      +'<td class="cs-tier" style="border-left-color:'+CS_TIER_COLORS[t]+'">'+t+'</td>'
+      +'<td>'+money(r.ded)+'</td><td>'+money(r.oop)+'</td><td>'+money(r.copay)+'</td></tr>';
+  }).join('');
+  sub.textContent=loc+' · plan-level simple average (not enrollment-weighted)';
+  note.innerHTML='Individual medical deductible, individual OOP max, and primary-care-visit copay for standard '
+    +'on-exchange plans; CSR variants excluded. Source: CMS '+CS_YEAR+' Plan Attributes &amp; Benefits PUFs.';
+}
+
 function selectMktState(state){
   document.querySelectorAll('#panel-mkt .state-pill').forEach(b=>b.classList.remove('active'));
   const id = state ? 'mkt-btn-'+state.replace(/ /g,'-').replace(/\./g,'') : 'mkt-btn-national';
@@ -862,6 +913,7 @@ function selectMktState(state){
 
   const d = state ? MKT_OEP[state] : MKT_NAT_OEP;
   const loc = state || 'National';
+  renderCostSharing(state);   // cost-sharing card is independent of OEP data
   if(!d) return;
 
   const lp = latestPost(POST_OEP[state||'United States']||[]);
