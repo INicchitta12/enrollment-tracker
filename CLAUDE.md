@@ -38,6 +38,7 @@ ACA cost-sharing section below). The monthly rebuild leaves it untouched.
 | Sheet | Notes |
 |---|---|
 | `Mcaid` | One row per state per month, plus a `United States` row |
+| `Mcaid Peak Baseline` | **Different layout** — 3 columns (`State`, `Reporting Period`, `Total Medicaid Enrollment`), one row per state + `United States`, all dated Mar 2023. Total enrollment only: no adult, no renewal fields. Reference point for the peak strip; never a series. |
 | `BHP` | Only DC, MN, NY, OR participate |
 | `Marketplace` | **Superseded — do not read.** Kept for reference only |
 | `Marketplace (2)` | The live Marketplace sheet. `Reporting Period` is the string `OEP` or a date |
@@ -84,7 +85,32 @@ California enrollment was 10,715,787. The adjustment touches enrollment counts o
 field is altered. The national row is the exact sum of states, so national enrollment is
 re-derived from state totals after the adjustment rather than adjusted separately, and the
 sum-of-states identity is checked before the adjustment is applied. A visible note on the
-Medicaid tab discloses the adjustment to viewers.
+Medicaid tab discloses the adjustment to viewers. The April 2026 CMS snapshot reconfirms
+California's data is non-comparable from March forward; the raw March→April change is −138,192
+(steeper than the ~−107,000 pre-revision trend but far from the −491,182 one-time March
+reclassification drop), so the level-shift interpretation holds and the constants are
+unchanged. Because the same constant is added to both March and April, the March→April delta
+is unaffected by the adjustment.
+
+**The April 2026 Medicaid rows arrived mislabeled `2025-04` in the workbook** — a year
+typo (confirmed against all three CMS control totals: 66,725,217 total, 38,489,574 adult,
+5,828,803 renewals due). Corrected in place to `2026-04-01` via a scoped XML edit of the 52
+`Reporting Period` cells (Mcaid sheet column B) so the `=SUM()` formula caches on the
+`United States` rows were preserved — a full openpyxl round-trip drops those caches and
+breaks the national rows. If a future drop repeats the typo, re-check the year before building.
+
+**Nevada's March 2026 total is overstated by ~12,000.** CMS acknowledges a reporting error
+that inflated Nevada's March *child* enrollment (adult enrollment is unaffected), to be
+corrected in a future CMS release. Do **not** adjust the figure — CMS corrects it upstream.
+The Medicaid tab surfaces a caveat when Nevada is selected, noting the March total is
+overstated and its March→April change is therefore understated.
+
+**April 2026 watch items (not CMS-flagged, left as reported).** Two states show implausible
+month-over-month movement that may be genuine or a reporting artifact; documented here rather
+than silently presented. *Idaho:* renewal rate jumps 73.5%→97.5% while procedural
+disenrollments collapse from 4,348 (19.6%) to 13 (0.1%) of 24,149 due. *Alabama:* renewals
+due more than double (94,392→201,219) while ex parte falls 41.7%→20.6%. Re-check both against
+the next CMS release.
 
 **BHP reporting coverage is uneven** — states report through different months. Charts plot
 only each state's reported range. NY's figure is Essential Plan Expansion under a 1332
@@ -95,6 +121,31 @@ states report.
 It is the key operational metric: nationally it fell from 56% to 48% over 13 months while
 procedural disenrollments rose from 10% to 15%. Across states the two correlate at r = -0.50
 (n = 51) — a moderate association, so describe it as such rather than as causation.
+
+## Peak baseline comparison (Medicaid tab)
+
+A compact strip between the Medicaid state selector and the lower chart grid compares the
+**most recent reported month** to the **March 2023 pre-unwinding peak** (peak value, current
+value, absolute change, percent change, and a proportional bar of current as a share of peak).
+It updates with the state selector. Data comes from `load_peak_baseline()` reading the
+`Mcaid Peak Baseline` sheet into `MCAID_PEAK` ({state|`United States`: peak total}).
+
+Rules that keep it honest:
+
+- **The baseline is a reference point, not a series point.** March 2023 is never added to
+  `MCAID_PERIODS` or any trend/series — a 34-month gap would render as a straight line and
+  misrepresent the decline. It is also **not** a reference line on the enrollment trend chart
+  (that axis spans ~66–68.5M; a line at ~87M would flatten the actual trend).
+- **Total enrollment only.** The sheet has no adult or renewal fields; no adult/renewal code
+  path reads from it, and the strip is labelled total enrollment. `load_peak_baseline()`
+  checks the sheet's `United States` row equals the sum of its states.
+- **Current value = the latest month's *adjusted* enrollment** (same figure as the KPI), so
+  the California continuity add-back is included on the current side.
+- **California peak non-comparability.** The Mar 2023 peak predates California's reporting
+  revision, so California's peak still includes limited-benefit enrollees its current figure
+  excludes; the +384,186 current-side adjustment only partly offsets this, so California's
+  decline-from-peak is somewhat overstated. The strip discloses this in a per-state note when
+  California is selected rather than restating the peak (a small effect on the national total).
 
 ## ACA cost sharing by metal tier
 
