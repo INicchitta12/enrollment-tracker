@@ -124,6 +124,15 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .prem-count{font-family:var(--mono);font-size:11px;font-weight:700;white-space:nowrap;}
 .prem-divider{border:none;border-top:1px dashed var(--border);margin:5px 0;}
 .prem-sec-hd{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px;}
+.cs-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.cs-table th{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:right;padding:4px 7px 5px;border-bottom:1px solid var(--border);}
+.cs-table th:first-child{text-align:left;}
+.cs-table td{padding:6px 7px;text-align:right;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--surface-2);}
+.cs-table tr:last-child td{border-bottom:none;}
+.cs-table td.cs-tier{text-align:left;font-family:var(--font);font-size:11px;font-weight:600;padding-left:9px;border-left:3px solid transparent;}
+.cs-na{color:var(--muted);font-weight:400;}
+.cs-note{font-size:9px;line-height:1.35;color:var(--muted);margin-top:auto;padding-top:8px;}
+.cs-empty{text-align:center;color:var(--muted);padding:22px 8px;font-size:11px;line-height:1.5;}
 .aptc-box{display:flex;align-items:center;justify-content:space-between;background:var(--ok-light);border:1px solid #A8D9BC;border-radius:5px;padding:8px 12px;margin-top:auto;}
 .aptc-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#2A7A4A;}
 .aptc-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ok);}
@@ -311,8 +320,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div class="chart-sub" id="mp-states-sub"></div>
         <div class="chart-wrap"><canvas id="mktStates"></canvas></div>
       </div>
-      <!-- col 3 spans both rows -->
-      <div class="chart-card span-rows">
+      <!-- col 3 row 1 -->
+      <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">Avg Monthly Premium <span>Before &amp; After APTC</span></div></div>
         <div style="flex:1;display:flex;flex-direction:column;padding-top:4px;">
           <div class="prem-sec-hd">All Enrollees</div>
@@ -354,6 +363,16 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
           <div class="duo-half"><div class="duo-lbl">Enrollment Type</div><div class="chart-wrap"><canvas id="enrollDonut"></canvas></div></div>
         </div>
       </div>
+      <!-- col 3 row 2 -->
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">Avg Cost Sharing <span>by Metal Tier</span></div></div>
+        <div class="chart-sub" id="mp-cs-sub">Plan-level simple average &middot; standard on-exchange plans</div>
+        <table class="cs-table">
+          <thead><tr><th>Tier</th><th>Deductible</th><th>OOP Max</th><th>PC Copay</th></tr></thead>
+          <tbody id="mp-cs-rows"></tbody>
+        </table>
+        <div class="cs-note" id="mp-cs-note"></div>
+      </div>
     </div>
   </div>
 
@@ -379,6 +398,8 @@ const MKT_NAT_OEP   = __MKT_NAT_OEP__;
 const POST_LABELS   = __POST_LABELS__;
 const POST_OEP      = __POST_OEP__;
 const YOY           = __YOY__;
+const COST_SHARING  = __COST_SHARING__;
+const CS_YEAR       = __CS_YEAR__;
 const BHP_LABELS    = __BHP_LABELS__;
 const BHP_SERIES    = __BHP_SERIES__;
 
@@ -753,6 +774,36 @@ function updatePrem(d){
   document.getElementById('mp-net-val').innerHTML='$'+np+'<span style="font-size:12px;color:var(--muted)">/mo</span>';
 }
 
+// Metal-tier colors, matching the Plan Composition donut.
+const CS_TIER_COLORS={Bronze:'#A9662F',Silver:'#A8ADB4',Gold:'#C9A227',Platinum:'#C3D2E0',Catastrophic:'#4A5568'};
+const CS_TIERS=['Bronze','Silver','Gold','Platinum','Catastrophic'];
+
+function renderCostSharing(state){
+  const key=state||'United States';
+  const loc=state||'National';
+  const data=COST_SHARING[key];
+  const rows=document.getElementById('mp-cs-rows');
+  const sub=document.getElementById('mp-cs-sub');
+  const note=document.getElementById('mp-cs-note');
+  if(!data){
+    rows.innerHTML='<tr><td colspan="4"><div class="cs-empty">No plan-level cost-sharing data for <b>'+loc+'</b>'
+      +'<br><span style="font-size:9px">state-based exchange — not in the CMS Exchange PUF</span></div></td></tr>';
+    sub.textContent='Plan-level simple average · standard on-exchange plans';
+    note.innerHTML='';
+    return;
+  }
+  const money=v=>(v==null)?'<span class="cs-na">n/a</span>':'$'+Number(v).toLocaleString();
+  rows.innerHTML=CS_TIERS.filter(t=>data[t]).map(t=>{
+    const r=data[t];
+    return '<tr>'
+      +'<td class="cs-tier" style="border-left-color:'+CS_TIER_COLORS[t]+'">'+t+'</td>'
+      +'<td>'+money(r.ded)+'</td><td>'+money(r.oop)+'</td><td>'+money(r.copay)+'</td></tr>';
+  }).join('');
+  sub.textContent=loc+' · plan-level simple average (not enrollment-weighted)';
+  note.innerHTML='Individual medical deductible, individual OOP max, and primary-care-visit copay for standard '
+    +'on-exchange plans; CSR variants excluded. Source: CMS '+CS_YEAR+' Plan Attributes &amp; Benefits PUFs.';
+}
+
 function selectMktState(state){
   document.querySelectorAll('#panel-mkt .state-pill').forEach(b=>b.classList.remove('active'));
   const id = state ? 'mkt-btn-'+state.replace(/ /g,'-').replace(/\./g,'') : 'mkt-btn-national';
@@ -760,6 +811,7 @@ function selectMktState(state){
 
   const d = state ? MKT_OEP[state] : MKT_NAT_OEP;
   const loc = state || 'National';
+  renderCostSharing(state);   // cost-sharing card is independent of OEP data
   if(!d) return;
 
   const lp = latestPost(POST_OEP[state||'United States']||[]);

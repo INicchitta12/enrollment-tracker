@@ -1,0 +1,6 @@
+# Extracted CMS PUF data files — far too large for the repo and GitHub Pages.
+# The compressed source zips live in source-data/ (tracked); the large CSVs are
+# unzipped to a temp dir and read from there, never committed.
+Plan_Attributes_PUF.csv
+Benefits_Cost_Sharing_PUF.csv
+/source-data/*.csv

@@ -9,8 +9,11 @@ supports advocacy materials, so **figures must be defensible and conservatively 
 ```
 data/Enrollment_Tracker.xlsx   source workbook — the only file that changes monthly
 data/pdf_history.json          national outcome mix Mar–Nov 2025 (from CMS PDF; static)
+data/cost_sharing.csv          ACA plan-level cost sharing by state × metal tier (annual; from PUFs)
+source-data/                   large CMS PUF zips + data dictionaries (extracted CSVs gitignored)
 template.html                  page markup, CSS, and chart JS with __PLACEHOLDER__ tokens
-build_dashboard.py             reads workbook + template -> writes index.html
+build_dashboard.py             reads workbook + cost_sharing.csv + template -> writes index.html
+build_cost_sharing.py          reads the PUF zips -> writes data/cost_sharing.csv (run yearly)
 index.html                     generated output; GitHub Pages serves this. Do not hand-edit.
 ```
 
@@ -25,6 +28,10 @@ Dependencies are pinned in `requirements.txt` (pandas, openpyxl). In a cloud ses
 install them before building. The script fails loudly if the workbook is missing or a
 placeholder goes unsubstituted. **Never edit `index.html` directly** — edit `template.html`
 or `build_dashboard.py` and rebuild, or the change is lost on the next run.
+
+`build_dashboard.py` reads `data/cost_sharing.csv` but does **not** regenerate it —
+that file is refreshed once a year by `build_cost_sharing.py` from the CMS PUFs (see the
+ACA cost-sharing section below). The monthly rebuild leaves it untouched.
 
 ## Workbook sheets
 
@@ -88,6 +95,62 @@ states report.
 It is the key operational metric: nationally it fell from 56% to 48% over 13 months while
 procedural disenrollments rose from 10% to 15%. Across states the two correlate at r = -0.50
 (n = 51) — a moderate association, so describe it as such rather than as causation.
+
+## ACA cost sharing by metal tier
+
+The Marketplace tab's bottom-right card shows average **individual medical deductible,
+individual out-of-pocket maximum, and primary-care-visit copay** for each state × metal tier,
+updating with the state selector. Figures are a **plan-level simple average (not
+enrollment-weighted)** — every qualifying plan counts once regardless of how many people
+enrolled in it. The card labels this explicitly; keep that label.
+
+**Source: two CMS Exchange PUFs**, not the workbook. The zips + data dictionaries live in
+`source-data/` (kept small, tracked); the extracted CSVs are far too large for the repo /
+GitHub Pages and are gitignored. `build_cost_sharing.py` reads them and writes
+`data/cost_sharing.csv`; `build_dashboard.py` then injects that CSV. Rerun
+`build_cost_sharing.py` only when CMS publishes a new benefit year (`CS_BENEFIT_YEAR`).
+
+- **Plan Attributes PUF** (`Plan_Attributes_PUF.csv`) → deductible + OOP max.
+  - Individual deductible = `TEHBDedInnTier1Individual` (combined medical+drug, integrated
+    plans) coalesced with `MEHBDedInnTier1Individual` (medical-only, separate-limit plans).
+    Each plan populates exactly one side; coalescing covers all plans. OOP max uses the
+    matching `…IndividualMOOP` pair. Values are `$X` / `Not Applicable` / blank — parse `$`
+    and commas.
+- **Benefits & Cost-Sharing PUF** (`Benefits_Cost_Sharing_PUF.csv`) → primary care copay.
+  - Benefit row `BenefitName == "Primary Care Visit to Treat an Injury or Illness"`, field
+    `CopayInnTier1`, joined to the base plans by 17-char `PlanId` (100% match). Copay parsing:
+    `No Charge*` → 0; `$X Copay*` (any "after/with deductible", "per Day/Stay" suffix) → X;
+    `Not Applicable` / blank → **excluded** (these plans express primary care as coinsurance
+    in `CoinsInnTier1`; excluded from the copay mean rather than coerced to 0, ~9% of plans).
+
+**Filters** (applied to Plan Attributes, in order), keeping one standard on-exchange row per
+plan:
+1. `DentalOnlyPlan == "No"` — exclude dental-only plans.
+2. `QHPNonQHPTypeId in {"Both", "On the Exchange"}` — on-exchange only. (Dictionary lists the
+   allowable values as "On/Off Exchange"; the data actually uses "Both"/"On the Exchange"/
+   "Off the Exchange" — trust the data.)
+3. `BusinessYear == CS_BENEFIT_YEAR` — current benefit year.
+4. `CSRVariationType` matches `^Standard .* On Exchange Plan$` — **base variant only**. This is
+   the critical filter: it drops every CSR variant (Zero/Limited Cost Sharing, 73/87/94% AV
+   Silver) *and* the off-exchange duplicate rows, leaving exactly one row per plan. CSR
+   variants have far lower deductibles and would badly distort Silver if included — the Silver
+   ≫ Gold deductible sanity check exists to catch that leak.
+5. `MetalLevel in {Bronze, Expanded Bronze, Silver, Gold, Platinum, Catastrophic}`; **Expanded
+   Bronze is folded into Bronze**.
+
+**United States row = mean across all plans nationally** (pooled), not the mean of state means.
+
+**Coverage: the PUF only includes FFE / SBE-FP states (~30).** Full state-based-exchange
+states (California, New York, etc.) are absent, so their selector shows a "no data" card. This
+is a source limitation, not a bug — do not fabricate values for them.
+
+**Known-legitimate zeros/blanks** (verified real, not parse errors): Platinum mean deductibles
+are ~$0 in several states (Platinum plans genuinely carry ~$0 deductibles); Catastrophic
+plans have deductible = OOP max = the federal limit ($10,600 in 2026) and often list primary
+care as `No Charge after deductible` (→ $0) or coinsurance (→ blank). The four sanity checks in
+`build_cost_sharing.py`'s validation are: deductibles decrease Bronze→Platinum; Catastrophic
+deductible ≈ OOP max; Silver deductible ≫ Gold (no CSR leak); no missing/zero cell outside the
+documented Platinum/Catastrophic cases.
 
 ## Conventions
 
