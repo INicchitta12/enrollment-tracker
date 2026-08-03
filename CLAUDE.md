@@ -39,6 +39,8 @@ ACA cost-sharing section below). The monthly rebuild leaves it untouched.
 |---|---|
 | `Mcaid` | One row per state per month, plus a `United States` row |
 | `Mcaid Peak Baseline` | **Different layout** — 3 columns (`State`, `Reporting Period`, `Total Medicaid Enrollment`), one row per state + `United States`, all dated Mar 2023. Total enrollment only: no adult, no renewal fields. Reference point for the peak strip; never a series. |
+| `CHIP` | 3 columns (`State`, `Reporting Period`, `Total CHIP Enrollment`), one row per state per month + a `United States` row. Total enrollment only — no adult, no renewal fields. Currently Dec 2025–Apr 2026, 51 states + US. **CHIP is a separate population, not a Medicaid subset** (see below). |
+| `CHIP Peak Baseline` | Same 3-column layout as `CHIP`, one row per state + `United States`, all dated Mar 2023. Total CHIP enrollment only. Reference point for the CHIP peak strip; never a series. |
 | `BHP` | Only DC, MN, NY, OR participate |
 | `Marketplace` | **Superseded — do not read.** Kept for reference only |
 | `Marketplace (2)` | The live Marketplace sheet. `Reporting Period` is the string `OEP` or a date |
@@ -146,6 +148,61 @@ Rules that keep it honest:
   excludes; the +384,186 current-side adjustment only partly offsets this, so California's
   decline-from-peak is somewhat overstated. The strip discloses this in a per-state note when
   California is selected rather than restating the peak (a small effect on the national total).
+
+## CHIP (its own tab)
+
+The CHIP tab sits between Medicaid and Basic Health Program in the tab bar, with a distinct
+violet accent (`--chip:#5B4B9E`, light panel tint `--chip-light:#EDEBF6`) — separate from
+Medicaid navy, BHP teal, and Marketplace crimson. Fed by `load_chip()` and
+`load_chip_peak_baseline()` in `build_dashboard.py`, reading the `CHIP` and `CHIP Peak
+Baseline` sheets. Total CHIP enrollment only — there is no renewal data — so it is a simpler
+tab than Medicaid: a KPI row (current enrollment with month-over-month delta, the Mar 2023
+peak reference, change since peak in absolute and percent, and current as a share of peak), a
+state selector defaulting to National, an enrollment trend chart, a peak baseline strip with a
+proportional bar, and a state-ranking chart (top states nationally; state-vs-largest-states
+when a state is selected). Every chart routes through `makeChart`; value axes use `axisFmt`.
+
+**CHIP is a separate population, not a Medicaid subset.** It covers Medicaid-expansion CHIP,
+separate CHIP, and pregnant adults in separate CHIP. Medicaid and CHIP enrollment therefore
+add together rather than overlap: for April 2026, Medicaid (66,725,217, the raw workbook US
+total) + CHIP (7,145,807) = 73,871,024. `load_chip()` verifies the `United States` row equals
+the exact sum of states in every period; if that identity fails, a state is missing or
+something is double-counted — stop and investigate rather than building. National CHIP control
+totals (summed across states): Dec 2025 7,243,961; Jan 2026 7,241,058; Feb 2026 7,227,658;
+Mar 2026 7,213,381; Apr 2026 7,145,807.
+
+**The March total has two acceptable vintages.** The CMS PDF published 7,213,496, but New
+Hampshire was subsequently revised from 19,058 to 18,943, giving 7,213,381. The current
+workbook carries the revised NH value (18,943 → national 7,213,381). Either vintage is
+acceptable depending on the data's age; any *other* March mismatch means stop and report.
+
+**The Medicaid adjustments do NOT apply to CHIP.** The California continuity add-back concerned
+Medicaid limited-benefit enrollees only, and the Nevada March 2026 caveat concerned Medicaid
+*child* enrollment — neither touches CHIP. `load_chip()` applies no adjustment, and the CHIP
+tab carries neither disclosure.
+
+**The Mar 2023 peak is a reference point, never a series point.** As on the Medicaid tab, it is
+never added to `CHIP_PERIODS` or any trend series (a 34-month gap would render as a straight
+line), and it is not a reference line on the trend chart (it would compress the visible range).
+Gaps in a state's monthly series render as gaps (`spanGaps:false`), never interpolated.
+
+**State-level data-quality caveats** (from CMS footnotes; affect cross-state comparability).
+The tab surfaces a brief per-state note when the selected state is one of these:
+
+- **Montana, Ohio, West Virginia** reported "individuals enrolled at any time in month" rather
+  than a point-in-time count for a stretch of earlier periods, so their figures run
+  structurally higher and are not directly comparable to other states.
+- **Rhode Island** has no data for Dec 2024 and Jan 2025 (system limitations) — any national
+  total spanning those months is missing a state.
+- **Colorado, Hawaii, New Hampshire** include retroactive enrollments, which makes their
+  figures subject to later revision.
+- **Alaska** did not include all CHIP enrollees for several months in late 2023 and early 2024.
+
+**CMS Performance Indicator CSV downloads are revised over time; the monthly PDF snapshots are
+point-in-time.** Where they conflict, the CSV is authoritative, and differences on older months
+reflect state resubmissions (the New Hampshire March revision above is one example). Use PDF
+totals to validate a fresh load, but expect small variances rather than treating them as
+errors. This applies to Medicaid and CHIP alike.
 
 ## ACA cost sharing by metal tier
 

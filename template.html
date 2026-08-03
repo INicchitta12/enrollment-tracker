@@ -14,6 +14,7 @@
   --bg:#F0F4F9;--surface:#FFFFFF;--surface-2:#E8EFF7;
   --text:#0D1B3E;--muted:#5A6A84;--border:#D0DBE8;
   --mcaid:#002F87;--mcaid-light:#E8EFF8;
+  --chip:#5B4B9E;--chip-light:#EDEBF6;
   --bhp:#007C8C;--bhp-light:#E5F4F6;
   --mkt:#8B1A30;--mkt-light:#F5E8EB;
   --ok:#1A7A4A;--ok-light:#E6F4EC;
@@ -32,12 +33,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .tab:hover{color:#fff;background:rgba(255,255,255,.08);}
 .tab-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .tab.active-mcaid{background:var(--mcaid-light);color:var(--mcaid);border-color:var(--border);border-bottom-color:var(--mcaid-light);font-weight:600;}
+.tab.active-chip{background:var(--chip-light);color:var(--chip);border-color:var(--border);border-bottom-color:var(--chip-light);font-weight:600;}
 .tab.active-bhp{background:var(--bhp-light);color:var(--bhp);border-color:var(--border);border-bottom-color:var(--bhp-light);font-weight:600;}
 .tab.active-mkt{background:var(--mkt-light);color:var(--mkt);border-color:var(--border);border-bottom-color:var(--mkt-light);font-weight:600;}
 .panels{flex:1;overflow:hidden;position:relative;}
 .panel{position:absolute;inset:0;padding:10px 14px;display:flex;flex-direction:column;gap:8px;opacity:0;pointer-events:none;transition:opacity .15s;}
 .panel.active{opacity:1;pointer-events:auto;}
 .panel.mcaid-panel{background:var(--mcaid-light);}
+.panel.chip-panel{background:var(--chip-light);}
 .panel.bhp-panel{background:var(--bhp-light);}
 .panel.mkt-panel{background:var(--mkt-light);}
 .state-bar{display:flex;align-items:center;gap:4px;flex-shrink:0;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;box-shadow:0 1px 3px rgba(0,0,0,.06);max-height:66px;overflow-y:auto;}
@@ -45,6 +48,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .state-pill{font-family:var(--font);font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap;}
 .state-pill:hover{background:var(--surface-2);color:var(--text);}
 .mcaid-panel .state-pill.active{background:var(--mcaid);color:#fff;border-color:var(--mcaid);font-weight:600;}
+.chip-panel .state-pill.active{background:var(--chip);color:#fff;border-color:var(--chip);font-weight:600;}
 .mkt-panel .state-pill.active{background:var(--mkt);color:#fff;border-color:var(--mkt);font-weight:600;}
 .kpi-row{display:flex;gap:8px;flex-shrink:0;}
 .kpi{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
@@ -76,6 +80,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .peak-bar-fill{height:100%;background:linear-gradient(90deg,#2E6BB0,var(--mcaid));border-radius:3px 0 0 3px;transition:width .4s ease;}
 .peak-note{flex-shrink:0;width:158px;font-size:8.5px;line-height:1.3;color:#7A5A2A;font-style:italic;}
 .peak-note:empty{display:none;}
+.chip-panel .peak-strip{border-left-color:var(--chip);}
+.chip-panel .peak-hd{color:var(--chip);}
+.chip-panel .peak-bartop b{color:var(--chip);}
+.chip-panel .peak-bar-fill{background:linear-gradient(90deg,#8A7BC6,var(--chip));}
 .cum-hd{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mcaid);margin-top:auto;flex-shrink:0;}
 .cum-hd span{color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;}
 .lower{flex:1;display:grid;gap:9px;min-height:0;}
@@ -157,13 +165,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 <div class="header">
   <div class="header-left">
     <span class="header-title">Enrollment Tracker</span>
-    <span class="header-sub">Medicaid &middot; BHP &middot; ACA Marketplace</span>
+    <span class="header-sub">Medicaid &middot; CHIP &middot; BHP &middot; ACA Marketplace</span>
   </div>
   <span class="period-badge" id="hdrPeriod">Medicaid &middot; Mar 2026</span>
 </div>
 
 <div class="tabs">
   <div class="tab active-mcaid" data-tab="mcaid" onclick="switchTab('mcaid')"><div class="tab-dot" style="background:#4A72C0"></div>Medicaid</div>
+  <div class="tab" data-tab="chip" onclick="switchTab('chip')"><div class="tab-dot" style="background:#7A68C0"></div>CHIP</div>
   <div class="tab" data-tab="bhp" onclick="switchTab('bhp')"><div class="tab-dot" style="background:#3AA8B8"></div>Basic Health Program</div>
   <div class="tab" data-tab="mkt" onclick="switchTab('mkt')"><div class="tab-dot" style="background:#C04060"></div>ACA Marketplace</div>
 </div>
@@ -244,6 +253,50 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
           <div class="chart-sub" id="mk-chart-sub"></div>
           <div class="chart-wrap"><canvas id="mcaidRateChart"></canvas></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CHIP ══ -->
+  <div class="panel chip-panel" id="panel-chip">
+    <div class="kpi-row">
+      <div class="kpi" id="cp-enroll" style="border-top:3px solid var(--chip)"><div class="kpi-label">Total CHIP Enrollment</div><div class="kpi-top"><div class="kpi-value big">&mdash;</div><span class="kpi-delta flat" id="cp-enroll-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="cp-peak-ref" style="border-top:3px solid #8A7BC6"><div class="kpi-label">Mar 2023 Peak</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">Pre-unwinding &middot; total enrollment</div></div>
+      <div class="kpi" id="cp-peakchg" style="border-top:3px solid var(--warn)"><div class="kpi-label">Change Since Peak</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="cp-share" style="border-top:3px solid var(--chip)"><div class="kpi-label">Current Share of Peak</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">of Mar 2023 peak</div></div>
+    </div>
+
+    <div class="data-note compact" id="cp-state-note" style="display:none"></div>
+
+    <div class="state-bar"><span class="state-bar-label">View:</span>
+      CHIP_PILLS
+    </div>
+
+    <div class="peak-strip" id="cp-peak">
+      <div class="peak-hd">vs. Pre-Unwinding Peak<span id="cp-peak-cap">Mar 2023 &middot; total enrollment</span></div>
+      <div class="peak-metrics">
+        <div><div class="peak-lbl">Mar 2023 Peak</div><div class="peak-val" id="cp-peak-peak">&mdash;</div></div>
+        <div><div class="peak-lbl" id="cp-peak-cur-lbl">Current</div><div class="peak-val" id="cp-peak-cur">&mdash;</div></div>
+        <div><div class="peak-lbl">Change</div><div class="peak-val" id="cp-peak-chg">&mdash;</div></div>
+        <div><div class="peak-lbl">Change %</div><div class="peak-val" id="cp-peak-pct">&mdash;</div></div>
+      </div>
+      <div class="peak-barwrap">
+        <div class="peak-bartop"><span>Current as share of peak</span><b id="cp-peak-share">&mdash;</b></div>
+        <div class="peak-bar-track"><div class="peak-bar-fill" id="cp-peak-bar" style="width:0"></div></div>
+      </div>
+      <div class="peak-note" id="cp-peak-note"></div>
+    </div>
+
+    <div class="lower l-50-50">
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--chip)"></div><div class="chart-title" id="cp-ts-title">Enrollment <span>Trend</span></div></div>
+        <div class="chart-sub" id="cp-ts-sub"></div>
+        <div class="chart-wrap"><canvas id="chipTsChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--chip)"></div><div class="chart-title" id="cp-rank-title">Top States</div></div>
+        <div class="chart-sub" id="cp-rank-sub"></div>
+        <div class="chart-wrap"><canvas id="chipRankChart"></canvas></div>
       </div>
     </div>
   </div>
@@ -403,6 +456,13 @@ const TOP12         = __TOP12__;
 const MIX           = __MIX__;
 const MCAID_PEAK    = __MCAID_PEAK__;
 const PEAK_LABEL    = __PEAK_LABEL__;
+const CHIP_PERIODS  = __CHIP_PERIODS__;
+const CHIP_LABELS   = __CHIP_LABELS__;
+const CHIP_LATEST   = __CHIP_LATEST__;
+const CHIP_NAT      = __CHIP_NAT__;
+const CHIP_STATES   = __CHIP_STATES__;
+const CHIP_PEAK     = __CHIP_PEAK__;
+const CHIP_PEAK_LABEL = __CHIP_PEAK_LABEL__;
 const MKT_OEP       = __MKT_OEP__;
 const MKT_NAT_OEP   = __MKT_NAT_OEP__;
 const POST_LABELS   = __POST_LABELS__;
@@ -679,6 +739,146 @@ function renderMix(state){
   });
 }
 
+// ══ CHIP ══
+// CHIP is a SEPARATE population from Medicaid — no renewal data, and the
+// California/Nevada Medicaid adjustments do not apply. Total enrollment only.
+// The Mar 2023 peak is a reference point, never a series point; a gap in a
+// state's series renders as a gap (spanGaps:false), never interpolated.
+const CHIP_CAVEATS={
+  'Montana':'reported “individuals enrolled at any time in month” rather than a point-in-time count for a stretch of earlier periods, so its figures run structurally higher and are not directly comparable to other states.',
+  'Ohio':'reported “individuals enrolled at any time in month” rather than a point-in-time count for a stretch of earlier periods, so its figures run structurally higher and are not directly comparable to other states.',
+  'West Virginia':'reported “individuals enrolled at any time in month” rather than a point-in-time count for a stretch of earlier periods, so its figures run structurally higher and are not directly comparable to other states.',
+  'Rhode Island':'has no data for Dec 2024 and Jan 2025 (system limitations); any national total spanning those months is missing a state.',
+  'Colorado':'includes retroactive enrollments, which makes its figures subject to later revision.',
+  'Hawaii':'includes retroactive enrollments, which makes its figures subject to later revision.',
+  'New Hampshire':'includes retroactive enrollments, which makes its figures subject to later revision.',
+  'Alaska':'did not include all CHIP enrollees for several months in late 2023 and early 2024.'
+};
+
+function chipVal(state,p){ return state ? ((CHIP_STATES[state]||{})[p] ?? null) : (CHIP_NAT[p] ?? null); }
+function chipSeries(state){ return CHIP_PERIODS.map(p=>chipVal(state,p)); }
+
+function renderChipTs(state){
+  document.getElementById('cp-ts-title').innerHTML=(state||'National')+' Enrollment <span>Trend</span>';
+  document.getElementById('cp-ts-sub').textContent='Total CHIP enrollment · '+CHIP_LABELS[0]+' – '+CHIP_LABELS[CHIP_LABELS.length-1];
+  const s=chipSeries(state);
+  makeChart('chipTsChart',{
+    type:'line',
+    data:{labels:CHIP_LABELS,datasets:[{label:'Total CHIP Enrollment',data:s,borderColor:'#5B4B9E',
+      backgroundColor:'rgba(91,75,158,.10)',borderWidth:2.5,pointRadius:s.map(v=>v==null?0:4),
+      pointBackgroundColor:'#5B4B9E',pointBorderColor:'#fff',pointBorderWidth:2,tension:.25,spanGaps:false,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},
+        tooltip:{...T,callbacks:{label:c=>c.raw==null?' not reported':' '+c.raw.toLocaleString()}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}},
+        y:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}
+  });
+}
+
+function chipLatestByState(){
+  return Object.keys(CHIP_STATES).map(s=>({s:s,v:(CHIP_STATES[s]||{})[CHIP_LATEST]})).filter(o=>o.v!=null);
+}
+
+function renderChipRank(state){
+  const title=document.getElementById('cp-rank-title'), sub=document.getElementById('cp-rank-sub');
+  const latestLbl=CHIP_LABELS[CHIP_PERIODS.indexOf(CHIP_LATEST)];
+  if(!state){
+    const top=chipLatestByState().sort((a,b)=>b.v-a.v).slice(0,12);
+    title.innerHTML='Top 12 States <span>· CHIP Enrollment</span>';
+    sub.textContent='Total CHIP enrollment · '+latestLbl;
+    makeChart('chipRankChart',{
+      type:'bar',
+      data:{labels:top.map(o=>o.s),datasets:[{data:top.map(o=>o.v),backgroundColor:'rgba(91,75,158,.72)',
+        hoverBackgroundColor:'rgba(91,75,158,.92)',borderRadius:3,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()}}},
+        scales:{x:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}},
+          y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9.5}},border:{display:false}}}}
+    });
+  } else {
+    const others=chipLatestByState().filter(o=>o.s!==state).sort((a,b)=>b.v-a.v).slice(0,5).map(o=>o.s);
+    const labels=[state,...others];
+    title.innerHTML=state+' <span>vs. Largest States</span>';
+    sub.textContent='Total CHIP enrollment · '+latestLbl;
+    makeChart('chipRankChart',{
+      type:'bar',
+      data:{labels:labels,datasets:[{data:labels.map(s=>chipVal(s,CHIP_LATEST)||0),
+        backgroundColor:labels.map(s=>s===state?'rgba(91,75,158,.9)':'rgba(91,75,158,.3)'),
+        hoverBackgroundColor:labels.map(s=>s===state?'rgba(91,75,158,1)':'rgba(91,75,158,.5)'),
+        borderRadius:3,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()}}},
+        scales:{x:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}},
+          y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}}}}
+    });
+  }
+}
+
+// Peak strip: latest reported month vs the Mar 2023 pre-unwinding peak.
+// Total enrollment only; the baseline is a reference point, never a series point.
+function renderChipPeak(state,key){
+  const g=id=>document.getElementById(id);
+  const peak=CHIP_PEAK[state||'United States'];
+  const cur=chipVal(state,key);
+  g('cp-peak-cur-lbl').textContent=CHIP_LABELS[CHIP_PERIODS.indexOf(key)];
+  if(peak==null||cur==null){
+    ['cp-peak-peak','cp-peak-cur','cp-peak-chg','cp-peak-pct'].forEach(i=>g(i).textContent='—');
+    g('cp-peak-share').textContent='—'; g('cp-peak-bar').style.width='0'; return;
+  }
+  const chg=cur-peak, pctChg=chg/peak*100, share=cur/peak*100;
+  g('cp-peak-peak').textContent=fmt(peak);
+  g('cp-peak-cur').textContent=fmt(cur);
+  g('cp-peak-chg').textContent=(chg<0?'−':'+')+fmt(Math.abs(chg));
+  g('cp-peak-chg').style.color=chg<0?'var(--warn)':'var(--ok)';
+  g('cp-peak-pct').textContent=(pctChg<0?'−':'+')+Math.abs(pctChg).toFixed(1)+'%';
+  g('cp-peak-pct').style.color=chg<0?'var(--warn)':'var(--ok)';
+  g('cp-peak-share').textContent=share.toFixed(1)+'% of peak';
+  g('cp-peak-bar').style.width=Math.max(0,Math.min(100,share))+'%';
+}
+
+function selectChipState(state){
+  document.querySelectorAll('#panel-chip .state-pill').forEach(b=>b.classList.remove('active'));
+  const id=state?'chip-btn-'+state.replace(/ /g,'-').replace(/\./g,''):'chip-btn-national';
+  const b=document.getElementById(id); if(b) b.classList.add('active');
+
+  // latest month with data for this view (states are complete here, but be safe)
+  let key=CHIP_LATEST;
+  if(chipVal(state,key)==null){ for(let i=CHIP_PERIODS.length-1;i>=0;i--){ if(chipVal(state,CHIP_PERIODS[i])!=null){key=CHIP_PERIODS[i];break;} } }
+  const cur=chipVal(state,key);
+  const lbl=CHIP_LABELS[CHIP_PERIODS.indexOf(key)];
+  const loc=state||'National';
+  const peak=CHIP_PEAK[state||'United States'];
+
+  setKpi('cp-enroll', fmt(cur), loc+' · '+lbl, 'var(--chip)');
+  const ki=CHIP_PERIODS.indexOf(key);
+  const prev=ki>0?chipVal(state,CHIP_PERIODS[ki-1]):null;
+  setDelta('cp-enroll-d', cur, prev, 'up');
+
+  setKpi('cp-peak-ref', peak!=null?fmt(peak):'—', 'Pre-unwinding · total enrollment', '#6A5AAE');
+
+  if(peak!=null && cur!=null){
+    const chg=cur-peak, pctChg=chg/peak*100;
+    setKpi('cp-peakchg', (chg<0?'−':'+')+fmt(Math.abs(chg)),
+      '<b>'+(pctChg<0?'−':'+')+Math.abs(pctChg).toFixed(1)+'%</b> vs. Mar 2023 peak',
+      chg<0?'var(--warn)':'var(--ok)');
+    setKpi('cp-share', (cur/peak*100).toFixed(1)+'%', 'of Mar 2023 peak', 'var(--chip)');
+  } else {
+    setKpi('cp-peakchg','—','no peak baseline',null);
+    setKpi('cp-share','—','of Mar 2023 peak',null);
+  }
+
+  const sn=document.getElementById('cp-state-note');
+  if(state && CHIP_CAVEATS[state]){
+    sn.style.display='flex';
+    sn.innerHTML='<span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">⚠</span>'
+      +'<span><b style="color:#5A4A1A">'+state+'</b> '+CHIP_CAVEATS[state]+'</span>';
+  } else { sn.style.display='none'; sn.innerHTML=''; }
+
+  renderChipPeak(state,key);
+  renderChipTs(state);
+  renderChipRank(state);
+}
+
 // ══ MARKETPLACE ══
 function latestPost(series){
   for(let i=series.length-1;i>=1;i--) if(series[i]!=null) return {v:series[i],lbl:POST_LABELS[i]};
@@ -900,6 +1100,7 @@ function renderBhp(){
 // ══ TABS ══
 const META={
   mcaid:{p:'Medicaid \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Renewal Tracker \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1]},
+  chip:{p:'CHIP \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Enrollment Data \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1]},
   bhp:{p:'BHP \u00b7 Jan\u2013Jul 2026',s:'CMS Basic Health Program Enrollment Data \u00b7 2026'},
   mkt:{p:'ACA Marketplace \u00b7 OEP + Effectuated 2026',s:'CMS Marketplace OEP Snapshot &amp; Effectuated Enrollment \u00b7 2026'}
 };
@@ -916,7 +1117,7 @@ document.getElementById('ftrDate').textContent='Generated '+new Date().toLocaleD
 // so the latest month shows on first load without waiting for a tab click.
 document.getElementById('hdrPeriod').textContent=META.mcaid.p;
 document.getElementById('ftrSrc').innerHTML='<span>'+META.mcaid.s+'</span>';
-requestAnimationFrame(()=>{ selectMcaidState(null); selectMktState(null); renderBhp(); });
+requestAnimationFrame(()=>{ selectMcaidState(null); selectChipState(null); selectMktState(null); renderBhp(); });
 </script>
 </body>
 </html>

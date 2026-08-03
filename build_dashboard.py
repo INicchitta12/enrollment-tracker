@@ -34,6 +34,15 @@ MKT_SHEET = "Marketplace (2)"
 PEAK_SHEET = "Mcaid Peak Baseline"
 PEAK_LABEL = "Mar 2023"
 
+# CHIP is a SEPARATE population from Medicaid (Medicaid-expansion CHIP, separate
+# CHIP, and pregnant adults in separate CHIP), not a Medicaid subset. Both CHIP
+# sheets use the compact 3-column layout (State, Reporting Period, Total CHIP
+# Enrollment) — total enrollment only, no adult or renewal breakout. The
+# California and Nevada Medicaid adjustments do NOT apply to CHIP.
+CHIP_SHEET = "CHIP"
+CHIP_PEAK_SHEET = "CHIP Peak Baseline"
+CHIP_PEAK_LABEL = "Mar 2023"
+
 STATE_ABBR = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
     'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'DC': 'District of Columbia',
@@ -196,6 +205,66 @@ def load_peak_baseline(xl):
     return peak
 
 
+def load_chip(xl):
+    """CHIP total enrollment by state + US, one value per state per month.
+
+    CHIP is a separate population from Medicaid, so no Medicaid adjustment
+    (California continuity, Nevada caveat) applies here. The sheet carries total
+    CHIP enrollment only — there is no adult or renewal breakout. Verifies the
+    national United States row equals the exact sum of states in every period;
+    gaps (a state missing a month) are preserved as None so the trend renders a
+    gap rather than interpolating.
+    """
+    if CHIP_SHEET not in xl.sheet_names:
+        sys.exit(f"ERROR: '{CHIP_SHEET}' sheet missing from workbook")
+    df = pd.read_excel(xl, sheet_name=CHIP_SHEET)
+    df['State'] = df['State'].astype(str).map(normalize_dc)
+    df['P'] = pd.to_datetime(df['Reporting Period'])
+    df['key'] = df['P'].dt.strftime('%Y-%m')
+
+    periods = sorted(df['key'].unique())
+    labels = [pd.Timestamp(p + '-01').strftime('%b %Y') for p in periods]
+
+    states, national = {}, {}
+    for _, row in df.iterrows():
+        val = to_int(row['Total CHIP Enrollment'])
+        if row['State'] == 'United States':
+            national[row['key']] = val
+        else:
+            states.setdefault(row['State'], {})[row['key']] = val
+
+    for p in periods:
+        states_sum = sum(s[p] for s in states.values()
+                         if p in s and s[p] is not None)
+        if national.get(p) != states_sum:
+            sys.exit(f"ERROR: CHIP national {national.get(p)} != sum of states "
+                     f"{states_sum} at {p}")
+
+    latest = periods[-1]
+    return periods, labels, latest, national, states
+
+
+def load_chip_peak_baseline(xl):
+    """March 2023 pre-unwinding peak TOTAL CHIP enrollment by state + US.
+
+    Returns {stateName|'United States': peak_total}. Like the Medicaid peak, this
+    is a reference point, NOT a trend series — it is never added to CHIP_PERIODS
+    or any series. Total CHIP enrollment only. Verifies the United States row
+    equals the sum of states.
+    """
+    if CHIP_PEAK_SHEET not in xl.sheet_names:
+        sys.exit(f"ERROR: '{CHIP_PEAK_SHEET}' sheet missing from workbook")
+    df = pd.read_excel(xl, sheet_name=CHIP_PEAK_SHEET)
+    df['State'] = df['State'].astype(str).map(normalize_dc)
+    peak = {row['State']: to_int(row['Total CHIP Enrollment']) for _, row in df.iterrows()}
+
+    states_sum = sum(v for k, v in peak.items() if k != 'United States' and v is not None)
+    if peak.get('United States') != states_sum:
+        sys.exit(f"ERROR: CHIP peak baseline United States {peak.get('United States')} "
+                 f"!= sum of states {states_sum}")
+    return peak
+
+
 def build_mix(periods, labels, national, states):
     """Renewal outcome mix. National blends PDF history (Mar-Nov 2025) with workbook data."""
     hist = json.loads(PDF_HISTORY.read_text())
@@ -336,6 +405,8 @@ def main():
     periods, labels, latest, mc_nat, mc_states, top12 = load_medicaid(xl)
     mix = build_mix(periods, labels, mc_nat, mc_states)
     peak = load_peak_baseline(xl)
+    chip_periods, chip_labels, chip_latest, chip_nat, chip_states = load_chip(xl)
+    chip_peak = load_chip_peak_baseline(xl)
     mkt_oep, mkt_nat, post_labels, post_series = load_marketplace(xl)
     yoy = load_effectuated(xl)
     cost_sharing = load_cost_sharing()
@@ -344,6 +415,7 @@ def main():
     compact = lambda o: json.dumps(o, separators=(',', ':'))
     replacements = {
         'MCAID_PILLS': state_pills('mcaid', 'selectMcaidState', mc_states),
+        'CHIP_PILLS': state_pills('chip', 'selectChipState', chip_states),
         'MKT_PILLS': state_pills('mkt', 'selectMktState', mkt_oep),
         '__MCAID_PERIODS__': compact(periods),
         '__MCAID_LABELS__': compact(labels),
@@ -354,6 +426,13 @@ def main():
         '__MIX__': compact(mix),
         '__MCAID_PEAK__': compact(peak),
         '__PEAK_LABEL__': compact(PEAK_LABEL),
+        '__CHIP_PERIODS__': compact(chip_periods),
+        '__CHIP_LABELS__': compact(chip_labels),
+        '__CHIP_LATEST__': compact(chip_latest),
+        '__CHIP_NAT__': compact(chip_nat),
+        '__CHIP_STATES__': compact(chip_states),
+        '__CHIP_PEAK__': compact(chip_peak),
+        '__CHIP_PEAK_LABEL__': compact(CHIP_PEAK_LABEL),
         '__MKT_OEP__': compact(mkt_oep),
         '__MKT_NAT_OEP__': compact(mkt_nat),
         '__POST_LABELS__': compact(post_labels),
@@ -378,6 +457,10 @@ def main():
     print(f"Built {OUTPUT.name}  ({len(html) // 1024} KB)")
     print(f"  Medicaid    {labels[0]} - {labels[-1]}  ({len(mc_states)} states)")
     print(f"  Peak base   {PEAK_LABEL} pre-unwinding  ({len([s for s in peak if s != 'United States'])} states + US)")
+    print(f"  CHIP        {chip_labels[0]} - {chip_labels[-1]}  ({len(chip_states)} states)  "
+          f"{chip_labels[-1]} national {chip_nat[chip_latest]:,}")
+    print(f"  CHIP peak   {CHIP_PEAK_LABEL} pre-unwinding  "
+          f"({len([s for s in chip_peak if s != 'United States'])} states + US)")
     print(f"  BHP         {bhp_labels[0]} - {bhp_labels[-1]}  ({len(bhp_series)} states)")
     print(f"  Marketplace OEP + {len(post_labels) - 1} months  ({len(mkt_oep)} states)")
     cs_states = [s for s in cost_sharing if s != 'United States']

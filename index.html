@@ -14,6 +14,7 @@
   --bg:#F0F4F9;--surface:#FFFFFF;--surface-2:#E8EFF7;
   --text:#0D1B3E;--muted:#5A6A84;--border:#D0DBE8;
   --mcaid:#002F87;--mcaid-light:#E8EFF8;
+  --chip:#5B4B9E;--chip-light:#EDEBF6;
   --bhp:#007C8C;--bhp-light:#E5F4F6;
   --mkt:#8B1A30;--mkt-light:#F5E8EB;
   --ok:#1A7A4A;--ok-light:#E6F4EC;
@@ -32,12 +33,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .tab:hover{color:#fff;background:rgba(255,255,255,.08);}
 .tab-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .tab.active-mcaid{background:var(--mcaid-light);color:var(--mcaid);border-color:var(--border);border-bottom-color:var(--mcaid-light);font-weight:600;}
+.tab.active-chip{background:var(--chip-light);color:var(--chip);border-color:var(--border);border-bottom-color:var(--chip-light);font-weight:600;}
 .tab.active-bhp{background:var(--bhp-light);color:var(--bhp);border-color:var(--border);border-bottom-color:var(--bhp-light);font-weight:600;}
 .tab.active-mkt{background:var(--mkt-light);color:var(--mkt);border-color:var(--border);border-bottom-color:var(--mkt-light);font-weight:600;}
 .panels{flex:1;overflow:hidden;position:relative;}
 .panel{position:absolute;inset:0;padding:10px 14px;display:flex;flex-direction:column;gap:8px;opacity:0;pointer-events:none;transition:opacity .15s;}
 .panel.active{opacity:1;pointer-events:auto;}
 .panel.mcaid-panel{background:var(--mcaid-light);}
+.panel.chip-panel{background:var(--chip-light);}
 .panel.bhp-panel{background:var(--bhp-light);}
 .panel.mkt-panel{background:var(--mkt-light);}
 .state-bar{display:flex;align-items:center;gap:4px;flex-shrink:0;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;box-shadow:0 1px 3px rgba(0,0,0,.06);max-height:66px;overflow-y:auto;}
@@ -45,6 +48,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .state-pill{font-family:var(--font);font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap;}
 .state-pill:hover{background:var(--surface-2);color:var(--text);}
 .mcaid-panel .state-pill.active{background:var(--mcaid);color:#fff;border-color:var(--mcaid);font-weight:600;}
+.chip-panel .state-pill.active{background:var(--chip);color:#fff;border-color:var(--chip);font-weight:600;}
 .mkt-panel .state-pill.active{background:var(--mkt);color:#fff;border-color:var(--mkt);font-weight:600;}
 .kpi-row{display:flex;gap:8px;flex-shrink:0;}
 .kpi{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
@@ -76,6 +80,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .peak-bar-fill{height:100%;background:linear-gradient(90deg,#2E6BB0,var(--mcaid));border-radius:3px 0 0 3px;transition:width .4s ease;}
 .peak-note{flex-shrink:0;width:158px;font-size:8.5px;line-height:1.3;color:#7A5A2A;font-style:italic;}
 .peak-note:empty{display:none;}
+.chip-panel .peak-strip{border-left-color:var(--chip);}
+.chip-panel .peak-hd{color:var(--chip);}
+.chip-panel .peak-bartop b{color:var(--chip);}
+.chip-panel .peak-bar-fill{background:linear-gradient(90deg,#8A7BC6,var(--chip));}
 .cum-hd{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mcaid);margin-top:auto;flex-shrink:0;}
 .cum-hd span{color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;}
 .lower{flex:1;display:grid;gap:9px;min-height:0;}
@@ -157,13 +165,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 <div class="header">
   <div class="header-left">
     <span class="header-title">Enrollment Tracker</span>
-    <span class="header-sub">Medicaid &middot; BHP &middot; ACA Marketplace</span>
+    <span class="header-sub">Medicaid &middot; CHIP &middot; BHP &middot; ACA Marketplace</span>
   </div>
   <span class="period-badge" id="hdrPeriod">Medicaid &middot; Mar 2026</span>
 </div>
 
 <div class="tabs">
   <div class="tab active-mcaid" data-tab="mcaid" onclick="switchTab('mcaid')"><div class="tab-dot" style="background:#4A72C0"></div>Medicaid</div>
+  <div class="tab" data-tab="chip" onclick="switchTab('chip')"><div class="tab-dot" style="background:#7A68C0"></div>CHIP</div>
   <div class="tab" data-tab="bhp" onclick="switchTab('bhp')"><div class="tab-dot" style="background:#3AA8B8"></div>Basic Health Program</div>
   <div class="tab" data-tab="mkt" onclick="switchTab('mkt')"><div class="tab-dot" style="background:#C04060"></div>ACA Marketplace</div>
 </div>
@@ -295,6 +304,101 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
           <div class="chart-sub" id="mk-chart-sub"></div>
           <div class="chart-wrap"><canvas id="mcaidRateChart"></canvas></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CHIP ══ -->
+  <div class="panel chip-panel" id="panel-chip">
+    <div class="kpi-row">
+      <div class="kpi" id="cp-enroll" style="border-top:3px solid var(--chip)"><div class="kpi-label">Total CHIP Enrollment</div><div class="kpi-top"><div class="kpi-value big">&mdash;</div><span class="kpi-delta flat" id="cp-enroll-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="cp-peak-ref" style="border-top:3px solid #8A7BC6"><div class="kpi-label">Mar 2023 Peak</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">Pre-unwinding &middot; total enrollment</div></div>
+      <div class="kpi" id="cp-peakchg" style="border-top:3px solid var(--warn)"><div class="kpi-label">Change Since Peak</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="cp-share" style="border-top:3px solid var(--chip)"><div class="kpi-label">Current Share of Peak</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">of Mar 2023 peak</div></div>
+    </div>
+
+    <div class="data-note compact" id="cp-state-note" style="display:none"></div>
+
+    <div class="state-bar"><span class="state-bar-label">View:</span>
+      <button class="state-pill active" onclick="selectChipState(null)" id="chip-btn-national">National</button>
+      <button class="state-pill" onclick="selectChipState('Alabama')" id="chip-btn-Alabama">Alabama</button>
+      <button class="state-pill" onclick="selectChipState('Alaska')" id="chip-btn-Alaska">Alaska</button>
+      <button class="state-pill" onclick="selectChipState('Arizona')" id="chip-btn-Arizona">Arizona</button>
+      <button class="state-pill" onclick="selectChipState('Arkansas')" id="chip-btn-Arkansas">Arkansas</button>
+      <button class="state-pill" onclick="selectChipState('California')" id="chip-btn-California">California</button>
+      <button class="state-pill" onclick="selectChipState('Colorado')" id="chip-btn-Colorado">Colorado</button>
+      <button class="state-pill" onclick="selectChipState('Connecticut')" id="chip-btn-Connecticut">Connecticut</button>
+      <button class="state-pill" onclick="selectChipState('Delaware')" id="chip-btn-Delaware">Delaware</button>
+      <button class="state-pill" onclick="selectChipState('District of Columbia')" id="chip-btn-District-of-Columbia">District of Columbia</button>
+      <button class="state-pill" onclick="selectChipState('Florida')" id="chip-btn-Florida">Florida</button>
+      <button class="state-pill" onclick="selectChipState('Georgia')" id="chip-btn-Georgia">Georgia</button>
+      <button class="state-pill" onclick="selectChipState('Hawaii')" id="chip-btn-Hawaii">Hawaii</button>
+      <button class="state-pill" onclick="selectChipState('Idaho')" id="chip-btn-Idaho">Idaho</button>
+      <button class="state-pill" onclick="selectChipState('Illinois')" id="chip-btn-Illinois">Illinois</button>
+      <button class="state-pill" onclick="selectChipState('Indiana')" id="chip-btn-Indiana">Indiana</button>
+      <button class="state-pill" onclick="selectChipState('Iowa')" id="chip-btn-Iowa">Iowa</button>
+      <button class="state-pill" onclick="selectChipState('Kansas')" id="chip-btn-Kansas">Kansas</button>
+      <button class="state-pill" onclick="selectChipState('Kentucky')" id="chip-btn-Kentucky">Kentucky</button>
+      <button class="state-pill" onclick="selectChipState('Louisiana')" id="chip-btn-Louisiana">Louisiana</button>
+      <button class="state-pill" onclick="selectChipState('Maine')" id="chip-btn-Maine">Maine</button>
+      <button class="state-pill" onclick="selectChipState('Maryland')" id="chip-btn-Maryland">Maryland</button>
+      <button class="state-pill" onclick="selectChipState('Massachusetts')" id="chip-btn-Massachusetts">Massachusetts</button>
+      <button class="state-pill" onclick="selectChipState('Michigan')" id="chip-btn-Michigan">Michigan</button>
+      <button class="state-pill" onclick="selectChipState('Minnesota')" id="chip-btn-Minnesota">Minnesota</button>
+      <button class="state-pill" onclick="selectChipState('Mississippi')" id="chip-btn-Mississippi">Mississippi</button>
+      <button class="state-pill" onclick="selectChipState('Missouri')" id="chip-btn-Missouri">Missouri</button>
+      <button class="state-pill" onclick="selectChipState('Montana')" id="chip-btn-Montana">Montana</button>
+      <button class="state-pill" onclick="selectChipState('Nebraska')" id="chip-btn-Nebraska">Nebraska</button>
+      <button class="state-pill" onclick="selectChipState('Nevada')" id="chip-btn-Nevada">Nevada</button>
+      <button class="state-pill" onclick="selectChipState('New Hampshire')" id="chip-btn-New-Hampshire">New Hampshire</button>
+      <button class="state-pill" onclick="selectChipState('New Jersey')" id="chip-btn-New-Jersey">New Jersey</button>
+      <button class="state-pill" onclick="selectChipState('New Mexico')" id="chip-btn-New-Mexico">New Mexico</button>
+      <button class="state-pill" onclick="selectChipState('New York')" id="chip-btn-New-York">New York</button>
+      <button class="state-pill" onclick="selectChipState('North Carolina')" id="chip-btn-North-Carolina">North Carolina</button>
+      <button class="state-pill" onclick="selectChipState('North Dakota')" id="chip-btn-North-Dakota">North Dakota</button>
+      <button class="state-pill" onclick="selectChipState('Ohio')" id="chip-btn-Ohio">Ohio</button>
+      <button class="state-pill" onclick="selectChipState('Oklahoma')" id="chip-btn-Oklahoma">Oklahoma</button>
+      <button class="state-pill" onclick="selectChipState('Oregon')" id="chip-btn-Oregon">Oregon</button>
+      <button class="state-pill" onclick="selectChipState('Pennsylvania')" id="chip-btn-Pennsylvania">Pennsylvania</button>
+      <button class="state-pill" onclick="selectChipState('Rhode Island')" id="chip-btn-Rhode-Island">Rhode Island</button>
+      <button class="state-pill" onclick="selectChipState('South Carolina')" id="chip-btn-South-Carolina">South Carolina</button>
+      <button class="state-pill" onclick="selectChipState('South Dakota')" id="chip-btn-South-Dakota">South Dakota</button>
+      <button class="state-pill" onclick="selectChipState('Tennessee')" id="chip-btn-Tennessee">Tennessee</button>
+      <button class="state-pill" onclick="selectChipState('Texas')" id="chip-btn-Texas">Texas</button>
+      <button class="state-pill" onclick="selectChipState('Utah')" id="chip-btn-Utah">Utah</button>
+      <button class="state-pill" onclick="selectChipState('Vermont')" id="chip-btn-Vermont">Vermont</button>
+      <button class="state-pill" onclick="selectChipState('Virginia')" id="chip-btn-Virginia">Virginia</button>
+      <button class="state-pill" onclick="selectChipState('Washington')" id="chip-btn-Washington">Washington</button>
+      <button class="state-pill" onclick="selectChipState('West Virginia')" id="chip-btn-West-Virginia">West Virginia</button>
+      <button class="state-pill" onclick="selectChipState('Wisconsin')" id="chip-btn-Wisconsin">Wisconsin</button>
+      <button class="state-pill" onclick="selectChipState('Wyoming')" id="chip-btn-Wyoming">Wyoming</button>
+    </div>
+
+    <div class="peak-strip" id="cp-peak">
+      <div class="peak-hd">vs. Pre-Unwinding Peak<span id="cp-peak-cap">Mar 2023 &middot; total enrollment</span></div>
+      <div class="peak-metrics">
+        <div><div class="peak-lbl">Mar 2023 Peak</div><div class="peak-val" id="cp-peak-peak">&mdash;</div></div>
+        <div><div class="peak-lbl" id="cp-peak-cur-lbl">Current</div><div class="peak-val" id="cp-peak-cur">&mdash;</div></div>
+        <div><div class="peak-lbl">Change</div><div class="peak-val" id="cp-peak-chg">&mdash;</div></div>
+        <div><div class="peak-lbl">Change %</div><div class="peak-val" id="cp-peak-pct">&mdash;</div></div>
+      </div>
+      <div class="peak-barwrap">
+        <div class="peak-bartop"><span>Current as share of peak</span><b id="cp-peak-share">&mdash;</b></div>
+        <div class="peak-bar-track"><div class="peak-bar-fill" id="cp-peak-bar" style="width:0"></div></div>
+      </div>
+      <div class="peak-note" id="cp-peak-note"></div>
+    </div>
+
+    <div class="lower l-50-50">
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--chip)"></div><div class="chart-title" id="cp-ts-title">Enrollment <span>Trend</span></div></div>
+        <div class="chart-sub" id="cp-ts-sub"></div>
+        <div class="chart-wrap"><canvas id="chipTsChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--chip)"></div><div class="chart-title" id="cp-rank-title">Top States</div></div>
+        <div class="chart-sub" id="cp-rank-sub"></div>
+        <div class="chart-wrap"><canvas id="chipRankChart"></canvas></div>
       </div>
     </div>
   </div>
@@ -505,6 +609,13 @@ const TOP12         = {"labels":["Indiana","Alaska","Oklahoma","Texas","New Hamp
 const MIX           = {"natLabels":["Mar 2025","Apr 2025","May 2025","Jun 2025","Jul 2025","Aug 2025","Sep 2025","Oct 2025","Nov 2025","Dec 2025","Jan 2026","Feb 2026","Mar 2026","Apr 2026"],"nat":{"exparte":[56,55,57,57,49,50,50,49,51,48.1,46.6,47.1,48.1,46.6],"form":[19,20,19,19,22,21,22,22,20,20.3,18.6,19.4,20.1,21.9],"inelig":[6,6,6,6,6,6,6,6,5,5.2,4.9,5.2,5.2,5.1],"proc":[10,10,10,11,13,12,14,13,13,14.9,15.2,15.4,14.5,14.5],"pend":[9,9,8,7,10,11,8,10,11,11.4,14.7,12.9,12.1,11.9],"labels":["Mar 2025","Apr 2025","May 2025","Jun 2025","Jul 2025","Aug 2025","Sep 2025","Oct 2025","Nov 2025","Dec 2025","Jan 2026","Feb 2026","Mar 2026","Apr 2026"]},"stLabels":["Dec 2025","Jan 2026","Feb 2026","Mar 2026","Apr 2026"],"states":{"Alaska":{"exparte":[31.4,21.8,23.4,20.8,27.2],"form":[18.4,18.6,18.3,20.0,17.2],"inelig":[12.2,10.4,9.7,10.3,10.5],"proc":[5.9,20.5,29.3,26.6,24.5],"pend":[32.1,28.8,19.3,22.3,20.6]},"Alabama":{"exparte":[41.9,42.5,42.9,41.7,20.6],"form":[28.6,30.4,33.6,35.7,56.7],"inelig":[18.4,18.0,16.3,16.0,8.3],"proc":[9.2,7.6,6.1,5.6,12.7],"pend":[1.8,1.6,1.1,1.0,1.8]},"Arkansas":{"exparte":[77.3,77.9,74.2,72.4,71.3],"form":[8.5,7.6,9.1,10.9,11.4],"inelig":[2.6,2.1,3.4,2.7,4.6],"proc":[11.4,12.1,12.9,13.8,12.5],"pend":[0.2,0.4,0.4,0.2,0.2]},"Arizona":{"exparte":[59.5,68.1,62.9,70.0,68.7],"form":[6.8,4.4,5.9,6.0,7.2],"inelig":[6.4,4.7,6.0,4.4,5.6],"proc":[18.0,14.8,16.1,12.9,13.9],"pend":[9.3,8.0,9.1,6.7,4.6]},"California":{"exparte":[43.7,35.2,43.0,43.3,42.4],"form":[16.2,16.2,13.3,14.0,15.0],"inelig":[1.8,1.6,1.5,1.8,1.6],"proc":[19.1,19.3,19.7,19.1,19.6],"pend":[19.2,27.7,22.5,21.8,21.4]},"Colorado":{"exparte":[61.6,60.7,59.4,55.4,57.2],"form":[19.0,19.5,20.7,20.7,20.0],"inelig":[8.6,7.3,6.7,8.1,8.2],"proc":[7.8,9.6,10.7,13.5,12.4],"pend":[3.0,2.8,2.6,2.2,2.1]},"Connecticut":{"exparte":[83.4,84.2,84.7,83.8,81.9],"form":[4.0,4.0,4.5,4.7,4.5],"inelig":[4.3,4.7,4.0,4.6,5.2],"proc":[4.3,3.3,3.4,3.5,3.8],"pend":[4.0,3.8,3.5,3.4,4.6]},"District of Columbia":{"exparte":[86.3,83.5,83.8,66.8,72.4],"form":[2.7,2.3,3.2,5.9,5.6],"inelig":[0.3,0.2,0.2,1.0,0.9],"proc":[7.5,9.8,8.2,16.0,12.5],"pend":[3.2,4.1,4.6,10.4,8.6]},"Delaware":{"exparte":[41.4,40.0,48.6,40.7,43.3],"form":[24.2,26.1,19.7,26.9,25.4],"inelig":[8.9,10.5,9.1,8.7,10.1],"proc":[23.8,22.0,21.0,22.4,20.0],"pend":[1.7,1.3,1.6,1.2,1.2]},"Florida":{"exparte":[24.0,24.1,23.7,20.2,21.8],"form":[39.5,37.1,37.2,41.0,44.6],"inelig":[9.1,8.1,7.7,7.6,8.3],"proc":[12.6,10.7,10.8,11.5,11.1],"pend":[14.7,20.0,20.5,19.6,14.3]},"Georgia":{"exparte":[51.9,53.7,53.4,49.7,48.4],"form":[13.2,11.7,12.1,14.1,13.9],"inelig":[14.3,12.7,12.7,13.8,10.0],"proc":[13.5,14.2,13.3,14.6,15.9],"pend":[7.1,7.8,8.5,7.8,11.9]},"Hawaii":{"exparte":[72.5,69.0,56.6,64.9,70.3],"form":[14.7,18.0,23.6,18.5,14.7],"inelig":[1.9,2.0,3.2,2.5,2.3],"proc":[8.7,8.4,12.4,9.7,9.7],"pend":[2.2,2.7,4.1,4.3,2.9]},"Iowa":{"exparte":[59.0,72.9,54.1,59.0,57.5],"form":[18.3,12.5,20.4,22.1,22.8],"inelig":[3.0,2.0,2.7,2.6,2.9],"proc":[12.9,7.0,8.3,10.7,10.8],"pend":[6.9,5.6,14.6,5.6,6.0]},"Idaho":{"exparte":[45.7,49.4,95.0,48.9,44.8],"form":[20.7,20.3,0.4,24.5,52.8],"inelig":[4.9,4.6,4.0,4.8,2.2],"proc":[25.6,21.6,0.4,19.6,0.1],"pend":[3.0,4.1,0.2,2.1,0.2]},"Illinois":{"exparte":[64.5,63.0,62.0,64.5,64.6],"form":[11.3,12.6,14.5,13.2,12.8],"inelig":[2.5,2.8,2.5,3.8,3.7],"proc":[11.8,10.6,10.8,8.5,9.5],"pend":[9.9,11.0,10.2,10.0,9.4]},"Indiana":{"exparte":[19.0,18.3,17.7,10.8,5.2],"form":[9.2,7.5,8.8,10.8,11.0],"inelig":[1.4,1.0,1.0,1.0,1.0],"proc":[45.4,45.5,45.5,43.3,46.3],"pend":[25.1,27.7,27.0,34.1,36.5]},"Kansas":{"exparte":[53.4,45.2,45.7,51.1,46.8],"form":[26.7,26.6,32.7,29.3,34.2],"inelig":[9.2,12.2,11.2,8.5,9.0],"proc":[6.5,12.4,7.5,6.4,6.0],"pend":[4.2,3.7,2.8,4.6,4.0]},"Kentucky":{"exparte":[82.6,76.5,77.6,77.2,77.0],"form":[6.5,8.8,8.7,9.0,10.0],"inelig":[2.7,3.9,3.5,3.8,3.7],"proc":[7.9,10.3,9.6,9.3,8.7],"pend":[0.5,0.5,0.5,0.7,0.6]},"Louisiana":{"exparte":[47.0,43.3,34.3,39.9,41.4],"form":[37.8,14.3,14.9,19.6,17.4],"inelig":[2.3,3.1,3.3,3.5,3.6],"proc":[2.3,23.9,32.1,21.8,22.8],"pend":[10.6,15.4,15.3,15.2,14.8]},"Massachusetts":{"exparte":[65.6,67.4,55.3,60.3,62.9],"form":[13.0,12.3,15.8,19.1,18.7],"inelig":[4.4,4.9,11.2,5.7,4.5],"proc":[11.4,12.9,15.9,14.3,13.3],"pend":[5.6,2.5,1.9,0.6,0.6]},"Maryland":{"exparte":[52.1,54.2,52.5,50.8,51.2],"form":[16.3,18.8,17.3,18.3,18.9],"inelig":[3.2,3.4,3.2,3.1,3.4],"proc":[24.5,19.8,22.9,23.4,22.9],"pend":[3.8,3.8,4.0,4.4,3.6]},"Maine":{"exparte":[75.6,74.5,76.1,74.7,76.2],"form":[3.9,4.1,4.1,3.3,3.8],"inelig":[1.1,1.2,1.0,0.9,1.3],"proc":[8.4,8.5,7.5,11.3,7.0],"pend":[11.1,11.7,11.3,9.7,11.6]},"Michigan":{"exparte":[56.8,58.6,59.2,54.5,58.1],"form":[16.4,16.5,17.0,21.8,17.7],"inelig":[1.7,1.7,2.2,3.1,3.2],"proc":[16.1,15.1,13.1,14.1,15.6],"pend":[9.0,8.1,8.5,6.6,5.4]},"Minnesota":{"exparte":[71.4,70.8,71.9,70.7,70.3],"form":[9.4,10.2,10.0,11.6,11.5],"inelig":[2.6,2.7,2.5,2.7,2.5],"proc":[16.6,16.2,15.5,15.0,15.6],"pend":[0.0,0.0,0.0,0.0,0.0]},"Missouri":{"exparte":[56.3,51.0,52.8,52.9,54.4],"form":[4.6,6.4,5.2,5.8,6.1],"inelig":[1.9,2.0,1.5,1.8,1.6],"proc":[17.0,18.2,18.3,19.1,18.8],"pend":[20.1,22.3,22.1,20.4,19.1]},"Mississippi":{"exparte":[54.1,52.4,51.1,39.2,40.2],"form":[28.4,31.9,34.5,46.0,45.3],"inelig":[3.9,2.9,2.6,2.8,2.7],"proc":[13.6,12.8,11.8,11.9,11.8],"pend":[0.1,0.0,0.0,0.1,0.0]},"Montana":{"exparte":[40.6,42.5,43.8,43.8,42.6],"form":[13.5,13.3,13.8,13.0,14.6],"inelig":[4.2,4.9,4.9,4.6,4.3],"proc":[16.3,15.4,14.7,14.9,14.8],"pend":[25.3,23.9,22.8,23.7,23.6]},"North Carolina":{"exparte":[65.0,61.1,61.8,59.0,57.0],"form":[0.5,0.5,0.3,0.4,0.4],"inelig":[2.5,2.5,2.6,2.7,3.1],"proc":[4.2,3.8,3.8,4.1,4.6],"pend":[27.7,32.1,31.4,33.8,35.0]},"North Dakota":{"exparte":[39.9,36.9,36.5,37.1,37.0],"form":[23.0,21.5,18.1,20.5,23.2],"inelig":[5.5,4.8,4.2,4.7,5.5],"proc":[15.4,13.5,13.9,14.1,14.5],"pend":[16.2,23.3,27.4,23.7,19.9]},"Nebraska":{"exparte":[62.3,61.0,62.1,62.8,64.8],"form":[7.9,8.8,8.9,8.9,8.6],"inelig":[9.1,9.3,9.1,9.4,9.0],"proc":[10.2,9.4,7.2,8.1,7.4],"pend":[10.4,11.5,12.8,10.8,10.2]},"New Hampshire":{"exparte":[26.5,29.1,38.8,39.4,32.4],"form":[28.3,30.3,25.5,28.7,31.8],"inelig":[5.0,4.4,3.5,4.0,5.1],"proc":[29.4,23.2,24.1,22.5,26.0],"pend":[10.8,13.0,8.1,5.3,4.7]},"New Jersey":{"exparte":[33.0,30.9,32.5,39.2,34.5],"form":[11.3,9.5,11.3,11.2,10.2],"inelig":[3.4,3.1,2.8,4.6,2.9],"proc":[14.7,13.1,13.3,11.1,4.3],"pend":[37.6,43.4,40.1,33.8,48.1]},"New Mexico":{"exparte":[54.5,52.9,53.0,53.5,51.1],"form":[19.3,21.5,21.6,21.5,22.5],"inelig":[2.2,2.5,2.3,2.6,3.2],"proc":[21.1,21.1,20.7,20.4,21.4],"pend":[2.9,2.0,2.3,1.9,1.8]},"Nevada":{"exparte":[80.3,66.7,79.8,78.4,77.9],"form":[8.0,18.3,4.9,3.2,5.1],"inelig":[1.7,1.8,2.3,1.7,2.4],"proc":[10.0,10.5,10.1,12.7,12.6],"pend":[0.0,2.6,2.9,4.0,1.9]},"New York":{"exparte":[28.4,25.5,25.4,26.4,26.5],"form":[43.9,42.8,43.3,46.1,46.4],"inelig":[10.0,8.8,10.4,10.4,10.1],"proc":[16.5,21.3,19.1,15.4,15.2],"pend":[1.2,1.5,1.7,1.6,1.7]},"Ohio":{"exparte":[60.9,62.5,50.5,51.4,50.4],"form":[9.9,9.9,14.5,15.3,16.1],"inelig":[1.9,1.7,1.9,2.1,2.1],"proc":[17.3,15.9,19.6,18.9,18.7],"pend":[10.0,10.0,13.6,12.3,12.9]},"Oklahoma":{"exparte":[35.1,42.5,39.3,39.6,47.4],"form":[14.1,12.4,12.1,16.7,14.9],"inelig":[13.1,7.2,6.5,6.2,8.1],"proc":[27.9,29.3,35.5,31.6,25.4],"pend":[9.8,8.5,6.6,5.9,4.1]},"Oregon":{"exparte":[64.4,64.4,64.6,65.6,69.3],"form":[14.4,14.6,15.0,14.9,12.6],"inelig":[5.1,5.8,6.3,6.1,4.6],"proc":[15.9,14.9,13.8,13.1,13.4],"pend":[0.2,0.3,0.3,0.2,0.2]},"Pennsylvania":{"exparte":[21.8,21.1,18.9,16.3,19.4],"form":[29.4,29.0,32.1,40.8,38.3],"inelig":[6.6,6.5,6.9,7.6,7.9],"proc":[3.3,4.4,4.9,5.9,6.1],"pend":[38.9,38.9,37.2,29.5,28.2]},"Rhode Island":{"exparte":[70.7,76.0,77.2,79.0,72.9],"form":[9.6,5.3,5.8,3.3,8.6],"inelig":[6.4,5.2,5.5,5.3,6.6],"proc":[12.5,13.0,10.9,11.9,11.5],"pend":[0.8,0.5,0.6,0.6,0.4]},"South Carolina":{"exparte":[66.3,66.3,65.3,67.4,71.0],"form":[9.5,8.6,9.3,8.3,5.0],"inelig":[17.5,17.0,18.8,19.0,19.1],"proc":[5.3,6.5,5.3,3.8,3.1],"pend":[1.5,1.7,1.3,1.5,1.8]},"South Dakota":{"exparte":[56.5,59.5,57.8,55.7,56.7],"form":[21.2,19.8,21.8,25.5,22.9],"inelig":[3.0,2.5,2.7,3.3,3.0],"proc":[17.0,15.0,14.7,14.2,16.1],"pend":[2.3,3.2,3.0,1.4,1.3]},"Tennessee":{"exparte":[75.4,66.1,62.4,70.9,68.5],"form":[15.5,20.9,23.4,18.3,20.6],"inelig":[2.5,4.1,4.6,3.0,3.5],"proc":[6.4,8.5,9.2,7.4,7.2],"pend":[0.2,0.4,0.4,0.3,0.2]},"Texas":{"exparte":[8.7,8.6,9.0,8.8,8.7],"form":[54.0,53.5,54.4,53.2,53.0],"inelig":[9.9,11.2,10.2,10.9,10.3],"proc":[22.7,19.3,19.8,20.9,21.9],"pend":[4.7,7.4,6.6,6.3,6.1]},"Utah":{"exparte":[39.7,36.1,36.7,34.6,16.8],"form":[15.7,17.3,17.7,19.2,36.2],"inelig":[2.7,2.8,3.0,2.8,3.3],"proc":[25.3,25.6,24.5,25.5,25.0],"pend":[16.5,18.1,18.1,18.0,18.6]},"Virginia":{"exparte":[47.3,49.2,49.1,48.3,49.2],"form":[35.0,16.4,38.4,41.1,39.3],"inelig":[1.7,3.7,1.7,1.8,1.8],"proc":[12.2,11.1,9.7,6.1,7.8],"pend":[3.9,19.6,1.1,2.8,1.9]},"Vermont":{"exparte":[66.3,63.5,64.5,63.6,65.1],"form":[10.7,11.4,10.6,6.8,12.0],"inelig":[2.1,2.3,2.0,2.5,2.3],"proc":[14.0,14.9,14.8,15.3,13.3],"pend":[7.0,8.0,8.1,11.8,7.3]},"Washington":{"exparte":[78.2,82.6,82.0,83.0,81.2],"form":[5.3,5.3,5.7,5.7,6.9],"inelig":[1.7,1.7,1.7,1.9,1.9],"proc":[12.2,9.6,9.6,8.8,9.4],"pend":[2.6,0.8,1.0,0.7,0.6]},"Wisconsin":{"exparte":[42.1,38.9,39.6,37.0,43.6],"form":[26.6,29.0,30.3,29.2,26.1],"inelig":[11.4,10.4,9.6,12.2,10.0],"proc":[13.0,13.7,13.0,13.8,12.8],"pend":[6.9,7.9,7.5,7.9,7.6]},"West Virginia":{"exparte":[56.9,58.8,64.3,62.3,59.0],"form":[19.0,17.5,15.5,19.5,21.5],"inelig":[4.6,4.0,3.6,3.8,4.1],"proc":[18.7,18.8,15.6,13.4,14.6],"pend":[0.8,0.9,1.0,1.0,0.9]},"Wyoming":{"exparte":[11.5,31.8,61.9,54.2,40.5],"form":[44.5,20.2,22.2,27.1,23.8],"inelig":[5.1,6.0,3.5,5.7,6.9],"proc":[19.0,18.2,0.5,0.7,18.6],"pend":[19.9,23.8,11.9,12.3,10.2]}}};
 const MCAID_PEAK    = {"Alaska":253960,"Alabama":991468,"Arkansas":1010510,"Arizona":2184898,"California":12931478,"Colorado":1591111,"Connecticut":1005040,"District of Columbia":278836,"Delaware":300281,"Florida":5000278,"Georgia":2167942,"Hawaii":441198,"Iowa":790181,"Idaho":418774,"Illinois":3471258,"Indiana":1904700,"Kansas":438542,"Kentucky":1494768,"Louisiana":1724564,"Massachusetts":1803264,"Maryland":1538624,"Maine":358877,"Michigan":2929863,"Minnesota":1393030,"Missouri":1464197,"Mississippi":702289,"Montana":299724,"North Carolina":2137561,"North Dakota":129430,"Nebraska":352494,"New Hampshire":227977,"New Jersey":1962324,"New Mexico":836594,"Nevada":840149,"New York":6962065,"Ohio":3167340,"Oklahoma":1183657,"Oregon":1213001,"Pennsylvania":3462649,"Rhode Island":332528,"South Carolina":1201865,"South Dakota":127505,"Tennessee":1650389,"Texas":5640998,"Utah":445810,"Virginia":1840758,"Vermont":189065,"Washington":2109188,"Wisconsin":1359177,"West Virginia":622863,"Wyoming":79226,"United States":86964268};
 const PEAK_LABEL    = "Mar 2023";
+const CHIP_PERIODS  = ["2025-12","2026-01","2026-02","2026-03","2026-04"];
+const CHIP_LABELS   = ["Dec 2025","Jan 2026","Feb 2026","Mar 2026","Apr 2026"];
+const CHIP_LATEST   = "2026-04";
+const CHIP_NAT      = {"2025-12":7243961,"2026-01":7241058,"2026-02":7227658,"2026-03":7213381,"2026-04":7145807};
+const CHIP_STATES   = {"Alaska":{"2025-12":12846,"2026-01":12869,"2026-02":12855,"2026-03":12843,"2026-04":12740},"Alabama":{"2025-12":193204,"2026-01":194604,"2026-02":196218,"2026-03":197501,"2026-04":198102},"Arkansas":{"2025-12":83497,"2026-01":84160,"2026-02":83371,"2026-03":83573,"2026-04":78477},"Arizona":{"2025-12":112634,"2026-01":112545,"2026-02":111400,"2026-03":110570,"2026-04":109923},"California":{"2025-12":1228746,"2026-01":1237976,"2026-02":1240954,"2026-03":1245606,"2026-04":1249682},"Colorado":{"2025-12":140079,"2026-01":140483,"2026-02":139344,"2026-03":139287,"2026-04":137972},"Connecticut":{"2025-12":25323,"2026-01":25561,"2026-02":25490,"2026-03":25649,"2026-04":25570},"District of Columbia":{"2025-12":16284,"2026-01":16165,"2026-02":16190,"2026-03":15890,"2026-04":15713},"Delaware":{"2025-12":13989,"2026-01":13946,"2026-02":14007,"2026-03":13899,"2026-04":13784},"Florida":{"2025-12":160955,"2026-01":163022,"2026-02":165278,"2026-03":168078,"2026-04":171606},"Georgia":{"2025-12":185500,"2026-01":183456,"2026-02":182012,"2026-03":182283,"2026-04":174668},"Hawaii":{"2025-12":24762,"2026-01":25342,"2026-02":25575,"2026-03":25695,"2026-04":26010},"Iowa":{"2025-12":84972,"2026-01":84760,"2026-02":84704,"2026-03":84083,"2026-04":83517},"Idaho":{"2025-12":19667,"2026-01":19587,"2026-02":19595,"2026-03":19785,"2026-04":19597},"Illinois":{"2025-12":318336,"2026-01":320864,"2026-02":321413,"2026-03":319643,"2026-04":304742},"Indiana":{"2025-12":122727,"2026-01":122313,"2026-02":120298,"2026-03":118614,"2026-04":117023},"Kansas":{"2025-12":72590,"2026-01":72803,"2026-02":72240,"2026-03":71964,"2026-04":70832},"Kentucky":{"2025-12":132867,"2026-01":134031,"2026-02":128641,"2026-03":125960,"2026-04":119910},"Louisiana":{"2025-12":137321,"2026-01":137043,"2026-02":136395,"2026-03":136772,"2026-04":131808},"Massachusetts":{"2025-12":191201,"2026-01":188257,"2026-02":183387,"2026-03":178999,"2026-04":174695},"Maryland":{"2025-12":196621,"2026-01":196171,"2026-02":195444,"2026-03":195018,"2026-04":196326},"Maine":{"2025-12":27136,"2026-01":21431,"2026-02":21134,"2026-03":20928,"2026-04":19858},"Michigan":{"2025-12":167087,"2026-01":167306,"2026-02":166929,"2026-03":167017,"2026-04":165309},"Minnesota":{"2025-12":4226,"2026-01":4104,"2026-02":3982,"2026-03":4037,"2026-04":3968},"Missouri":{"2025-12":133560,"2026-01":134247,"2026-02":134390,"2026-03":135843,"2026-04":132415},"Mississippi":{"2025-12":83623,"2026-01":83703,"2026-02":83532,"2026-03":83253,"2026-04":83125},"Montana":{"2025-12":19767,"2026-01":19792,"2026-02":19805,"2026-03":20037,"2026-04":19544},"North Carolina":{"2025-12":344953,"2026-01":344352,"2026-02":345689,"2026-03":347117,"2026-04":349014},"North Dakota":{"2025-12":5387,"2026-01":5414,"2026-02":5392,"2026-03":5417,"2026-04":5410},"Nebraska":{"2025-12":36847,"2026-01":37249,"2026-02":37273,"2026-03":37455,"2026-04":35874},"New Hampshire":{"2025-12":18988,"2026-01":18907,"2026-02":18985,"2026-03":18943,"2026-04":18915},"New Jersey":{"2025-12":258231,"2026-01":256572,"2026-02":256439,"2026-03":257103,"2026-04":261154},"New Mexico":{"2025-12":43713,"2026-01":44018,"2026-02":43909,"2026-03":44111,"2026-04":42494},"Nevada":{"2025-12":47076,"2026-01":47335,"2026-02":47078,"2026-03":46879,"2026-04":46080},"New York":{"2025-12":662420,"2026-01":659617,"2026-02":657439,"2026-03":652991,"2026-04":650335},"Ohio":{"2025-12":242337,"2026-01":242200,"2026-02":242061,"2026-03":237707,"2026-04":232871},"Oklahoma":{"2025-12":79005,"2026-01":74717,"2026-02":77906,"2026-03":83566,"2026-04":81057},"Oregon":{"2025-12":183955,"2026-01":184066,"2026-02":182827,"2026-03":182349,"2026-04":180746},"Pennsylvania":{"2025-12":280410,"2026-01":278730,"2026-02":278554,"2026-03":280272,"2026-04":277094},"Rhode Island":{"2025-12":33704,"2026-01":34013,"2026-02":35160,"2026-03":34526,"2026-04":33766},"South Carolina":{"2025-12":112832,"2026-01":113356,"2026-02":113491,"2026-03":112772,"2026-04":112428},"South Dakota":{"2025-12":14418,"2026-01":14404,"2026-02":14600,"2026-03":14739,"2026-04":14453},"Tennessee":{"2025-12":181780,"2026-01":181049,"2026-02":177810,"2026-03":180842,"2026-04":181381},"Texas":{"2025-12":344976,"2026-01":344813,"2026-02":345824,"2026-03":334075,"2026-04":333003},"Utah":{"2025-12":34612,"2026-01":34679,"2026-02":34682,"2026-03":34610,"2026-04":34242},"Virginia":{"2025-12":193509,"2026-01":192709,"2026-02":190873,"2026-03":190582,"2026-04":189054},"Vermont":{"2025-12":5393,"2026-01":5468,"2026-02":5466,"2026-03":5505,"2026-04":5527},"Washington":{"2025-12":64618,"2026-01":65228,"2026-02":65723,"2026-03":66336,"2026-04":61666},"Wisconsin":{"2025-12":99749,"2026-01":99940,"2026-02":100048,"2026-03":96751,"2026-04":97222},"West Virginia":{"2025-12":39681,"2026-01":39648,"2026-02":39865,"2026-03":39754,"2026-04":39040},"Wyoming":{"2025-12":5847,"2026-01":6033,"2026-02":5981,"2026-03":6152,"2026-04":6065}};
+const CHIP_PEAK     = {"Alaska":12150,"Alabama":205536,"Arkansas":75026,"Arizona":147213,"California":1297814,"Colorado":119896,"Connecticut":13667,"District of Columbia":16242,"Delaware":6541,"Florida":87798,"Georgia":325706,"Hawaii":24181,"Iowa":69846,"Idaho":39369,"Illinois":346416,"Indiana":136704,"Kansas":68364,"Kentucky":143601,"Louisiana":189203,"Massachusetts":210420,"Maryland":166163,"Maine":15641,"Michigan":143833,"Minnesota":3313,"Missouri":39895,"Mississippi":77568,"Montana":28814,"North Carolina":300301,"North Dakota":3881,"Nebraska":42529,"New Hampshire":23704,"New Jersey":268685,"New Mexico":54184,"Nevada":55698,"New York":529246,"Ohio":254452,"Oklahoma":143251,"Oregon":188991,"Pennsylvania":250984,"Rhode Island":37124,"South Carolina":111786,"South Dakota":19452,"Tennessee":148032,"Texas":281452,"Utah":38339,"Virginia":192748,"Vermont":4584,"Washington":80027,"Wisconsin":79903,"West Virginia":37872,"Wyoming":5303,"United States":7163448};
+const CHIP_PEAK_LABEL = "Mar 2023";
 const MKT_OEP       = {"Alaska":{"total":26079,"new":4584,"reenroll":21495,"active":15845,"auto":5650,"aptc":19249,"avgPrem":1043,"avgNet":344,"cat":0,"bronze":12441,"silver":2618,"gold":11020,"plat":0},"Alabama":{"total":455776,"new":60346,"reenroll":395430,"active":193074,"auto":202356,"aptc":415172,"avgPrem":743,"avgNet":126,"cat":1718,"bronze":198749,"silver":248467,"gold":6842,"plat":0},"Arkansas":{"total":160307,"new":29746,"reenroll":130561,"active":76556,"auto":54005,"aptc":139372,"avgPrem":839,"avgNet":162,"cat":1217,"bronze":52071,"silver":55449,"gold":50562,"plat":1008},"Arizona":{"total":357144,"new":56742,"reenroll":300402,"active":172889,"auto":127513,"aptc":295299,"avgPrem":688,"avgNet":229,"cat":737,"bronze":200376,"silver":142749,"gold":13282,"plat":0},"California":{"total":1927371,"new":235055,"reenroll":1692316,"active":538476,"auto":1153840,"aptc":1577627,"avgPrem":737,"avgNet":264,"cat":15592,"bronze":564476,"silver":1181687,"gold":107896,"plat":57720},"Colorado":{"total":277238,"new":37335,"reenroll":239903,"active":146249,"auto":93654,"aptc":191153,"avgPrem":673,"avgNet":318,"cat":1375,"bronze":106571,"silver":80695,"gold":88597,"plat":0},"Connecticut":{"total":156745,"new":26902,"reenroll":129843,"active":55130,"auto":74713,"aptc":123873,"avgPrem":1030,"avgNet":277,"cat":1741,"bronze":38213,"silver":101603,"gold":15188,"plat":0},"District of Columbia":{"total":16053,"new":3522,"reenroll":12531,"active":1456,"auto":11075,"aptc":3012,"avgPrem":815,"avgNet":725,"cat":433,"bronze":5263,"silver":3356,"gold":4705,"plat":2296},"Delaware":{"total":44663,"new":6758,"reenroll":37905,"active":23460,"auto":14445,"aptc":36026,"avgPrem":901,"avgNet":320,"cat":1123,"bronze":20891,"silver":10629,"gold":11564,"plat":456},"Florida":{"total":4538772,"new":725149,"reenroll":3813623,"active":2786806,"auto":1026817,"aptc":4295772,"avgPrem":806,"avgNet":106,"cat":3437,"bronze":1677199,"silver":2228615,"gold":624080,"plat":5441},"Georgia":{"total":1324295,"new":192032,"reenroll":1132263,"active":510966,"auto":621297,"aptc":1180015,"avgPrem":777,"avgNet":164,"cat":574,"bronze":512136,"silver":750552,"gold":59512,"plat":1521},"Hawaii":{"total":23380,"new":4130,"reenroll":19250,"active":12614,"auto":6636,"aptc":16702,"avgPrem":778,"avgNet":372,"cat":446,"bronze":9317,"silver":5663,"gold":4585,"plat":3369},"Iowa":{"total":123304,"new":17687,"reenroll":105617,"active":65823,"auto":39794,"aptc":93877,"avgPrem":615,"avgNet":235,"cat":184,"bronze":59093,"silver":28134,"gold":35893,"plat":0},"Idaho":{"total":120426,"new":15959,"reenroll":104467,"active":33279,"auto":71188,"aptc":92090,"avgPrem":509,"avgNet":202,"cat":563,"bronze":70540,"silver":36828,"gold":11669,"plat":826},"Illinois":{"total":448568,"new":74773,"reenroll":373795,"active":182167,"auto":191628,"aptc":382114,"avgPrem":816,"avgNet":230,"cat":282,"bronze":167455,"silver":141789,"gold":139042,"plat":0},"Indiana":{"total":300049,"new":42907,"reenroll":257142,"active":133201,"auto":123941,"aptc":250156,"avgPrem":623,"avgNet":222,"cat":0,"bronze":107691,"silver":184739,"gold":6908,"plat":0},"Kansas":{"total":192811,"new":26335,"reenroll":166476,"active":92554,"auto":73922,"aptc":170974,"avgPrem":779,"avgNet":160,"cat":130,"bronze":90801,"silver":87620,"gold":14260,"plat":0},"Kentucky":{"total":89028,"new":15624,"reenroll":73404,"active":28226,"auto":45178,"aptc":71435,"avgPrem":797,"avgNet":288,"cat":999,"bronze":35330,"silver":46821,"gold":5878,"plat":0},"Louisiana":{"total":296648,"new":31342,"reenroll":265306,"active":103783,"auto":161523,"aptc":270419,"avgPrem":759,"avgNet":144,"cat":0,"bronze":168905,"silver":112263,"gold":15480,"plat":0},"Massachusetts":{"total":403624,"new":56744,"reenroll":346880,"active":159341,"auto":187539,"aptc":292196,"avgPrem":594,"avgNet":325,"cat":889,"bronze":34062,"silver":358260,"gold":7385,"plat":3028},"Maryland":{"total":255612,"new":47815,"reenroll":207797,"active":61434,"auto":146363,"aptc":172309,"avgPrem":542,"avgNet":284,"cat":2564,"bronze":67563,"silver":76594,"gold":106187,"plat":2704},"Maine":{"total":58523,"new":8577,"reenroll":49946,"active":26149,"auto":23797,"aptc":43597,"avgPrem":913,"avgNet":340,"cat":550,"bronze":33814,"silver":19513,"gold":4392,"plat":254},"Michigan":{"total":497064,"new":64637,"reenroll":432427,"active":235220,"auto":197207,"aptc":402911,"avgPrem":657,"avgNet":222,"cat":8045,"bronze":239037,"silver":232730,"gold":17252,"plat":0},"Minnesota":{"total":139251,"new":24417,"reenroll":114834,"active":30875,"auto":83959,"aptc":68982,"avgPrem":639,"avgNet":437,"cat":0,"bronze":77802,"silver":40677,"gold":20772,"plat":0},"Missouri":{"total":365734,"new":46284,"reenroll":319450,"active":166907,"auto":152543,"aptc":316392,"avgPrem":724,"avgNet":173,"cat":791,"bronze":187274,"silver":138361,"gold":39308,"plat":0},"Mississippi":{"total":313392,"new":62394,"reenroll":250998,"active":119770,"auto":131228,"aptc":298865,"avgPrem":816,"avgNet":131,"cat":0,"bronze":113435,"silver":198108,"gold":1849,"plat":0},"Montana":{"total":73255,"new":10443,"reenroll":62812,"active":39032,"auto":23780,"aptc":56892,"avgPrem":729,"avgNet":230,"cat":3238,"bronze":47311,"silver":17554,"gold":5152,"plat":0},"North Carolina":{"total":761457,"new":125794,"reenroll":635663,"active":384487,"auto":251176,"aptc":662864,"avgPrem":755,"avgNet":180,"cat":0,"bronze":486199,"silver":232430,"gold":42828,"plat":0},"North Dakota":{"total":41014,"new":5230,"reenroll":35784,"active":25848,"auto":9936,"aptc":32183,"avgPrem":591,"avgNet":229,"cat":791,"bronze":21451,"silver":8516,"gold":10256,"plat":0},"Nebraska":{"total":128492,"new":14833,"reenroll":113659,"active":77150,"auto":36509,"aptc":111189,"avgPrem":800,"avgNet":217,"cat":0,"bronze":84672,"silver":35102,"gold":8718,"plat":0},"New Hampshire":{"total":66024,"new":11751,"reenroll":54273,"active":34260,"auto":20013,"aptc":36748,"avgPrem":553,"avgNet":342,"cat":1343,"bronze":30105,"silver":24549,"gold":10027,"plat":0},"New Jersey":{"total":509192,"new":77970,"reenroll":431222,"active":219933,"auto":211289,"aptc":418531,"avgPrem":734,"avgNet":277,"cat":1719,"bronze":124678,"silver":377437,"gold":5358,"plat":0},"New Mexico":{"total":83103,"new":12863,"reenroll":70240,"active":20159,"auto":50081,"aptc":68362,"avgPrem":842,"avgNet":299,"cat":0,"bronze":2596,"silver":30201,"gold":50306,"plat":0},"Nevada":{"total":104286,"new":20911,"reenroll":83375,"active":42654,"auto":40721,"aptc":85980,"avgPrem":659,"avgNet":234,"cat":291,"bronze":44202,"silver":55880,"gold":3913,"plat":0},"New York":{"total":210704,"new":31868,"reenroll":178836,"active":71295,"auto":107541,"aptc":89718,"avgPrem":812,"avgNet":636,"cat":4036,"bronze":104370,"silver":75396,"gold":15723,"plat":11179},"Ohio":{"total":469616,"new":73309,"reenroll":396307,"active":208141,"auto":188166,"aptc":387729,"avgPrem":665,"avgNet":233,"cat":0,"bronze":282120,"silver":168124,"gold":19372,"plat":0},"Oklahoma":{"total":261887,"new":33769,"reenroll":228118,"active":119580,"auto":108538,"aptc":237649,"avgPrem":727,"avgNet":161,"cat":1127,"bronze":152229,"silver":88181,"gold":20350,"plat":0},"Oregon":{"total":118372,"new":16801,"reenroll":101571,"active":70004,"auto":31567,"aptc":71031,"avgPrem":741,"avgNet":426,"cat":0,"bronze":65978,"silver":36311,"gold":16083,"plat":0},"Pennsylvania":{"total":501459,"new":81373,"reenroll":420086,"active":143158,"auto":276928,"aptc":400008,"avgPrem":742,"avgNet":251,"cat":497,"bronze":151590,"silver":131343,"gold":216977,"plat":1052},"Rhode Island":{"total":43446,"new":9818,"reenroll":33628,"active":8208,"auto":25420,"aptc":35699,"avgPrem":649,"avgNet":246,"cat":0,"bronze":13386,"silver":15232,"gold":14078,"plat":750},"South Carolina":{"total":587567,"new":84654,"reenroll":502913,"active":266081,"auto":236832,"aptc":524034,"avgPrem":655,"avgNet":139,"cat":0,"bronze":377450,"silver":193860,"gold":16257,"plat":0},"South Dakota":{"total":50951,"new":6685,"reenroll":44266,"active":32986,"auto":11280,"aptc":42465,"avgPrem":684,"avgNet":211,"cat":1672,"bronze":30223,"silver":14017,"gold":5039,"plat":0},"Tennessee":{"total":569310,"new":92921,"reenroll":476389,"active":259380,"auto":217009,"aptc":514288,"avgPrem":838,"avgNet":141,"cat":0,"bronze":319290,"silver":213810,"gold":36113,"plat":97},"Texas":{"total":4172233,"new":764316,"reenroll":3407917,"active":2072012,"auto":1335905,"aptc":3877775,"avgPrem":709,"avgNet":89,"cat":2669,"bronze":1299290,"silver":1147273,"gold":1723001,"plat":0},"Utah":{"total":387336,"new":46063,"reenroll":341273,"active":255681,"auto":85592,"aptc":350154,"avgPrem":571,"avgNet":120,"cat":0,"bronze":200835,"silver":176878,"gold":9194,"plat":429},"Virginia":{"total":370086,"new":58469,"reenroll":311617,"active":90220,"auto":221397,"aptc":288477,"avgPrem":575,"avgNet":215,"cat":3195,"bronze":156700,"silver":115308,"gold":93512,"plat":1371},"Vermont":{"total":30344,"new":2492,"reenroll":27852,"active":5725,"auto":22127,"aptc":23336,"avgPrem":1090,"avgNet":364,"cat":188,"bronze":10615,"silver":3470,"gold":14632,"plat":1439},"Washington":{"total":290109,"new":51635,"reenroll":238474,"active":77734,"auto":160740,"aptc":187093,"avgPrem":738,"avgNet":343,"cat":753,"bronze":86954,"silver":49999,"gold":152403,"plat":0},"Wisconsin":{"total":291336,"new":39582,"reenroll":251754,"active":172086,"auto":79668,"aptc":228117,"avgPrem":784,"avgNet":250,"cat":1238,"bronze":172872,"silver":96777,"gold":19614,"plat":835},"West Virginia":{"total":55879,"new":6922,"reenroll":48957,"active":22478,"auto":26479,"aptc":49659,"avgPrem":1314,"avgNet":208,"cat":0,"bronze":21474,"silver":15875,"gold":17784,"plat":0},"Wyoming":{"total":41545,"new":5503,"reenroll":36042,"active":24360,"auto":11682,"aptc":36186,"avgPrem":1217,"avgNet":235,"cat":0,"bronze":14824,"silver":9230,"gold":17491,"plat":0}};
 const MKT_NAT_OEP   = {"total":23130860,"new":3603771,"reenroll":19527089,"active":10714902,"auto":8812187,"aptc":20035756,"avgPrem":741,"avgNet":178,"cat":67489,"bronze":9151919,"silver":9847273,"gold":3968289,"plat":95890};
 const POST_LABELS   = ["OEP","Jan","Feb","Mar","Apr","May"];
@@ -781,6 +892,146 @@ function renderMix(state){
   });
 }
 
+// ══ CHIP ══
+// CHIP is a SEPARATE population from Medicaid — no renewal data, and the
+// California/Nevada Medicaid adjustments do not apply. Total enrollment only.
+// The Mar 2023 peak is a reference point, never a series point; a gap in a
+// state's series renders as a gap (spanGaps:false), never interpolated.
+const CHIP_CAVEATS={
+  'Montana':'reported “individuals enrolled at any time in month” rather than a point-in-time count for a stretch of earlier periods, so its figures run structurally higher and are not directly comparable to other states.',
+  'Ohio':'reported “individuals enrolled at any time in month” rather than a point-in-time count for a stretch of earlier periods, so its figures run structurally higher and are not directly comparable to other states.',
+  'West Virginia':'reported “individuals enrolled at any time in month” rather than a point-in-time count for a stretch of earlier periods, so its figures run structurally higher and are not directly comparable to other states.',
+  'Rhode Island':'has no data for Dec 2024 and Jan 2025 (system limitations); any national total spanning those months is missing a state.',
+  'Colorado':'includes retroactive enrollments, which makes its figures subject to later revision.',
+  'Hawaii':'includes retroactive enrollments, which makes its figures subject to later revision.',
+  'New Hampshire':'includes retroactive enrollments, which makes its figures subject to later revision.',
+  'Alaska':'did not include all CHIP enrollees for several months in late 2023 and early 2024.'
+};
+
+function chipVal(state,p){ return state ? ((CHIP_STATES[state]||{})[p] ?? null) : (CHIP_NAT[p] ?? null); }
+function chipSeries(state){ return CHIP_PERIODS.map(p=>chipVal(state,p)); }
+
+function renderChipTs(state){
+  document.getElementById('cp-ts-title').innerHTML=(state||'National')+' Enrollment <span>Trend</span>';
+  document.getElementById('cp-ts-sub').textContent='Total CHIP enrollment · '+CHIP_LABELS[0]+' – '+CHIP_LABELS[CHIP_LABELS.length-1];
+  const s=chipSeries(state);
+  makeChart('chipTsChart',{
+    type:'line',
+    data:{labels:CHIP_LABELS,datasets:[{label:'Total CHIP Enrollment',data:s,borderColor:'#5B4B9E',
+      backgroundColor:'rgba(91,75,158,.10)',borderWidth:2.5,pointRadius:s.map(v=>v==null?0:4),
+      pointBackgroundColor:'#5B4B9E',pointBorderColor:'#fff',pointBorderWidth:2,tension:.25,spanGaps:false,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},
+        tooltip:{...T,callbacks:{label:c=>c.raw==null?' not reported':' '+c.raw.toLocaleString()}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}},
+        y:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}
+  });
+}
+
+function chipLatestByState(){
+  return Object.keys(CHIP_STATES).map(s=>({s:s,v:(CHIP_STATES[s]||{})[CHIP_LATEST]})).filter(o=>o.v!=null);
+}
+
+function renderChipRank(state){
+  const title=document.getElementById('cp-rank-title'), sub=document.getElementById('cp-rank-sub');
+  const latestLbl=CHIP_LABELS[CHIP_PERIODS.indexOf(CHIP_LATEST)];
+  if(!state){
+    const top=chipLatestByState().sort((a,b)=>b.v-a.v).slice(0,12);
+    title.innerHTML='Top 12 States <span>· CHIP Enrollment</span>';
+    sub.textContent='Total CHIP enrollment · '+latestLbl;
+    makeChart('chipRankChart',{
+      type:'bar',
+      data:{labels:top.map(o=>o.s),datasets:[{data:top.map(o=>o.v),backgroundColor:'rgba(91,75,158,.72)',
+        hoverBackgroundColor:'rgba(91,75,158,.92)',borderRadius:3,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()}}},
+        scales:{x:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}},
+          y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9.5}},border:{display:false}}}}
+    });
+  } else {
+    const others=chipLatestByState().filter(o=>o.s!==state).sort((a,b)=>b.v-a.v).slice(0,5).map(o=>o.s);
+    const labels=[state,...others];
+    title.innerHTML=state+' <span>vs. Largest States</span>';
+    sub.textContent='Total CHIP enrollment · '+latestLbl;
+    makeChart('chipRankChart',{
+      type:'bar',
+      data:{labels:labels,datasets:[{data:labels.map(s=>chipVal(s,CHIP_LATEST)||0),
+        backgroundColor:labels.map(s=>s===state?'rgba(91,75,158,.9)':'rgba(91,75,158,.3)'),
+        hoverBackgroundColor:labels.map(s=>s===state?'rgba(91,75,158,1)':'rgba(91,75,158,.5)'),
+        borderRadius:3,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()}}},
+        scales:{x:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}},
+          y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}}}}
+    });
+  }
+}
+
+// Peak strip: latest reported month vs the Mar 2023 pre-unwinding peak.
+// Total enrollment only; the baseline is a reference point, never a series point.
+function renderChipPeak(state,key){
+  const g=id=>document.getElementById(id);
+  const peak=CHIP_PEAK[state||'United States'];
+  const cur=chipVal(state,key);
+  g('cp-peak-cur-lbl').textContent=CHIP_LABELS[CHIP_PERIODS.indexOf(key)];
+  if(peak==null||cur==null){
+    ['cp-peak-peak','cp-peak-cur','cp-peak-chg','cp-peak-pct'].forEach(i=>g(i).textContent='—');
+    g('cp-peak-share').textContent='—'; g('cp-peak-bar').style.width='0'; return;
+  }
+  const chg=cur-peak, pctChg=chg/peak*100, share=cur/peak*100;
+  g('cp-peak-peak').textContent=fmt(peak);
+  g('cp-peak-cur').textContent=fmt(cur);
+  g('cp-peak-chg').textContent=(chg<0?'−':'+')+fmt(Math.abs(chg));
+  g('cp-peak-chg').style.color=chg<0?'var(--warn)':'var(--ok)';
+  g('cp-peak-pct').textContent=(pctChg<0?'−':'+')+Math.abs(pctChg).toFixed(1)+'%';
+  g('cp-peak-pct').style.color=chg<0?'var(--warn)':'var(--ok)';
+  g('cp-peak-share').textContent=share.toFixed(1)+'% of peak';
+  g('cp-peak-bar').style.width=Math.max(0,Math.min(100,share))+'%';
+}
+
+function selectChipState(state){
+  document.querySelectorAll('#panel-chip .state-pill').forEach(b=>b.classList.remove('active'));
+  const id=state?'chip-btn-'+state.replace(/ /g,'-').replace(/\./g,''):'chip-btn-national';
+  const b=document.getElementById(id); if(b) b.classList.add('active');
+
+  // latest month with data for this view (states are complete here, but be safe)
+  let key=CHIP_LATEST;
+  if(chipVal(state,key)==null){ for(let i=CHIP_PERIODS.length-1;i>=0;i--){ if(chipVal(state,CHIP_PERIODS[i])!=null){key=CHIP_PERIODS[i];break;} } }
+  const cur=chipVal(state,key);
+  const lbl=CHIP_LABELS[CHIP_PERIODS.indexOf(key)];
+  const loc=state||'National';
+  const peak=CHIP_PEAK[state||'United States'];
+
+  setKpi('cp-enroll', fmt(cur), loc+' · '+lbl, 'var(--chip)');
+  const ki=CHIP_PERIODS.indexOf(key);
+  const prev=ki>0?chipVal(state,CHIP_PERIODS[ki-1]):null;
+  setDelta('cp-enroll-d', cur, prev, 'up');
+
+  setKpi('cp-peak-ref', peak!=null?fmt(peak):'—', 'Pre-unwinding · total enrollment', '#6A5AAE');
+
+  if(peak!=null && cur!=null){
+    const chg=cur-peak, pctChg=chg/peak*100;
+    setKpi('cp-peakchg', (chg<0?'−':'+')+fmt(Math.abs(chg)),
+      '<b>'+(pctChg<0?'−':'+')+Math.abs(pctChg).toFixed(1)+'%</b> vs. Mar 2023 peak',
+      chg<0?'var(--warn)':'var(--ok)');
+    setKpi('cp-share', (cur/peak*100).toFixed(1)+'%', 'of Mar 2023 peak', 'var(--chip)');
+  } else {
+    setKpi('cp-peakchg','—','no peak baseline',null);
+    setKpi('cp-share','—','of Mar 2023 peak',null);
+  }
+
+  const sn=document.getElementById('cp-state-note');
+  if(state && CHIP_CAVEATS[state]){
+    sn.style.display='flex';
+    sn.innerHTML='<span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">⚠</span>'
+      +'<span><b style="color:#5A4A1A">'+state+'</b> '+CHIP_CAVEATS[state]+'</span>';
+  } else { sn.style.display='none'; sn.innerHTML=''; }
+
+  renderChipPeak(state,key);
+  renderChipTs(state);
+  renderChipRank(state);
+}
+
 // ══ MARKETPLACE ══
 function latestPost(series){
   for(let i=series.length-1;i>=1;i--) if(series[i]!=null) return {v:series[i],lbl:POST_LABELS[i]};
@@ -1002,6 +1253,7 @@ function renderBhp(){
 // ══ TABS ══
 const META={
   mcaid:{p:'Medicaid \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Renewal Tracker \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1]},
+  chip:{p:'CHIP \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Enrollment Data \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1]},
   bhp:{p:'BHP \u00b7 Jan\u2013Jul 2026',s:'CMS Basic Health Program Enrollment Data \u00b7 2026'},
   mkt:{p:'ACA Marketplace \u00b7 OEP + Effectuated 2026',s:'CMS Marketplace OEP Snapshot &amp; Effectuated Enrollment \u00b7 2026'}
 };
@@ -1018,7 +1270,7 @@ document.getElementById('ftrDate').textContent='Generated '+new Date().toLocaleD
 // so the latest month shows on first load without waiting for a tab click.
 document.getElementById('hdrPeriod').textContent=META.mcaid.p;
 document.getElementById('ftrSrc').innerHTML='<span>'+META.mcaid.s+'</span>';
-requestAnimationFrame(()=>{ selectMcaidState(null); selectMktState(null); renderBhp(); });
+requestAnimationFrame(()=>{ selectMcaidState(null); selectChipState(null); selectMktState(null); renderBhp(); });
 </script>
 </body>
 </html>
