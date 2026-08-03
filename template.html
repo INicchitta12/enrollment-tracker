@@ -287,6 +287,15 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       <div class="peak-note" id="cp-peak-note"></div>
     </div>
 
+    <div style="flex-shrink:0">
+      <div class="cum-hd" id="cp-cum-hd" style="color:var(--chip);margin-top:0">Cumulative Impact <span></span></div>
+      <div class="cum-strip">
+        <div class="cum-cell"><div class="cum-lbl">Net Enrollment Change</div><div class="cum-val" id="cp-cum-net">&mdash;</div><div class="cum-sub" id="cp-cum-net-sub">&mdash;</div></div>
+        <div class="cum-cell"><div class="cum-lbl">Average Monthly Change</div><div class="cum-val" id="cp-cum-avg">&mdash;</div><div class="cum-sub" id="cp-cum-avg-sub">&mdash;</div></div>
+        <div class="cum-cell"><div class="cum-lbl">vs. March 2023 Peak</div><div class="cum-val" id="cp-cum-peak">&mdash;</div><div class="cum-sub" id="cp-cum-peak-sub">&mdash;</div></div>
+      </div>
+    </div>
+
     <div class="lower l-50-50">
       <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--chip)"></div><div class="chart-title" id="cp-ts-title">Enrollment <span>Trend</span></div></div>
@@ -771,7 +780,12 @@ function renderChipTs(state){
       plugins:{legend:{display:false},
         tooltip:{...T,callbacks:{label:c=>c.raw==null?' not reported':' '+c.raw.toLocaleString()}}},
       scales:{x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}},
-        y:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}
+        // beginAtZero (national + state): CHIP enrollment is genuinely flat, so
+        // anchoring at zero renders change proportionally instead of letting
+        // auto-scale stretch a ~1-5% span across the whole plot. The national
+        // range widens to ~0–8M so axisFmt picks whole millions; states stay in
+        // thousands automatically. Applies to the CHIP trend chart only.
+        y:{beginAtZero:true,grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}
   });
 }
 
@@ -873,6 +887,41 @@ function selectChipState(state){
     sn.innerHTML='<span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">⚠</span>'
       +'<span><b style="color:#5A4A1A">'+state+'</b> '+CHIP_CAVEATS[state]+'</span>';
   } else { sn.style.display='none'; sn.innerHTML=''; }
+
+  // Cumulative Impact strip — first→last available month for this view. CHIP has
+  // no renewal data, so the cells are net change, average monthly change, and
+  // change vs the Mar 2023 peak. Everything is derived from the data (state spans
+  // can differ); the header shows the actual month range.
+  let firstIdx=-1,lastIdx=-1,firstVal=null,lastVal=null;
+  CHIP_PERIODS.forEach((p,i)=>{ const v=chipVal(state,p);
+    if(v!=null){ if(firstIdx<0){firstIdx=i;firstVal=v;} lastIdx=i;lastVal=v; } });
+  const cumHd=document.getElementById('cp-cum-hd');
+  const sgn=v=>v<0?'−':'+';
+  if(firstIdx>=0){
+    cumHd.innerHTML='Cumulative Impact <span>· '+CHIP_LABELS[firstIdx]+' – '+CHIP_LABELS[lastIdx]+'</span>';
+    const net=lastVal-firstVal, netPct=firstVal?net/firstVal*100:0;
+    setCum('cp-cum-net','cp-cum-net-sub',
+      sgn(net)+Math.abs(net).toLocaleString(),
+      sgn(net)+Math.abs(netPct).toFixed(2)+'% since '+CHIP_LABELS[firstIdx],
+      net<0?'var(--warn)':'var(--ok)');
+    const intervals=lastIdx-firstIdx, avg=intervals>0?Math.round(net/intervals):0;
+    setCum('cp-cum-avg','cp-cum-avg-sub',
+      sgn(avg)+Math.abs(avg).toLocaleString(),
+      intervals>0?('per month · '+intervals+(intervals===1?' interval':' intervals')):'single month',
+      avg<0?'var(--warn)':'var(--ok)');
+    if(peak!=null){
+      const pk=lastVal-peak, pkPct=pk/peak*100, sh=lastVal/peak*100;
+      setCum('cp-cum-peak','cp-cum-peak-sub',
+        sgn(pk)+Math.abs(pk).toLocaleString(),
+        sgn(pk)+Math.abs(pkPct).toFixed(1)+'% · '+sh.toFixed(1)+'% of peak',
+        pk<0?'var(--warn)':'var(--ok)');
+    } else { setCum('cp-cum-peak','cp-cum-peak-sub','—','no peak baseline',null); }
+  } else {
+    cumHd.innerHTML='Cumulative Impact <span></span>';
+    setCum('cp-cum-net','cp-cum-net-sub','—','—',null);
+    setCum('cp-cum-avg','cp-cum-avg-sub','—','—',null);
+    setCum('cp-cum-peak','cp-cum-peak-sub','—','—',null);
+  }
 
   renderChipPeak(state,key);
   renderChipTs(state);
