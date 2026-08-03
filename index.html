@@ -915,22 +915,6 @@ function renderChipTs(state){
   document.getElementById('cp-ts-title').innerHTML=(state||'National')+' Enrollment <span>Trend</span>';
   document.getElementById('cp-ts-sub').textContent='Total CHIP enrollment · '+CHIP_LABELS[0]+' – '+CHIP_LABELS[CHIP_LABELS.length-1];
   const s=chipSeries(state);
-  // National view: pad the range to whole-million boundaries (min rounded down,
-  // max rounded up) and step the axis a million at a time, so tick spacing is
-  // wide enough for axisFmt to pick whole millions while the decline still
-  // reads as a genuine slope. Do NOT begin at zero. State views keep Chart.js
-  // auto-scaling (values ~6K–1.2M read correctly in thousands).
-  const yScale={grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}};
-  if(!state){
-    const vals=s.filter(v=>v!=null);
-    if(vals.length){
-      const M=1e6;
-      yScale.min=Math.floor(Math.min(...vals)/M)*M;
-      yScale.max=Math.ceil(Math.max(...vals)/M)*M;
-      if(yScale.max<=yScale.min) yScale.max=yScale.min+M;
-      yScale.ticks.stepSize=M;   // whole-million ticks -> axisFmt renders 'M'
-    }
-  }
   makeChart('chipTsChart',{
     type:'line',
     data:{labels:CHIP_LABELS,datasets:[{label:'Total CHIP Enrollment',data:s,borderColor:'#5B4B9E',
@@ -940,7 +924,7 @@ function renderChipTs(state){
       plugins:{legend:{display:false},
         tooltip:{...T,callbacks:{label:c=>c.raw==null?' not reported':' '+c.raw.toLocaleString()}}},
       scales:{x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}},
-        y:yScale}}
+        y:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}
   });
 }
 
