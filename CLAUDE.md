@@ -4,11 +4,31 @@ Single-page dashboard tracking Medicaid, Basic Health Program (BHP), and ACA Mar
 enrollment. Published via GitHub Pages. Audience is internal policy analysts; the output
 supports advocacy materials, so **figures must be defensible and conservatively sourced**.
 
+## CMS data caveats — consult before touching data
+
+`data/cms_data_notes.md` is the register of every caveat CMS publishes in the "Data Notes"
+appendix of its monthly Enrollment Snapshot PDFs (source PDFs in `source-data/cms-snapshots/`),
+consolidated and deduplicated across editions. **Consult it before you:**
+
+- **add or refresh any data** — check whether the new month or state carries a known caveat;
+- **investigate an anomaly** — an implausible jump is often a documented CMS reporting issue, not
+  a real change or a bug (see the April 2026 watch items below for the pattern);
+- **change how a metric is calculated** — a caveat may explain, or be undone by, the change.
+
+**Any state flagged as an active caveat there must have its caveat surfaced on the dashboard when
+that state is selected** (as Nevada and California already are on the Medicaid tab, and the CHIP
+caveats on the CHIP tab). If a flagged state has no on-page note yet, add one rather than showing
+the figure unqualified. `data/cms_data_notes.md` also records caveats affecting data currently in
+the dashboard that are **not yet** reflected in this file or the code — read its Active-caveats
+section and gap note before trusting a state's figure.
+
 ## Layout
 
 ```
 data/Enrollment_Tracker.xlsx   source workbook — the only file that changes monthly
 data/pdf_history.json          national outcome mix Mar–Nov 2025 (from CMS PDF; static)
+data/cms_data_notes.md         consolidated CMS "Data Notes" caveats, deduped across snapshots
+source-data/cms-snapshots/     CMS monthly Enrollment Snapshot PDFs (provenance for the above)
 data/cost_sharing.csv          ACA plan-level cost sharing by state × metal tier (annual; from PUFs)
 source-data/                   large CMS PUF zips + data dictionaries (extracted CSVs gitignored)
 template.html                  page markup, CSS, and chart JS with __PLACEHOLDER__ tokens
@@ -275,10 +295,16 @@ documented Platinum/Catastrophic cases.
 ## Monthly update
 
 1. Drop the new workbook at `data/Enrollment_Tracker.xlsx` (keep the filename)
-2. `python build_dashboard.py`
-3. Sanity-check the console summary — month ranges and state counts should look right
-4. Open `index.html` locally, click through all three tabs and a few state toggles
-5. Commit and push; GitHub Pages redeploys within about a minute
+2. Add the new CMS snapshot PDF to `source-data/cms-snapshots/` (named `snapshot-YYYY-MM.pdf`),
+   extract its **Data Notes** appendix — the *Data Type × Data Notes* table near the end; ignore
+   the identical "What You Should Know When Using the Data" boilerplate slides — and update
+   `data/cms_data_notes.md`: add **new** caveats, mark **resolved** ones (a caveat that stops being
+   repeated), and record any that **changed wording** (e.g. a restated date or a changed state
+   list). Surface any newly active state caveat on the dashboard per the rule above.
+3. `python build_dashboard.py`
+4. Sanity-check the console summary — month ranges and state counts should look right
+5. Open `index.html` locally, click through all three tabs and a few state toggles
+6. Commit and push; GitHub Pages redeploys within about a minute
 
 ## Verification habit
 
