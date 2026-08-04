@@ -68,6 +68,7 @@ FIELDS = {
     "tot": "TOT_BENES",              # Total Medicare
     "org": "ORGNL_MDCR_BENES",       # Original / Traditional Medicare
     "ma": "MA_AND_OTH_BENES",        # Medicare Advantage & other health plans
+    "abtot": "A_B_TOT_BENES",        # beneficiaries with BOTH Part A and Part B
     "aged": "AGED_TOT_BENES",        # entitled by age
     "dsbld": "DSBLD_TOT_BENES",      # entitled by disability
     "dual": "DUAL_TOT_BENES",        # Medicare-Medicaid dual eligibles
@@ -128,6 +129,10 @@ def main():
             sys.exit(f"ERROR: Aged+Disabled != Total for {st} {period}")
         if rec["pdp"] + rec["mapd"] != rec["partd"]:
             sys.exit(f"ERROR: PDP+MAPD != Part D for {st} {period}")
+        # A&B is the MA-penetration denominator (must have both parts to enroll in
+        # MA), so it must be a positive subset of the total.
+        if not 0 < rec["abtot"] <= rec["tot"]:
+            sys.exit(f"ERROR: A_B_TOT out of range for {st} {period}")
 
         states.setdefault(st, {})[period] = rec
         seen.setdefault(period, set()).add(st)
@@ -179,11 +184,11 @@ def main():
     print(f"  {len(states)} states + DC (territories excluded)  ·  "
           f"{labels[0]} – {labels[-1]}  ({len(periods)} months)")
     print(f"  National {labels[-1]}: total {n_now['tot']:,}  ·  "
-          f"MA penetration {n_now['ma'] / n_now['tot'] * 100:.1f}%  ·  "
+          f"MA penetration {n_now['ma'] / n_now['abtot'] * 100:.1f}% (of A&B)  ·  "
           f"dual {n_now['dual'] / n_now['tot'] * 100:.1f}%  ·  "
           f"Part D {n_now['partd'] / n_now['tot'] * 100:.1f}%")
-    print(f"  MA penetration {labels[0]} {n_then['ma'] / n_then['tot'] * 100:.1f}%"
-          f"  ->  {labels[-1]} {n_now['ma'] / n_now['tot'] * 100:.1f}%")
+    print(f"  MA penetration (MA / Part A&B) {labels[0]} {n_then['ma'] / n_then['abtot'] * 100:.1f}%"
+          f"  ->  {labels[-1]} {n_now['ma'] / n_now['abtot'] * 100:.1f}%")
 
 
 if __name__ == "__main__":

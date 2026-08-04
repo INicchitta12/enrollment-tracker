@@ -253,9 +253,12 @@ Rerun `build_medicare.py` only when CMS publishes a refreshed Medicare file. The
 CSV is gitignored (`Medicare_Monthly_Data.csv`).
 
 **The headline metric is Medicare Advantage penetration** — MA (`MA_AND_OTH_BENES`, labelled
-"MA & other health plans", since it also covers cost plans/PACE) as a share of total Medicare
-(`TOT_BENES`) — the hospital-relevant story. Nationally it rose **47.9% → 51.2%** (Jan 2023 →
-Apr 2026); across states Apr 2026 spans **2.8% (Alaska) → 63.7% (Michigan)**.
+"MA & other health plans", since it also covers cost plans/PACE) as a share of beneficiaries
+with **both Part A and Part B** (`A_B_TOT_BENES`), **not** total Medicare — you must carry both
+parts to enrol in MA, so A&B is the eligible denominator (the standard CMS penetration basis).
+It runs ~4 points above the total-Medicare basis: nationally it rose **52.3% → 55.6%** (Jan 2023
+→ Apr 2026); across states Apr 2026 spans **3.2% (Alaska) → 67.6% (Michigan)**. The KPI, hero
+trend, ranking, and lookback bar all use this A&B denominator; `mcPen()` is the single source.
 
 Data traps handled in `build_medicare.py` (all verified against the file):
 
@@ -281,9 +284,10 @@ Tab shape (state selector defaults to National, wired like the others; every fig
 recalculates): a **KPI row** (total Medicare + MoM; MA penetration + MoM in points; Original
 Medicare; dual-eligible + share; Part D coverage + share), a **3-year lookback strip** (current
 vs the same month three years earlier — total then/now/change/%, with the proportional bar
-repurposed to show **MA penetration then → now**: a light "now" fill under a solid
-"3-years-ago" fill so both values and the gain between them are visible, since a growing series
-would overrun a share-of-baseline bar), and a **five-chart grid**: MA penetration trend (hero,
+repurposed to show **MA penetration then → now**: a light "3-years-ago" segment (0 → then)
+followed by a darker segment for the gain up to now (then → now), so the current rate is the
+darker region and its right edge marks today, since a growing series would overrun a
+share-of-baseline bar), and a **five-chart grid**: MA penetration trend (hero,
 tall, line), three **stacked-area** charts — Original vs MA, Part D (PDP vs MAPD), Aged vs
 Disabled — and a state MA-penetration ranking (top-12 nationally; selected-state-vs-largest when a state
 is chosen). The lookback month is derived as three years before the latest month, so it tracks
