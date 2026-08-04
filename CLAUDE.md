@@ -93,26 +93,39 @@ outcome mix is workbook-only and covers the workbook's months.
 **Outcome-mix components are rescaled to sum to exactly 100** so stacked bars render
 cleanly. Adjustments are under ~0.25pt.
 
-**California enrollment carries a continuity adjustment from March 2026 onward.** California
-revised its Medicaid reporting in March 2026 to exclude limited-benefit enrollees and did not
-restate prior months, making March-onward non-comparable to earlier months and inflating the
-apparent national decline. To keep the trend comparable, `load_medicaid()` adds back a fixed
-amount to California's `enroll` and `adult` counts for March 2026 and every later month (the
-revision is permanent). The add-backs are derived by taking California's average monthly change
-over Dec 2025–Feb 2026 (−106,996 total, −78,132 adult), treating that as the expected March
-change, and attributing the excess decline to the reclassification:
+**California enrollment carries a continuity restatement of its pre-March-2026 months.**
+California revised its Medicaid reporting in March 2026 to exclude limited-benefit enrollees and
+did not restate prior months, making March-onward non-comparable to earlier months and inflating
+the apparent national decline. To keep the trend comparable, `load_medicaid()` puts the whole
+series on the revised (exclude-limited-benefit) basis by restating the **pre-revision** months
+**down** — subtracting a fixed amount from California's `enroll` and `adult` counts for every
+month *before* `CA_ADJUST_FROM` (`2026-03`), and leaving March 2026 and later **exactly as CMS
+reports them**. This is deliberately the opposite of an add-back to the future: the two framings
+produce an identical trend (they differ only by a uniform level shift), so the choice is which
+end of the series stays real — and anchoring the current/most-recent months to CMS's published
+figures keeps them tied to CMS control totals (national April = 66,725,217, which the load is
+validated against) and cross-checkable, leaving only the shrinking pre-March tail as an estimate.
+The amounts are derived by taking California's average monthly change over Dec 2025–Feb 2026
+(−106,996 total, −78,132 adult), treating that as the expected March change, and attributing the
+excess decline to the reclassification (i.e. the estimated limited-benefit population removed):
 `CA_ENROLL_ADJUST = 384186` (Total Medicaid Enrollment) and `CA_ADULT_ADJUST = 372782` (Total
-Medicaid Adult Enrollment). **These are estimates, not CMS figures** — as reported, March
-California enrollment was 10,715,787. The adjustment touches enrollment counts only; no renewal
-field is altered. The national row is the exact sum of states, so national enrollment is
-re-derived from state totals after the adjustment rather than adjusted separately, and the
-sum-of-states identity is checked before the adjustment is applied. A visible note on the
-Medicaid tab discloses the adjustment to viewers. The April 2026 CMS snapshot reconfirms
-California's data is non-comparable from March forward; the raw March→April change is −138,192
-(steeper than the ~−107,000 pre-revision trend but far from the −491,182 one-time March
-reclassification drop), so the level-shift interpretation holds and the constants are
-unchanged. Because the same constant is added to both March and April, the March→April delta
-is unaffected by the adjustment.
+Medicaid Adult Enrollment). **These are estimates, not CMS figures.** As reported, March
+California enrollment was 10,715,787 — shown unchanged. The restatement touches enrollment counts
+only; no renewal field is altered. The national row is the exact sum of states, so national
+enrollment is re-derived from state totals after the restatement rather than adjusted separately,
+and the sum-of-states identity is checked before it is applied. A visible note on the Medicaid tab
+discloses this to viewers. Because March and April are both left as reported, the raw March→April
+change (−138,192) flows through untouched — steeper than the ~−107,000 pre-revision trend but far
+from the −491,182 one-time March reclassification drop, so the level-shift interpretation holds
+and the constants are unchanged.
+
+*Why March, not November?* CMS's Dec 2025–Feb 2026 editions dated this revision to November 2025,
+then the Mar–Apr editions restated it to March 2026 (see `data/cms_data_notes.md`). The workbook
+data settle it: California runs a smooth trend Dec→Feb (−103,503, −110,489) and then a single
+−491,182 cliff at Feb→March — there is **no level break in the Dec/Jan/Feb figures**, so the
+exclusion landed in the March data and those earlier months are fully on the old include-basis.
+March is therefore the operative revision month, and subtracting the full constant from each
+pre-March month is the correct restatement; no separate November adjustment is warranted.
 
 **The April 2026 Medicaid rows arrived mislabeled `2025-04` in the workbook** — a year
 typo (confirmed against all three CMS control totals: 66,725,217 total, 38,489,574 adult,
@@ -161,13 +174,14 @@ Rules that keep it honest:
 - **Total enrollment only.** The sheet has no adult or renewal fields; no adult/renewal code
   path reads from it, and the strip is labelled total enrollment. `load_peak_baseline()`
   checks the sheet's `United States` row equals the sum of its states.
-- **Current value = the latest month's *adjusted* enrollment** (same figure as the KPI), so
-  the California continuity add-back is included on the current side.
+- **Current value = the latest month's enrollment** (same figure as the KPI). Under the
+  California restatement the latest month is left exactly as CMS reports it, so the current side
+  is the real reported figure — no add-back is applied to it.
 - **California peak non-comparability.** The Mar 2023 peak predates California's reporting
-  revision, so California's peak still includes limited-benefit enrollees its current figure
-  excludes; the +384,186 current-side adjustment only partly offsets this, so California's
-  decline-from-peak is somewhat overstated. The strip discloses this in a per-state note when
-  California is selected rather than restating the peak (a small effect on the national total).
+  revision, so California's peak still includes limited-benefit enrollees its current figure now
+  excludes; the peak overstates California's decline by roughly the excluded population
+  (~384,000). The strip discloses this in a per-state note when California is selected rather than
+  restating the peak (a small effect on the national total).
 
 ## CHIP (its own tab)
 
@@ -196,7 +210,7 @@ Hampshire was subsequently revised from 19,058 to 18,943, giving 7,213,381. The 
 workbook carries the revised NH value (18,943 → national 7,213,381). Either vintage is
 acceptable depending on the data's age; any *other* March mismatch means stop and report.
 
-**The Medicaid adjustments do NOT apply to CHIP.** The California continuity add-back concerned
+**The Medicaid adjustments do NOT apply to CHIP.** The California continuity restatement concerned
 Medicaid limited-benefit enrollees only, and the Nevada March 2026 caveat concerned Medicaid
 *child* enrollment — neither touches CHIP. `load_chip()` applies no adjustment, and the CHIP
 tab carries neither disclosure.

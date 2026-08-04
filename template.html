@@ -192,7 +192,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
     <div class="data-note compact">
       <span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">&#9888;</span>
-      <span><b style="color:#5A4A1A">California</b> enrollment adjusted from Mar 2026 forward (<b style="color:#5A4A1A">+384,186</b> total, <b style="color:#5A4A1A">+372,782</b> adult) for continuity, after a CMS reporting revision excluded limited-benefit enrollees without restating prior months. As reported, March California enrollment was 10,715,787.</span>
+      <span>In Mar 2026 a CMS revision excluded limited-benefit enrollees from <b style="color:#5A4A1A">California</b>&rsquo;s Medicaid counts without restating prior months. For a comparable trend, California&rsquo;s pre-Mar-2026 months are restated down onto that revised basis (by an estimated <b style="color:#5A4A1A">384,186</b> total, <b style="color:#5A4A1A">372,782</b> adult); Mar 2026 and later are shown exactly as CMS reports them, so current figures match CMS totals.</span>
     </div>
 
     <div class="data-note compact" id="mk-state-note" style="display:none"></div>
@@ -465,6 +465,16 @@ const TOP12         = __TOP12__;
 const MIX           = __MIX__;
 const MCAID_PEAK    = __MCAID_PEAK__;
 const PEAK_LABEL    = __PEAK_LABEL__;
+// Per-state Medicaid caveats from the CMS "Data Notes" appendix (see
+// data/cms_data_notes.md). Surfaced under the state selector when that state is
+// chosen. Wyoming's Jan 2026 processing issue is omitted here — it was flagged
+// for a single month and dropped from later editions (resolved), so a standing
+// warning would misread; it stays documented in the register.
+const MCAID_CAVEATS = {
+  'Nevada':'<b style="color:#5A4A1A">Nevada</b>’s <b style="color:#5A4A1A">March 2026</b> total is overstated by roughly <b style="color:#5A4A1A">12,000</b> — a CMS reporting error inflated child enrollment (adult enrollment is unaffected), to be corrected in a future CMS release. Its March→April change is therefore understated.',
+  'Georgia':'<b style="color:#5A4A1A">Georgia</b> reports beneficiaries granted a new 12-month eligibility period after a change in circumstances <b style="color:#5A4A1A">together with</b> those due for renewal, which inflates its renewals-due count — so Georgia’s renewal-outcome mix is not directly comparable to other states’. (CMS Data Notes; ongoing.)',
+  'North Carolina':'<b style="color:#5A4A1A">North Carolina</b> reports renewal outcomes only for renewals it initiated and scheduled to complete in the report month, excluding renewals due it could not initiate in time — so its renewals-due count runs low relative to other states. (CMS Data Notes; ongoing.)',
+};
 const CHIP_PERIODS  = __CHIP_PERIODS__;
 const CHIP_LABELS   = __CHIP_LABELS__;
 const CHIP_LATEST   = __CHIP_LATEST__;
@@ -655,12 +665,14 @@ function selectMcaidState(state){
   setBar('mk-bar-proc',   d.procedural/d.disenrolled*100,d.procedural.toLocaleString(),'mk-pct-proc');
   setBar('mk-bar-inelig', d.ineligible/d.disenrolled*100,d.ineligible.toLocaleString(),'mk-pct-inelig');
 
-  // Nevada March reporting error — CMS-acknowledged, corrected upstream later
+  // Per-state Medicaid caveats from the CMS "Data Notes" appendix
+  // (see data/cms_data_notes.md). Nevada affects an enrollment total; Georgia
+  // and North Carolina affect the comparability of the renewal-outcome mix.
   const sn=document.getElementById('mk-state-note');
-  if(state==='Nevada'){
+  if(state && MCAID_CAVEATS[state]){
     sn.style.display='flex';
     sn.innerHTML='<span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">⚠</span>'
-      +'<span><b style="color:#5A4A1A">Nevada</b>’s <b style="color:#5A4A1A">March 2026</b> total is overstated by roughly <b style="color:#5A4A1A">12,000</b> — a CMS reporting error inflated child enrollment (adult enrollment is unaffected), to be corrected in a future CMS release. Its March→April change is therefore understated.</span>';
+      +'<span>'+MCAID_CAVEATS[state]+'</span>';
   } else {
     sn.style.display='none'; sn.innerHTML='';
   }
@@ -695,7 +707,7 @@ function renderPeak(state, key){
   g('mk-peak-share').textContent=share.toFixed(1)+'% of peak';
   g('mk-peak-bar').style.width=Math.max(0,Math.min(100,share))+'%';
   g('mk-peak-note').innerHTML = state==='California'
-    ? 'CA peak includes limited-benefit enrollees excluded from the current figure; the +384,186 continuity adjustment only partly offsets, so this decline is somewhat overstated.'
+    ? 'The Mar 2023 peak still includes limited-benefit enrollees that CMS excluded from the current figure, so CA&rsquo;s decline from peak is overstated by roughly the excluded population (~384,000).'
     : '';
 }
 
