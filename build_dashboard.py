@@ -74,13 +74,21 @@ MCAID_COLS = {
 # California revised its Medicaid reporting in March 2026 to exclude
 # limited-benefit enrollees and did not restate prior months, which makes March
 # onward non-comparable to earlier months and inflates the apparent national
-# decline. We apply a continuity adjustment: California's average monthly
-# enrollment change over Dec 2025-Feb 2026 was -106,996 total and -78,132 adult;
-# treating that as the expected March change and attributing the excess decline
-# to the reclassification gives the add-backs below (expected March value minus
-# the value California actually reported). These are estimates, not CMS figures.
-# The revision is permanent, so the adjustment applies to March 2026 and every
-# later month. Enrollment counts only -- renewal fields are never touched.
+# decline. We put the whole series on the revised (exclude-limited-benefit)
+# basis by restating the PRE-revision months DOWN, rather than inflating the
+# post-revision months up. This keeps March 2026 and every later month exactly
+# as CMS reports them, so the current/most-recent figures still tie to CMS
+# control totals (e.g. national April 66,725,217); only the shrinking pre-March
+# tail is an estimate. The two framings produce an identical trend -- they differ
+# only by a uniform level shift -- so the choice is purely which end stays real.
+# Magnitude: California's average monthly change over Dec 2025-Feb 2026 was
+# -106,996 total and -78,132 adult; treating that as the expected March change
+# and attributing the excess decline to the reclassification gives the amounts
+# below (expected March value minus the value California actually reported),
+# i.e. the estimated limited-benefit population removed. These are estimates,
+# not CMS figures. Enrollment counts only -- renewal fields are never touched.
+# CA_ADJUST_FROM is the first revised (exclude-basis) month; months before it are
+# restated down by the constants below.
 CA_ADJUST_FROM = '2026-03'
 CA_ENROLL_ADJUST = 384186
 CA_ADULT_ADJUST = 372782
@@ -121,12 +129,14 @@ def mix_percentages(rec):
 
 
 def apply_california_adjustment(periods, national, states):
-    """Continuity add-back for California's March 2026 reporting revision.
+    """Continuity restatement for California's March 2026 reporting revision.
 
-    Adjusts California's own enrollment counts from CA_ADJUST_FROM onward, then
-    re-derives the national enrollment counts from state totals so the national
-    row stays the exact sum of states. Renewal fields are left untouched. Raises
-    if the national == sum-of-states identity does not hold on the raw data.
+    Restates California's own enrollment counts for the months BEFORE
+    CA_ADJUST_FROM down onto the revised exclude-limited-benefit basis, leaving
+    CA_ADJUST_FROM and later exactly as CMS reports them, then re-derives the
+    national enrollment counts from state totals so the national row stays the
+    exact sum of states. Renewal fields are left untouched. Raises if the
+    national == sum-of-states identity does not hold on the raw data.
     """
     def sum_states(key, field):
         return sum(s[key][field] for s in states.values()
@@ -140,9 +150,9 @@ def apply_california_adjustment(periods, national, states):
 
     ca = states.get('California', {})
     for key in periods:
-        if key >= CA_ADJUST_FROM and key in ca:
-            ca[key]['enroll'] += CA_ENROLL_ADJUST
-            ca[key]['adult'] += CA_ADULT_ADJUST
+        if key < CA_ADJUST_FROM and key in ca:
+            ca[key]['enroll'] -= CA_ENROLL_ADJUST
+            ca[key]['adult'] -= CA_ADULT_ADJUST
             national[key]['enroll'] = sum_states(key, 'enroll')
             national[key]['adult'] = sum_states(key, 'adult')
 

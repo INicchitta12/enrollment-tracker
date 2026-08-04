@@ -28,20 +28,22 @@ Issues touching data currently in the dashboard (Dec 2025 – Apr 2026).
 
 | State | Program / data type | Issue | Period affected | Dashboard impact | CMS will correct? | Appeared in |
 |---|---|---|---|---|---|---|
-| **California** | Medicaid enrollment (total, adult) | Revised reporting to exclude limited-benefit individuals; prior months not restated, so data are **not comparable to earlier months**. ⚠ **The revision date CMS gives changed between editions:** Dec 2025 / Jan 2026 / Feb 2026 editions date it to **November 2025**; Mar 2026 / Apr 2026 editions date it to **March 2026**. | "Nov 2025 forward" (early editions) → "Mar 2026 forward" (later editions) | CA + national Medicaid total & adult. Dashboard applies a continuity add-back **from March 2026 only** (`CA_ENROLL_ADJUST`, `CA_ADULT_ADJUST`). The Nov 2025 framing is **not** reflected — see gap note below. | No — state will not restate prior months | Dec 2025 – Apr 2026 (wording changed after Feb 2026) |
+| **California** | Medicaid enrollment (total, adult) | Revised reporting to exclude limited-benefit individuals; prior months not restated, so data are **not comparable to earlier months**. CMS's revision date shifted between editions: Dec 2025 / Jan 2026 / Feb 2026 editions said **November 2025**; Mar 2026 / Apr 2026 editions say **March 2026** — the workbook data confirm the break is at March (see gap note). | Mar 2026 forward | CA + national Medicaid total & adult. Dashboard now puts the whole series on the revised (exclude) basis by **restating the pre-March-2026 months down** (`CA_ENROLL_ADJUST`, `CA_ADULT_ADJUST`), leaving Mar 2026+ as CMS reports them so current figures tie to CMS control totals. Disclosed on the Medicaid tab. | No — state will not restate prior months | Dec 2025 – Apr 2026 (wording changed after Feb 2026) |
 | **Nevada** | Medicaid child enrollment | March 2026 child enrollment overstated by ~12,000 due to a reporting error (adult unaffected). | Mar 2026 | NV + national Medicaid total & child; NV Mar→Apr change understated. Surfaced on Medicaid tab; left as reported. | **Yes** — corrected data in a future report | Apr 2026 (first appeared) |
-| **Georgia** | Eligibility processing (renewal outcomes) | Reports individuals who stayed eligible after a change in circumstances and were granted a new 12-month period **together with** those due for renewal in the month. | Ongoing (all editions) | Inflates Georgia's "renewals due" denominator and distorts its renewal-outcome mix vs other states. **Not currently surfaced on the dashboard.** | No — methodology | Dec 2025 – Apr 2026 (all) |
-| **North Carolina** | Eligibility processing (renewal outcomes) | Reports renewal outcomes only for renewals it *initiated* and scheduled to complete in the report month; excludes renewals due that it could not initiate in time. | Ongoing (all editions) | Undercounts NC renewals due / outcomes; not comparable to states reporting all due renewals. **Not currently surfaced on the dashboard.** | No — methodology | Dec 2025 – Apr 2026 (all) |
-| **Wyoming** | Eligibility processing (renewal outcomes) | State identified an issue with its **January 2026** eligibility-processing submission; corrected data forthcoming. | Jan 2026 | WY Jan 2026 renewal-outcome figures suspect. **Not surfaced.** Note dropped after the Jan 2026 edition → treat as resolved. | **Yes** — appears resolved (dropped Feb 2026) | Jan 2026 only |
+| **Georgia** | Eligibility processing (renewal outcomes) | Reports individuals who stayed eligible after a change in circumstances and were granted a new 12-month period **together with** those due for renewal in the month. | Ongoing (all editions) | Inflates Georgia's "renewals due" denominator and distorts its renewal-outcome mix vs other states. **Surfaced** on the Medicaid tab when Georgia is selected. | No — methodology | Dec 2025 – Apr 2026 (all) |
+| **North Carolina** | Eligibility processing (renewal outcomes) | Reports renewal outcomes only for renewals it *initiated* and scheduled to complete in the report month; excludes renewals due that it could not initiate in time. | Ongoing (all editions) | Undercounts NC renewals due / outcomes; not comparable to states reporting all due renewals. **Surfaced** on the Medicaid tab when North Carolina is selected. | No — methodology | Dec 2025 – Apr 2026 (all) |
+| **Wyoming** | Eligibility processing (renewal outcomes) | State identified an issue with its **January 2026** eligibility-processing submission; corrected data forthcoming. | Jan 2026 | WY Jan 2026 renewal-outcome figures suspect. **Intentionally not surfaced** on the dashboard — one month, dropped from later editions (resolved); a standing warning would misread. Documented here only. | **Yes** — appears resolved (dropped Feb 2026) | Jan 2026 only |
 
-**Gap note — California November 2025 revision.** CMS's Dec 2025, Jan 2026 and Feb 2026 editions
-state California's Medicaid data are non-comparable **from November 2025 forward**. The dashboard
-and `CLAUDE.md` treat the reclassification as a clean **March 2026** level shift and apply the
-continuity add-back only from March 2026 — so the Dec 2025, Jan 2026 and Feb 2026 California
-figures shown in the dashboard carry a CMS-flagged comparability caveat that is not accounted for
-in the adjustment or disclosed to viewers. The later editions restate the date to March 2026,
-but the earlier framing is unresolved and should be reconciled (was there a November 2025 partial
-revision distinct from the March 2026 one?). See the report accompanying this file.
+**Gap note — California, resolved.** CMS's Dec 2025, Jan 2026 and Feb 2026 editions dated this
+revision to **November 2025**; the Mar–Apr editions restate it to **March 2026**. Investigated
+against the workbook: California runs a smooth trend Dec→Feb (−103,503, then −110,489) and then a
+single **−491,182 cliff at Feb→March 2026** — there is **no level break in the Dec/Jan/Feb
+figures**, so the exclusion landed in the March data and those earlier months are fully on the old
+include-basis. The "November 2025" label is therefore *not* borne out by the data; **March is the
+operative revision month** and no separate November adjustment is warranted. The dashboard now
+restates the pre-March-2026 CA months down onto the revised basis (rather than adding back to the
+future), so March 2026+ — the most-scrutinized months — are shown exactly as CMS reports them and
+tie to CMS control totals. See the California sections of `CLAUDE.md`.
 
 ---
 
