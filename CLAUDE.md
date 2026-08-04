@@ -30,10 +30,12 @@ data/pdf_history.json          national outcome mix Mar–Nov 2025 (from CMS PDF
 data/cms_data_notes.md         consolidated CMS "Data Notes" caveats, deduped across snapshots
 source-data/cms-snapshots/     CMS monthly Enrollment Snapshot PDFs (provenance for the above)
 data/cost_sharing.csv          ACA plan-level cost sharing by state × metal tier (annual; from PUFs)
-source-data/                   large CMS PUF zips + data dictionaries (extracted CSVs gitignored)
+data/medicare.json             per-state monthly Medicare summary (50+DC; from build_medicare.py)
+source-data/                   large CMS PUF/Medicare zips + data dictionaries (extracted CSVs gitignored)
 template.html                  page markup, CSS, and chart JS with __PLACEHOLDER__ tokens
-build_dashboard.py             reads workbook + cost_sharing.csv + template -> writes index.html
+build_dashboard.py             reads workbook + cost_sharing.csv + medicare.json + template -> writes index.html
 build_cost_sharing.py          reads the PUF zips -> writes data/cost_sharing.csv (run yearly)
+build_medicare.py              reads the Medicare CSV zip -> writes data/medicare.json (run on new Medicare drop)
 index.html                     generated output; GitHub Pages serves this. Do not hand-edit.
 ```
 
@@ -237,6 +239,73 @@ point-in-time.** Where they conflict, the CSV is authoritative, and differences 
 reflect state resubmissions (the New Hampshire March revision above is one example). Use PDF
 totals to validate a fresh load, but expect small variances rather than treating them as
 errors. This applies to Medicaid and CHIP alike.
+
+## Medicare (its own tab)
+
+The Medicare tab is the last tab in the bar, with a distinct **burnt-orange accent**
+(`--mcare:#B45309`, light panel tint `--mcare-light:#F7EEE1`) — separate from Medicaid
+navy, CHIP violet, BHP teal, and Marketplace crimson. It does **not** come from the
+workbook: `build_medicare.py` reads the raw CMS Medicare Monthly Enrollment CSV **straight
+from its zip** in `source-data/Medicare_Monthly_Data.zip` and writes a small per-state
+monthly summary to `data/medicare.json`; `build_dashboard.py`'s `load_medicare()` reads only
+that JSON and **never touches the raw source at build time** (same split as cost sharing).
+Rerun `build_medicare.py` only when CMS publishes a refreshed Medicare file. The extracted
+CSV is gitignored (`Medicare_Monthly_Data.csv`).
+
+**The headline metric is Medicare Advantage penetration** — MA (`MA_AND_OTH_BENES`, labelled
+"MA & other health plans", since it also covers cost plans/PACE) as a share of total Medicare
+(`TOT_BENES`) — the hospital-relevant story. Nationally it rose **47.9% → 51.2%** (Jan 2023 →
+Apr 2026); across states Apr 2026 spans **2.8% (Alaska) → 63.7% (Michigan)**.
+
+Data traps handled in `build_medicare.py` (all verified against the file):
+
+- **One file, three geography levels + annual roll-ups.** The CSV has no `Bene_Geo_Lvl`
+  column (the dictionary lists one; the data omits it, along with `State_Abrvtn` and
+  `FIPS_Cd`). Level is inferred: `BENE_STATE_DESC == "National"`, else
+  `BENE_COUNTY_DESC == "Total"` is a **state** row, else a **county** row. It also carries
+  annual `MONTH == "Year"` roll-ups. We keep **state-level, real-month rows only** and never
+  sum counties or let a `Year` row into a series.
+- **The CMS `National` row includes territories, so we do NOT use it.** Beyond 50+DC the state
+  level also carries Puerto Rico, Guam, the Virgin Islands, American Samoa, the Northern
+  Mariana Islands, and "Foreign and Other Outlying Areas" (~1.4M). The national series is
+  **rebuilt as the exact sum of the 50 states + DC** to match the dashboard's scope, so it runs
+  ~1.4M **below** CMS's published national — a compact note on the tab discloses this.
+- **Suppression is the literal `*`** (~11% of county cells, 0.73% of state cells). The nine
+  fields kept here are never suppressed for any 50+DC state in any month; `build_medicare.py`
+  **fails loudly** if that ever changes rather than summing around a hole.
+- **Reconciliation holds exactly** in the source and is re-checked on the rebuilt national
+  totals: `Original + MA == Total`, `Aged + Disabled == Total`, `PDP + MAPD == Part D`. Every
+  month must carry the full 51-area panel or the build aborts.
+
+Tab shape (state selector defaults to National, wired like the others; every figure
+recalculates): a **KPI row** (total Medicare + MoM; MA penetration + MoM in points; Original
+Medicare; dual-eligible + share; Part D coverage + share), a **3-year lookback strip** (current
+vs the same month three years earlier, Apr 2023 — total then/now/change/%, with the
+proportional bar repurposed to show **MA penetration now** since a growing series would overrun
+a share-of-baseline bar), and a **five-chart grid**: MA penetration trend (hero, tall),
+Original vs MA, Part D (PDP vs MAPD), Aged vs Disabled, and a state MA-penetration ranking
+(top-12 nationally; selected-state-vs-largest when a state is chosen).
+
+**Dual-eligibles are the bridge to the Medicaid tab.** `DUAL_TOT_BENES` (17.4% of Medicare,
+~12.0M nationally) counts beneficiaries jointly enrolled in Medicaid — the same people appear
+on the Medicaid tab. Only `DUAL_TOT` is surfaced: the full/partial dual split
+(`FULL_DUAL`/`PART_DUAL`) is suppressed in ~26–28 small-state cells, so it is not shown.
+
+**Axis-scaling decisions (deliberate, per the CHIP lesson).** Medicare series carry real level
+movement, so unlike the genuinely flat CHIP series they are **not** anchored at zero — with two
+exceptions coded on purpose:
+
+- The **MA penetration** charts use `pctAxisFmt`, an adaptive percent formatter that adds
+  decimals from the tick spacing so a narrow (~3-point) range doesn't collapse into repeated
+  whole-percent labels the way `pctFmt` would. The hero penetration axis is auto-scaled (tight)
+  because penetration rises almost monotonically everywhere — genuine signal, not noise.
+- The **stacked-to-total** charts (Original vs MA, PDP vs MAPD, Aged vs Disabled) **do**
+  `beginAtZero`: they are compositions of a whole, and a non-zero baseline would exaggerate the
+  smaller band (e.g. make ~6M disabled look comparable to ~62M aged).
+
+No per-state Medicare caveats are flagged in the current CMS file; `MCARE_CAVEATS` is wired
+(like the Medicaid/CHIP caveat maps) so one can be surfaced under the selector if a future
+edition adds one.
 
 ## ACA cost sharing by metal tier
 

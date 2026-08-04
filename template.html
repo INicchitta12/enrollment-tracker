@@ -17,6 +17,7 @@
   --chip:#5B4B9E;--chip-light:#EDEBF6;
   --bhp:#007C8C;--bhp-light:#E5F4F6;
   --mkt:#8B1A30;--mkt-light:#F5E8EB;
+  --mcare:#B45309;--mcare-light:#F7EEE1;
   --ok:#1A7A4A;--ok-light:#E6F4EC;
   --warn:#C0392B;--pend:#5A6A84;
   --font:'Arial',sans-serif;--mono:'JetBrains Mono','Courier New',monospace;
@@ -36,6 +37,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .tab.active-chip{background:var(--chip-light);color:var(--chip);border-color:var(--border);border-bottom-color:var(--chip-light);font-weight:600;}
 .tab.active-bhp{background:var(--bhp-light);color:var(--bhp);border-color:var(--border);border-bottom-color:var(--bhp-light);font-weight:600;}
 .tab.active-mkt{background:var(--mkt-light);color:var(--mkt);border-color:var(--border);border-bottom-color:var(--mkt-light);font-weight:600;}
+.tab.active-mcare{background:var(--mcare-light);color:var(--mcare);border-color:var(--border);border-bottom-color:var(--mcare-light);font-weight:600;}
 .panels{flex:1;overflow:hidden;position:relative;}
 .panel{position:absolute;inset:0;padding:10px 14px;display:flex;flex-direction:column;gap:8px;opacity:0;pointer-events:none;transition:opacity .15s;}
 .panel.active{opacity:1;pointer-events:auto;}
@@ -43,6 +45,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .panel.chip-panel{background:var(--chip-light);}
 .panel.bhp-panel{background:var(--bhp-light);}
 .panel.mkt-panel{background:var(--mkt-light);}
+.panel.mcare-panel{background:var(--mcare-light);}
 .state-bar{display:flex;align-items:center;gap:4px;flex-shrink:0;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;box-shadow:0 1px 3px rgba(0,0,0,.06);max-height:66px;overflow-y:auto;}
 .state-bar-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);flex-shrink:0;margin-right:3px;}
 .state-pill{font-family:var(--font);font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap;}
@@ -50,6 +53,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .mcaid-panel .state-pill.active{background:var(--mcaid);color:#fff;border-color:var(--mcaid);font-weight:600;}
 .chip-panel .state-pill.active{background:var(--chip);color:#fff;border-color:var(--chip);font-weight:600;}
 .mkt-panel .state-pill.active{background:var(--mkt);color:#fff;border-color:var(--mkt);font-weight:600;}
+.mcare-panel .state-pill.active{background:var(--mcare);color:#fff;border-color:var(--mcare);font-weight:600;}
 .kpi-row{display:flex;gap:8px;flex-shrink:0;}
 .kpi{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
 .kpi-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:4px;}
@@ -84,6 +88,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .chip-panel .peak-hd{color:var(--chip);}
 .chip-panel .peak-bartop b{color:var(--chip);}
 .chip-panel .peak-bar-fill{background:linear-gradient(90deg,#8A7BC6,var(--chip));}
+.mcare-panel .peak-strip{border-left-color:var(--mcare);}
+.mcare-panel .peak-hd{color:var(--mcare);}
+.mcare-panel .peak-bartop b{color:var(--mcare);}
+.mcare-panel .peak-bar-fill{background:linear-gradient(90deg,#E0873A,var(--mcare));}
 .cum-hd{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mcaid);margin-top:auto;flex-shrink:0;}
 .cum-hd span{color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;}
 .lower{flex:1;display:grid;gap:9px;min-height:0;}
@@ -91,6 +99,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .l-50-50{grid-template-columns:1fr 1fr;}
 .l-bhp{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;}
 .l-mkt{grid-template-columns:34fr 30fr 36fr;grid-template-rows:1fr 1fr;}
+.l-mcare{grid-template-columns:38fr 31fr 31fr;grid-template-rows:1fr 1fr;}
 .span-rows{grid-row:span 2;}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 13px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);min-height:0;}
 .chart-card-header{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-shrink:0;}
@@ -165,7 +174,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 <div class="header">
   <div class="header-left">
     <span class="header-title">Enrollment Tracker</span>
-    <span class="header-sub">Medicaid &middot; CHIP &middot; BHP &middot; ACA Marketplace</span>
+    <span class="header-sub">Medicaid &middot; CHIP &middot; BHP &middot; ACA Marketplace &middot; Medicare</span>
   </div>
   <span class="period-badge" id="hdrPeriod">Medicaid &middot; Mar 2026</span>
 </div>
@@ -175,6 +184,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   <div class="tab" data-tab="chip" onclick="switchTab('chip')"><div class="tab-dot" style="background:#7A68C0"></div>CHIP</div>
   <div class="tab" data-tab="bhp" onclick="switchTab('bhp')"><div class="tab-dot" style="background:#3AA8B8"></div>Basic Health Program</div>
   <div class="tab" data-tab="mkt" onclick="switchTab('mkt')"><div class="tab-dot" style="background:#C04060"></div>ACA Marketplace</div>
+  <div class="tab" data-tab="mcare" onclick="switchTab('mcare')"><div class="tab-dot" style="background:#D9822B"></div>Medicare</div>
 </div>
 
 <div class="panels">
@@ -446,6 +456,71 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     </div>
   </div>
 
+  <!-- ══ MEDICARE ══ -->
+  <div class="panel mcare-panel" id="panel-mcare">
+    <div class="kpi-row">
+      <div class="kpi" id="mc-total" style="border-top:3px solid var(--mcare)"><div class="kpi-label">Total Medicare</div><div class="kpi-top"><div class="kpi-value big">&mdash;</div><span class="kpi-delta flat" id="mc-total-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mc-pen" style="border-top:3px solid #E0873A"><div class="kpi-label">MA Penetration</div><div class="kpi-top"><div class="kpi-value big">&mdash;</div><span class="kpi-delta flat" id="mc-pen-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mc-orig" style="border-top:3px solid #6B7280"><div class="kpi-label">Original Medicare</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mc-orig-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mc-dual" style="border-top:3px solid var(--mcaid)"><div class="kpi-label">Dual-Eligible</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mc-dual-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="mc-partd" style="border-top:3px solid var(--ok)"><div class="kpi-label">Part D Coverage</div><div class="kpi-top"><div class="kpi-value">&mdash;</div><span class="kpi-delta flat" id="mc-partd-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+    </div>
+
+    <div class="data-note compact">
+      <span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">&#9888;</span>
+      <span>National figures here sum the <b style="color:#5A4A1A">50 states + DC</b>. CMS&rsquo;s published national total also includes Puerto Rico and other territories (~1.4M), so it runs higher. Nationally, <b style="color:#5A4A1A">dual-eligibles</b> (17.4% of Medicare) are jointly enrolled in Medicaid and also appear on the Medicaid tab.</span>
+    </div>
+
+    <div class="data-note compact" id="mc-state-note" style="display:none"></div>
+
+    <div class="state-bar"><span class="state-bar-label">View:</span>
+      MCARE_PILLS
+    </div>
+
+    <div class="peak-strip" id="mc-look">
+      <div class="peak-hd">vs. 3 Years Ago<span id="mc-look-cap">Apr 2023 &middot; total enrollment</span></div>
+      <div class="peak-metrics">
+        <div><div class="peak-lbl" id="mc-look-then-lbl">Apr 2023</div><div class="peak-val" id="mc-look-then">&mdash;</div></div>
+        <div><div class="peak-lbl" id="mc-look-now-lbl">Current</div><div class="peak-val" id="mc-look-now">&mdash;</div></div>
+        <div><div class="peak-lbl">Change</div><div class="peak-val" id="mc-look-chg">&mdash;</div></div>
+        <div><div class="peak-lbl">Change %</div><div class="peak-val" id="mc-look-pct">&mdash;</div></div>
+      </div>
+      <div class="peak-barwrap">
+        <div class="peak-bartop"><span id="mc-look-bartop">MA penetration now</span><b id="mc-look-share">&mdash;</b></div>
+        <div class="peak-bar-track"><div class="peak-bar-fill" id="mc-look-bar" style="width:0"></div></div>
+      </div>
+      <div class="peak-note" id="mc-look-note"></div>
+    </div>
+
+    <div class="lower l-mcare">
+      <div class="chart-card span-rows">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mcare)"></div><div class="chart-title" id="mc-pen-title">MA Penetration <span>Trend</span></div></div>
+        <div class="chart-sub" id="mc-pen-sub"></div>
+        <div class="chart-wrap"><canvas id="mcarePenChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mcare)"></div><div class="chart-title" id="mc-comp-title">Original vs. <span>Medicare Advantage</span></div></div>
+        <div class="chart-sub" id="mc-comp-sub"></div>
+        <div class="chart-wrap"><canvas id="mcareCompChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mcare)"></div><div class="chart-title" id="mc-partd-title">Part D Drug <span>Coverage</span></div></div>
+        <div class="chart-sub" id="mc-partd-sub"></div>
+        <div class="chart-wrap"><canvas id="mcarePartdChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mcare)"></div><div class="chart-title" id="mc-basis-title">Aged vs. <span>Disabled</span></div></div>
+        <div class="chart-sub" id="mc-basis-sub"></div>
+        <div class="chart-wrap"><canvas id="mcareBasisChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mcare)"></div><div class="chart-title" id="mc-rank-title">Top States</div></div>
+        <div class="chart-sub" id="mc-rank-sub"></div>
+        <div class="chart-wrap"><canvas id="mcareRankChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div class="footer">
@@ -491,6 +566,7 @@ const COST_SHARING  = __COST_SHARING__;
 const CS_YEAR       = __CS_YEAR__;
 const BHP_LABELS    = __BHP_LABELS__;
 const BHP_SERIES    = __BHP_SERIES__;
+const MEDICARE      = __MEDICARE__;
 
 const charts = {};
 function makeChart(id, cfg){ if(charts[id]){charts[id].destroy(); delete charts[id];}
@@ -514,6 +590,14 @@ function logFmt(v){
   return String(Math.round(v));
 }
 const pctFmt = v => Math.round(v)+'%';
+// Percent axis for narrow ranges (e.g. MA penetration spans only a few points):
+// adds just enough decimals from the tick spacing so labels don't collapse into
+// repeats the way a whole-number pctFmt would. Wide 0-100 axes still read clean.
+function pctAxisFmt(v,i,ticks){
+  const step=(ticks&&ticks.length>1)?Math.abs(ticks[1].value-ticks[0].value):Math.abs(v);
+  const dec = step>=1 ? 0 : step>=0.1 ? 1 : 2;
+  return v.toFixed(dec)+'%';
+}
 
 function setKpi(id,val,sub,color){ const el=document.getElementById(id); if(!el) return;
   const v=el.querySelector('.kpi-value'); v.textContent=val; if(color) v.style.color=color;
@@ -1158,12 +1242,200 @@ function renderBhp(){
   bhpMini('bhpDC','District of Columbia','#B0307A');
 }
 
+// ══ MEDICARE ══
+// Medicare Advantage penetration (MA & other health plans as a share of total
+// Medicare) is the headline. National figures are the sum of the 50 states + DC
+// with territories excluded, so they run below CMS's published national total.
+// Unlike the genuinely flat CHIP series (anchored at zero to avoid amplifying
+// noise), Medicare carries real level movement across the 40 months — total
+// enrollment grows steadily and MA share rises almost monotonically everywhere —
+// so value and percent axes auto-scale to show the actual trend.
+const MC_P = MEDICARE.periods, MC_L = MEDICARE.labels, MC_LATEST = MEDICARE.latest;
+const MC_SHORT = MC_L.map(l=>l.replace(' 20',"’"));       // "Jan 2023" -> "Jan '23"
+const MC_LOOKBACK = '2023-04';                                  // 3-year lookback baseline
+const MCARE_CAVEATS = {};  // none flagged in the CMS Medicare file at present; wired like the other tabs
+
+function mcRec(state,p){ return state ? ((MEDICARE.states[state]||{})[p]||null) : (MEDICARE.national[p]||null); }
+function mcPen(rec){ return rec ? +(rec.ma/rec.tot*100).toFixed(1) : null; }
+const mcValAxis=()=>({grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}});
+const mcPctAxis=()=>({grid:{color:'#E8EFF7'},ticks:{callback:pctAxisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}});
+
+// Shared scaffold for the 40-month trend charts (x auto-skips its dense labels).
+function mcTrendOpts(yAxis){
+  return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:7,font:{size:9.5},color:'#5A6A84'}},
+      tooltip:{...T,callbacks:{title:c=>MC_L[c[0].dataIndex]}}},
+    scales:{
+      x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9},autoSkip:true,maxTicksLimit:8,maxRotation:0},border:{display:false}},
+      y:yAxis}};
+}
+function mcColSeries(state,field){ return MC_P.map(p=>{const r=mcRec(state,p);return r?r[field]:null;}); }
+
+// Hero: MA penetration over time (percent axis, auto-scaled — the series rises).
+function renderMcarePen(state){
+  document.getElementById('mc-pen-title').innerHTML=(state||'National')+' MA <span>Penetration Trend</span>';
+  document.getElementById('mc-pen-sub').textContent='Medicare Advantage & other health plans as a share of total Medicare · '+MC_L[0]+' – '+MC_L[MC_L.length-1];
+  const o=mcTrendOpts(mcPctAxis());
+  o.plugins.legend.display=false;
+  o.plugins.tooltip.callbacks.label=c=>c.raw==null?'':' MA penetration: '+c.raw+'%';
+  makeChart('mcarePenChart',{type:'line',
+    data:{labels:MC_SHORT,datasets:[{label:'MA penetration',data:MC_P.map(p=>mcPen(mcRec(state,p))),
+      borderColor:'#B45309',backgroundColor:'rgba(180,83,9,.10)',borderWidth:2.5,
+      pointRadius:0,pointHoverRadius:4,pointBackgroundColor:'#B45309',tension:.25,fill:true}]},
+    options:o});
+}
+
+// Two stacked-area trend charts share this builder: two components that sum to a
+// meaningful total (Original+MA = total Medicare; PDP+MAPD = total Part D).
+function renderMcareStack(canvasId,subId,subText,state,ds){
+  document.getElementById(subId).textContent=subText;
+  const o=mcTrendOpts(mcValAxis());
+  // Stacked-to-total, so anchor at zero: the two bands are a composition of the
+  // whole, and a non-zero baseline would exaggerate the smaller band's share
+  // (e.g. make ~6M disabled look comparable to ~62M aged). This is the opposite
+  // call from the penetration hero, where a tight auto-scaled axis is wanted to
+  // show a few points of real movement.
+  o.scales.y.stacked=true; o.scales.x.stacked=true; o.scales.y.beginAtZero=true;
+  o.plugins.tooltip.callbacks.label=c=>c.raw==null?'':' '+c.dataset.label+': '+c.raw.toLocaleString();
+  makeChart(canvasId,{type:'line',
+    data:{labels:MC_SHORT,datasets:ds.map(d=>({label:d.label,data:mcColSeries(state,d.field),
+      borderColor:d.line,backgroundColor:d.fill,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.25,fill:true}))},
+    options:o});
+}
+
+function renderMcareComp(state){
+  renderMcareStack('mcareCompChart','mc-comp-sub',
+    'Beneficiaries by coverage type · stacked to total Medicare · '+MC_L[0]+' – '+MC_L[MC_L.length-1],state,
+    [{label:'Original Medicare',field:'org',line:'#6B7280',fill:'rgba(107,114,128,.28)'},
+     {label:'Medicare Advantage',field:'ma',line:'#B45309',fill:'rgba(180,83,9,.30)'}]);
+}
+function renderMcarePartd(state){
+  const r=mcRec(state,MC_LATEST);
+  renderMcareStack('mcarePartdChart','mc-partd-sub',
+    (r?'Part D covers '+(r.partd/r.tot*100).toFixed(1)+'% of Medicare · ':'')+'standalone (PDP) vs. MA drug plans (MAPD)',state,
+    [{label:'MAPD (MA drug plan)',field:'mapd',line:'#B45309',fill:'rgba(180,83,9,.28)'},
+     {label:'PDP (standalone)',field:'pdp',line:'#1A7A4A',fill:'rgba(26,122,74,.22)'}]);
+}
+function renderMcareBasis(state){
+  const r=mcRec(state,MC_LATEST);
+  renderMcareStack('mcareBasisChart','mc-basis-sub',
+    'Entitlement basis · stacked to total Medicare'+(r?' · disabled = '+(r.dsbld/r.tot*100).toFixed(1)+'%':''),state,
+    [{label:'Aged (65+)',field:'aged',line:'#B45309',fill:'rgba(180,83,9,.26)'},
+     {label:'Disabled (under 65)',field:'dsbld',line:'#3B6FB0',fill:'rgba(59,111,176,.22)'}]);
+}
+
+function mcPenByState(){
+  return Object.keys(MEDICARE.states).map(s=>{const r=(MEDICARE.states[s]||{})[MC_LATEST];
+    return r?{s:s,v:+(r.ma/r.tot*100).toFixed(1),ma:r.ma,tot:r.tot}:null;}).filter(Boolean);
+}
+function renderMcareRank(state){
+  const title=document.getElementById('mc-rank-title'), sub=document.getElementById('mc-rank-sub');
+  const latestLbl=MC_L[MC_P.indexOf(MC_LATEST)];
+  const xax={grid:{color:'#E8EFF7'},ticks:{callback:pctFmt,color:'#5A6A84',font:{size:10}},border:{display:false},max:70,beginAtZero:true};
+  if(!state){
+    const top=mcPenByState().sort((a,b)=>b.v-a.v).slice(0,12);
+    title.innerHTML='Highest MA Penetration <span>· States</span>';
+    sub.textContent='MA share of total Medicare · '+latestLbl;
+    makeChart('mcareRankChart',{type:'bar',
+      data:{labels:top.map(o=>o.s),datasets:[{data:top.map(o=>o.v),backgroundColor:'rgba(180,83,9,.72)',
+        hoverBackgroundColor:'rgba(180,83,9,.92)',borderRadius:3,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{
+          label:c=>' '+c.raw+'% MA · '+top[c.dataIndex].ma.toLocaleString()+' of '+top[c.dataIndex].tot.toLocaleString()}}},
+        scales:{x:xax,y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9.5}},border:{display:false}}}}});
+  } else {
+    const all=mcPenByState(), byName=Object.fromEntries(all.map(o=>[o.s,o]));
+    const largest=all.slice().sort((a,b)=>b.tot-a.tot).filter(o=>o.s!==state).slice(0,5).map(o=>o.s);
+    const names=[state,...largest];
+    title.innerHTML=state+' <span>vs. Largest States</span>';
+    sub.textContent='MA share of total Medicare · '+latestLbl;
+    makeChart('mcareRankChart',{type:'bar',
+      data:{labels:names,datasets:[{data:names.map(s=>byName[s]?byName[s].v:0),
+        backgroundColor:names.map(s=>s===state?'rgba(180,83,9,.9)':'rgba(180,83,9,.3)'),
+        hoverBackgroundColor:names.map(s=>s===state?'rgba(180,83,9,1)':'rgba(180,83,9,.5)'),
+        borderRadius:3,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+c.raw+'% MA penetration'}}},
+        scales:{x:xax,y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}}}}});
+  }
+}
+
+// 3-year lookback strip: current month vs the same month 3 years earlier
+// (Apr 2023). Total enrollment grows, so the proportional bar is repurposed to
+// show MA penetration now (a real 0-100 share), with the 3-years-ago value noted.
+function renderMcareLook(state){
+  const g=id=>document.getElementById(id);
+  const then=mcRec(state,MC_LOOKBACK), now=mcRec(state,MC_LATEST);
+  g('mc-look-now-lbl').textContent=MC_L[MC_P.indexOf(MC_LATEST)];
+  g('mc-look-then-lbl').textContent=MC_L[MC_P.indexOf(MC_LOOKBACK)];
+  if(!then||!now){
+    ['mc-look-then','mc-look-now','mc-look-chg','mc-look-pct','mc-look-share'].forEach(i=>g(i).textContent='—');
+    g('mc-look-bar').style.width='0'; g('mc-look-note').innerHTML=''; return;
+  }
+  const chg=now.tot-then.tot, pctChg=chg/then.tot*100;
+  g('mc-look-then').textContent=fmt(then.tot);
+  g('mc-look-now').textContent=fmt(now.tot);
+  g('mc-look-chg').textContent=(chg<0?'−':'+')+fmt(Math.abs(chg));
+  g('mc-look-chg').style.color=chg<0?'var(--warn)':'var(--ok)';
+  g('mc-look-pct').textContent=(pctChg<0?'−':'+')+Math.abs(pctChg).toFixed(1)+'%';
+  g('mc-look-pct').style.color=chg<0?'var(--warn)':'var(--ok)';
+  const penNow=mcPen(now), penThen=mcPen(then);
+  g('mc-look-share').textContent=penNow+'%';
+  g('mc-look-bar').style.width=Math.max(0,Math.min(100,penNow))+'%';
+  g('mc-look-note').innerHTML='MA penetration '+(penNow>=penThen?'rose':'fell')+' from <b>'+penThen+'%</b> ('
+    +MC_L[MC_P.indexOf(MC_LOOKBACK)]+') to <b>'+penNow+'%</b>.';
+}
+
+function selectMcareState(state){
+  document.querySelectorAll('#panel-mcare .state-pill').forEach(b=>b.classList.remove('active'));
+  const id=state?'mcare-btn-'+state.replace(/ /g,'-').replace(/\./g,''):'mcare-btn-national';
+  const b=document.getElementById(id); if(b) b.classList.add('active');
+
+  const key=MC_LATEST, d=mcRec(state,key); if(!d) return;
+  const ki=MC_P.indexOf(key), prev=ki>0?mcRec(state,MC_P[ki-1]):null;
+  const lbl=MC_L[ki], loc=state||'National';
+
+  setKpi('mc-total', fmt(d.tot), loc+' · '+lbl, 'var(--mcare)');
+  setDelta('mc-total-d', d.tot, prev?prev.tot:null, 'up');
+
+  const pen=mcPen(d);
+  setKpi('mc-pen', pen+'%', '<b>'+fmt(d.ma)+'</b> in MA & other plans', '#B45309');
+  // Penetration MoM shown in points, styled neutral (flat) — a rise in MA share
+  // is not editorialised as good or bad; the arrow carries the direction only.
+  (function(){ const el=document.getElementById('mc-pen-d'); const pp=prev?mcPen(prev):null;
+    if(pp==null){ el.textContent=''; el.className='kpi-delta flat'; return; }
+    const dpt=+(pen-pp).toFixed(1);
+    el.textContent=(dpt>0?'▲ ':dpt<0?'▼ ':'– ')+Math.abs(dpt).toFixed(1)+'pt';
+    el.className='kpi-delta flat'; el.title='vs. prior month: '+pp+'% → '+pen+'%'; })();
+
+  setKpi('mc-orig', fmt(d.org), '<b>'+pct(d.org,d.tot)+'</b> of total Medicare', '#6B7280');
+  setDelta('mc-orig-d', d.org, prev?prev.org:null, 'none');
+  setKpi('mc-dual', fmt(d.dual), '<b>'+pct(d.dual,d.tot)+'</b> also in Medicaid', 'var(--mcaid)');
+  setDelta('mc-dual-d', d.dual, prev?prev.dual:null, 'none');
+  setKpi('mc-partd', fmt(d.partd), '<b>'+pct(d.partd,d.tot)+'</b> of total Medicare', 'var(--ok)');
+  setDelta('mc-partd-d', d.partd, prev?prev.partd:null, 'none');
+
+  const sn=document.getElementById('mc-state-note');
+  if(state && MCARE_CAVEATS[state]){ sn.style.display='flex';
+    sn.innerHTML='<span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">⚠</span>'
+      +'<span><b style="color:#5A4A1A">'+state+'</b> '+MCARE_CAVEATS[state]+'</span>';
+  } else { sn.style.display='none'; sn.innerHTML=''; }
+
+  renderMcareLook(state);
+  renderMcarePen(state);
+  renderMcareComp(state);
+  renderMcarePartd(state);
+  renderMcareBasis(state);
+  renderMcareRank(state);
+}
+
 // ══ TABS ══
 const META={
   mcaid:{p:'Medicaid \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Renewal Tracker \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1]},
   chip:{p:'CHIP \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Enrollment Data \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1]},
   bhp:{p:'BHP \u00b7 Jan\u2013Jul 2026',s:'CMS Basic Health Program Enrollment Data \u00b7 2026'},
-  mkt:{p:'ACA Marketplace \u00b7 OEP + Effectuated 2026',s:'CMS Marketplace OEP Snapshot &amp; Effectuated Enrollment \u00b7 2026'}
+  mkt:{p:'ACA Marketplace \u00b7 OEP + Effectuated 2026',s:'CMS Marketplace OEP Snapshot &amp; Effectuated Enrollment \u00b7 2026'},
+  mcare:{p:'Medicare \u00b7 '+MC_L[MC_L.length-1],s:'CMS Medicare Monthly Enrollment \u00b7 50 states + DC \u00b7 '+MC_L[MC_L.length-1]}
 };
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(t=>{t.className='tab';if(t.dataset.tab===tab)t.classList.add('active-'+tab);});
@@ -1178,7 +1450,7 @@ document.getElementById('ftrDate').textContent='Generated '+new Date().toLocaleD
 // so the latest month shows on first load without waiting for a tab click.
 document.getElementById('hdrPeriod').textContent=META.mcaid.p;
 document.getElementById('ftrSrc').innerHTML='<span>'+META.mcaid.s+'</span>';
-requestAnimationFrame(()=>{ selectMcaidState(null); selectChipState(null); selectMktState(null); renderBhp(); });
+requestAnimationFrame(()=>{ selectMcaidState(null); selectChipState(null); selectMktState(null); renderBhp(); selectMcareState(null); });
 </script>
 </body>
 </html>

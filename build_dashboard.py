@@ -18,6 +18,7 @@ ROOT = Path(__file__).parent
 WORKBOOK = ROOT / "data" / "Enrollment_Tracker.xlsx"
 PDF_HISTORY = ROOT / "data" / "pdf_history.json"
 COST_SHARING = ROOT / "data" / "cost_sharing.csv"
+MEDICARE = ROOT / "data" / "medicare.json"
 TEMPLATE = ROOT / "template.html"
 OUTPUT = ROOT / "index.html"
 
@@ -384,6 +385,26 @@ def load_cost_sharing():
     return out
 
 
+def load_medicare():
+    """Read data/medicare.json — the small per-state monthly Medicare summary.
+
+    Written by build_medicare.py from the raw CMS Medicare Monthly Enrollment
+    file (in source-data/); the monthly dashboard rebuild only reads this
+    aggregate and never touches the raw source. The national series here is the
+    sum of the 50 states + DC (territories excluded), so it runs below CMS's
+    published national — see build_medicare.py and CLAUDE.md for the scope
+    decision. Returns the parsed object as-is for injection.
+    """
+    if not MEDICARE.exists():
+        sys.exit(f"ERROR: Medicare data not found at {MEDICARE}; "
+                 "run build_medicare.py first")
+    mc = json.loads(MEDICARE.read_text())
+    n = mc["national"][mc["latest"]]
+    if n["org"] + n["ma"] != n["tot"]:
+        sys.exit("ERROR: Medicare national Original+MA != Total; rebuild medicare.json")
+    return mc
+
+
 def load_bhp(xl):
     df = pd.read_excel(xl, sheet_name="BHP")
     df['State'] = df['State'].astype(str).map(normalize_dc)
@@ -421,12 +442,14 @@ def main():
     yoy = load_effectuated(xl)
     cost_sharing = load_cost_sharing()
     bhp_labels, bhp_series = load_bhp(xl)
+    medicare = load_medicare()
 
     compact = lambda o: json.dumps(o, separators=(',', ':'))
     replacements = {
         'MCAID_PILLS': state_pills('mcaid', 'selectMcaidState', mc_states),
         'CHIP_PILLS': state_pills('chip', 'selectChipState', chip_states),
         'MKT_PILLS': state_pills('mkt', 'selectMktState', mkt_oep),
+        'MCARE_PILLS': state_pills('mcare', 'selectMcareState', medicare['states']),
         '__MCAID_PERIODS__': compact(periods),
         '__MCAID_LABELS__': compact(labels),
         '__MCAID_LATEST__': compact(latest),
@@ -452,6 +475,7 @@ def main():
         '__CS_YEAR__': compact(CS_BENEFIT_YEAR),
         '__BHP_LABELS__': compact(bhp_labels),
         '__BHP_SERIES__': compact(bhp_series),
+        '__MEDICARE__': compact(medicare),
     }
 
     html = TEMPLATE.read_text()
@@ -472,6 +496,10 @@ def main():
     print(f"  CHIP peak   {CHIP_PEAK_LABEL} pre-unwinding  "
           f"({len([s for s in chip_peak if s != 'United States'])} states + US)")
     print(f"  BHP         {bhp_labels[0]} - {bhp_labels[-1]}  ({len(bhp_series)} states)")
+    mc_now = medicare['national'][medicare['latest']]
+    print(f"  Medicare    {medicare['labels'][0]} - {medicare['labels'][-1]}  "
+          f"({len(medicare['states'])} states + DC, territories excluded)  "
+          f"{medicare['labels'][-1]} MA penetration {mc_now['ma']/mc_now['tot']*100:.1f}%")
     print(f"  Marketplace OEP + {len(post_labels) - 1} months  ({len(mkt_oep)} states)")
     cs_states = [s for s in cost_sharing if s != 'United States']
     print(f"  Cost sharing {CS_BENEFIT_YEAR} plan-level avg  ({len(cs_states)} states + US)")
