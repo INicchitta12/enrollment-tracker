@@ -91,7 +91,12 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .mcare-panel .peak-strip{border-left-color:var(--mcare);}
 .mcare-panel .peak-hd{color:var(--mcare);}
 .mcare-panel .peak-bartop b{color:var(--mcare);}
-.mcare-panel .peak-bar-fill{background:linear-gradient(90deg,#E0873A,var(--mcare));}
+/* The lookback bar layers two fills: a light "now" fill (current MA penetration)
+   with the solid "3 years ago" fill on top, so both values are visible and the
+   sliver between them is the gain. */
+.mc-look-track{position:relative;}
+.mcare-panel .peak-bar-fill.mc-look-now{background:rgba(180,83,9,.20);}
+.mc-look-then{position:absolute;top:0;left:0;height:100%;border-radius:3px 0 0 3px;background:linear-gradient(90deg,#E0873A,var(--mcare));border-right:2px solid #5A2D06;transition:width .4s ease;}
 .cum-hd{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mcaid);margin-top:auto;flex-shrink:0;}
 .cum-hd span{color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;}
 .lower{flex:1;display:grid;gap:9px;min-height:0;}
@@ -690,8 +695,11 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div><div class="peak-lbl">Change %</div><div class="peak-val" id="mc-look-pct">&mdash;</div></div>
       </div>
       <div class="peak-barwrap">
-        <div class="peak-bartop"><span id="mc-look-bartop">MA penetration now</span><b id="mc-look-share">&mdash;</b></div>
-        <div class="peak-bar-track"><div class="peak-bar-fill" id="mc-look-bar" style="width:0"></div></div>
+        <div class="peak-bartop"><span id="mc-look-bartop">MA penetration</span><b id="mc-look-share">&mdash;</b></div>
+        <div class="peak-bar-track mc-look-track">
+          <div class="peak-bar-fill mc-look-now" id="mc-look-bar" style="width:0"></div>
+          <div class="mc-look-then" id="mc-look-bar-then" style="width:0"></div>
+        </div>
       </div>
       <div class="peak-note" id="mc-look-note"></div>
     </div>
@@ -1456,13 +1464,17 @@ function renderBhp(){
 // so value and percent axes auto-scale to show the actual trend.
 const MC_P = MEDICARE.periods, MC_L = MEDICARE.labels, MC_LATEST = MEDICARE.latest;
 const MC_SHORT = MC_L.map(l=>l.replace(' 20',"’"));       // "Jan 2023" -> "Jan '23"
-const MC_LOOKBACK = '2023-04';                                  // 3-year lookback baseline
+const MC_LOOKBACK = (parseInt(MC_LATEST.slice(0,4))-3)+MC_LATEST.slice(4);  // same month, 3 years earlier
 const MCARE_CAVEATS = {};  // none flagged in the CMS Medicare file at present; wired like the other tabs
 
 function mcRec(state,p){ return state ? ((MEDICARE.states[state]||{})[p]||null) : (MEDICARE.national[p]||null); }
 function mcPen(rec){ return rec ? +(rec.ma/rec.tot*100).toFixed(1) : null; }
 const mcValAxis=()=>({grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}});
-const mcPctAxis=()=>({grid:{color:'#E8EFF7'},ticks:{callback:pctAxisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}});
+// `grace` pads the auto-scaled range by ~70% of the data span on each side, so a
+// few points of MA-penetration movement don't stretch across the full plot
+// height and overstate the slope. Still not anchored at zero (that would flatten
+// the genuine rise) — this is the deliberate middle ground.
+const mcPctAxis=()=>({grace:'70%',grid:{color:'#E8EFF7'},ticks:{callback:pctAxisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}});
 
 // Shared scaffold for the 40-month trend charts (x auto-skips its dense labels).
 function mcTrendOpts(yAxis){
@@ -1489,16 +1501,15 @@ function renderMcarePen(state){
     options:o});
 }
 
-// Two stacked-area trend charts share this builder: two components that sum to a
-// meaningful total (Original+MA = total Medicare; PDP+MAPD = total Part D).
+// Three stacked-area trend charts share this builder: two components that sum to
+// a meaningful total (Original+MA = total Medicare; PDP+MAPD = total Part D;
+// Aged+Disabled = total Medicare). Anchored at zero — they are compositions of a
+// whole, and a non-zero baseline would exaggerate the smaller band's share (e.g.
+// make ~6M disabled look comparable to ~62M aged). This is the opposite call
+// from the penetration hero, where a tight auto-scaled axis is wanted.
 function renderMcareStack(canvasId,subId,subText,state,ds){
   document.getElementById(subId).textContent=subText;
   const o=mcTrendOpts(mcValAxis());
-  // Stacked-to-total, so anchor at zero: the two bands are a composition of the
-  // whole, and a non-zero baseline would exaggerate the smaller band's share
-  // (e.g. make ~6M disabled look comparable to ~62M aged). This is the opposite
-  // call from the penetration hero, where a tight auto-scaled axis is wanted to
-  // show a few points of real movement.
   o.scales.y.stacked=true; o.scales.x.stacked=true; o.scales.y.beginAtZero=true;
   o.plugins.tooltip.callbacks.label=c=>c.raw==null?'':' '+c.dataset.label+': '+c.raw.toLocaleString();
   makeChart(canvasId,{type:'line',
@@ -1517,8 +1528,8 @@ function renderMcarePartd(state){
   const r=mcRec(state,MC_LATEST);
   renderMcareStack('mcarePartdChart','mc-partd-sub',
     (r?'Part D covers '+(r.partd/r.tot*100).toFixed(1)+'% of Medicare · ':'')+'standalone (PDP) vs. MA drug plans (MAPD)',state,
-    [{label:'MAPD (MA drug plan)',field:'mapd',line:'#B45309',fill:'rgba(180,83,9,.28)'},
-     {label:'PDP (standalone)',field:'pdp',line:'#1A7A4A',fill:'rgba(26,122,74,.22)'}]);
+    [{label:'PDP (standalone)',field:'pdp',line:'#1A7A4A',fill:'rgba(26,122,74,.22)'},
+     {label:'MAPD (MA drug plan)',field:'mapd',line:'#B45309',fill:'rgba(180,83,9,.28)'}]);
 }
 function renderMcareBasis(state){
   const r=mcRec(state,MC_LATEST);
@@ -1570,11 +1581,14 @@ function renderMcareRank(state){
 function renderMcareLook(state){
   const g=id=>document.getElementById(id);
   const then=mcRec(state,MC_LOOKBACK), now=mcRec(state,MC_LATEST);
-  g('mc-look-now-lbl').textContent=MC_L[MC_P.indexOf(MC_LATEST)];
-  g('mc-look-then-lbl').textContent=MC_L[MC_P.indexOf(MC_LOOKBACK)];
+  const thenLbl=MC_L[MC_P.indexOf(MC_LOOKBACK)], nowLbl=MC_L[MC_P.indexOf(MC_LATEST)];
+  g('mc-look-cap').textContent=thenLbl+' · total enrollment';
+  g('mc-look-then-lbl').textContent=thenLbl;
+  g('mc-look-now-lbl').textContent=nowLbl;
+  g('mc-look-bartop').textContent='MA penetration · '+thenLbl+' → '+nowLbl;
   if(!then||!now){
     ['mc-look-then','mc-look-now','mc-look-chg','mc-look-pct','mc-look-share'].forEach(i=>g(i).textContent='—');
-    g('mc-look-bar').style.width='0'; g('mc-look-note').innerHTML=''; return;
+    g('mc-look-bar').style.width='0'; g('mc-look-bar-then').style.width='0'; g('mc-look-note').innerHTML=''; return;
   }
   const chg=now.tot-then.tot, pctChg=chg/then.tot*100;
   g('mc-look-then').textContent=fmt(then.tot);
@@ -1583,11 +1597,13 @@ function renderMcareLook(state){
   g('mc-look-chg').style.color=chg<0?'var(--warn)':'var(--ok)';
   g('mc-look-pct').textContent=(pctChg<0?'−':'+')+Math.abs(pctChg).toFixed(1)+'%';
   g('mc-look-pct').style.color=chg<0?'var(--warn)':'var(--ok)';
-  const penNow=mcPen(now), penThen=mcPen(then);
-  g('mc-look-share').textContent=penNow+'%';
+  // Bar: light fill = MA penetration now; solid fill on top = penetration then,
+  // so the sliver between the two edges is the change. Both values are labelled.
+  const penNow=mcPen(now), penThen=mcPen(then), dpt=+(penNow-penThen).toFixed(1);
+  g('mc-look-share').textContent=penThen+'% → '+penNow+'%';
   g('mc-look-bar').style.width=Math.max(0,Math.min(100,penNow))+'%';
-  g('mc-look-note').innerHTML='MA penetration '+(penNow>=penThen?'rose':'fell')+' from <b>'+penThen+'%</b> ('
-    +MC_L[MC_P.indexOf(MC_LOOKBACK)]+') to <b>'+penNow+'%</b>.';
+  g('mc-look-bar-then').style.width=Math.max(0,Math.min(100,penThen))+'%';
+  g('mc-look-note').innerHTML=(dpt>=0?'▲':'▼')+' '+(dpt>=0?'+':'−')+Math.abs(dpt).toFixed(1)+' points since '+thenLbl;
 }
 
 function selectMcareState(state){

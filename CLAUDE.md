@@ -280,11 +280,14 @@ Data traps handled in `build_medicare.py` (all verified against the file):
 Tab shape (state selector defaults to National, wired like the others; every figure
 recalculates): a **KPI row** (total Medicare + MoM; MA penetration + MoM in points; Original
 Medicare; dual-eligible + share; Part D coverage + share), a **3-year lookback strip** (current
-vs the same month three years earlier, Apr 2023 — total then/now/change/%, with the
-proportional bar repurposed to show **MA penetration now** since a growing series would overrun
-a share-of-baseline bar), and a **five-chart grid**: MA penetration trend (hero, tall),
-Original vs MA, Part D (PDP vs MAPD), Aged vs Disabled, and a state MA-penetration ranking
-(top-12 nationally; selected-state-vs-largest when a state is chosen).
+vs the same month three years earlier — total then/now/change/%, with the proportional bar
+repurposed to show **MA penetration then → now**: a light "now" fill under a solid
+"3-years-ago" fill so both values and the gain between them are visible, since a growing series
+would overrun a share-of-baseline bar), and a **five-chart grid**: MA penetration trend (hero,
+tall, line), three **stacked-area** charts — Original vs MA, Part D (PDP vs MAPD), Aged vs
+Disabled — and a state MA-penetration ranking (top-12 nationally; selected-state-vs-largest when a state
+is chosen). The lookback month is derived as three years before the latest month, so it tracks
+forward as new data lands.
 
 **Dual-eligibles are the bridge to the Medicaid tab.** `DUAL_TOT_BENES` (17.4% of Medicare,
 ~12.0M nationally) counts beneficiaries jointly enrolled in Medicaid — the same people appear
@@ -297,8 +300,10 @@ exceptions coded on purpose:
 
 - The **MA penetration** charts use `pctAxisFmt`, an adaptive percent formatter that adds
   decimals from the tick spacing so a narrow (~3-point) range doesn't collapse into repeated
-  whole-percent labels the way `pctFmt` would. The hero penetration axis is auto-scaled (tight)
-  because penetration rises almost monotonically everywhere — genuine signal, not noise.
+  whole-percent labels the way `pctFmt` would. The hero penetration axis is auto-scaled (not
+  anchored at zero — that would flatten the genuine rise) but carries ~70% `grace` padding, so
+  a few points of movement sit in the middle band instead of stretching across the full height
+  and overstating the slope.
 - The **stacked-to-total** charts (Original vs MA, PDP vs MAPD, Aged vs Disabled) **do**
   `beginAtZero`: they are compositions of a whole, and a non-zero baseline would exaggerate the
   smaller band (e.g. make ~6M disabled look comparable to ~62M aged).
