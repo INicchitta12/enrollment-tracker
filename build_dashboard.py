@@ -499,7 +499,7 @@ def main():
     mc_now = medicare['national'][medicare['latest']]
     print(f"  Medicare    {medicare['labels'][0]} - {medicare['labels'][-1]}  "
           f"({len(medicare['states'])} states + DC, territories excluded)  "
-          f"{medicare['labels'][-1]} MA penetration {mc_now['ma']/mc_now['tot']*100:.1f}%")
+          f"{medicare['labels'][-1]} MA penetration {mc_now['ma']/mc_now['abtot']*100:.1f}% (of A&B)")
     print(f"  Marketplace OEP + {len(post_labels) - 1} months  ({len(mkt_oep)} states)")
     cs_states = [s for s in cost_sharing if s != 'United States']
     print(f"  Cost sharing {CS_BENEFIT_YEAR} plan-level avg  ({len(cs_states)} states + US)")
