@@ -284,8 +284,8 @@ vs the same month three years earlier — total then/now/change/%, with the prop
 repurposed to show **MA penetration then → now**: a light "now" fill under a solid
 "3-years-ago" fill so both values and the gain between them are visible, since a growing series
 would overrun a share-of-baseline bar), and a **five-chart grid**: MA penetration trend (hero,
-tall, line), three **stacked bars** — Original vs MA, Part D (PDP vs MAPD), Aged vs Disabled —
-and a state MA-penetration ranking (top-12 nationally; selected-state-vs-largest when a state
+tall, line), three **stacked-area** charts — Original vs MA, Part D (PDP vs MAPD), Aged vs
+Disabled — and a state MA-penetration ranking (top-12 nationally; selected-state-vs-largest when a state
 is chosen). The lookback month is derived as three years before the latest month, so it tracks
 forward as new data lands.
 
@@ -304,7 +304,7 @@ exceptions coded on purpose:
   anchored at zero — that would flatten the genuine rise) but carries ~70% `grace` padding, so
   a few points of movement sit in the middle band instead of stretching across the full height
   and overstating the slope.
-- The **stacked-to-total** bar charts (Original vs MA, PDP vs MAPD, Aged vs Disabled) **do**
+- The **stacked-to-total** charts (Original vs MA, PDP vs MAPD, Aged vs Disabled) **do**
   `beginAtZero`: they are compositions of a whole, and a non-zero baseline would exaggerate the
   smaller band (e.g. make ~6M disabled look comparable to ~62M aged).
 

@@ -1297,43 +1297,42 @@ function renderMcarePen(state){
     options:o});
 }
 
-// Three stacked-BAR charts share this builder: two components that sum to a
-// meaningful total (Original+MA = total Medicare; PDP+MAPD = total Part D;
-// Aged+Disabled = total Medicare). Bars anchor at zero — they are compositions
-// of a whole, and a non-zero baseline would exaggerate the smaller band's share
-// (e.g. make ~6M disabled look comparable to ~62M aged). This is the opposite
-// call from the penetration hero, where a tight auto-scaled axis is wanted.
+// Three stacked-area trend charts share this builder: two components that sum to
+// a meaningful total (Original+MA = total Medicare; PDP+MAPD = total Part D;
+// Aged+Disabled = total Medicare). Anchored at zero — they are compositions of a
+// whole, and a non-zero baseline would exaggerate the smaller band's share (e.g.
+// make ~6M disabled look comparable to ~62M aged). This is the opposite call
+// from the penetration hero, where a tight auto-scaled axis is wanted.
 function renderMcareStack(canvasId,subId,subText,state,ds){
   document.getElementById(subId).textContent=subText;
   const o=mcTrendOpts(mcValAxis());
   o.scales.y.stacked=true; o.scales.x.stacked=true; o.scales.y.beginAtZero=true;
   o.plugins.tooltip.callbacks.label=c=>c.raw==null?'':' '+c.dataset.label+': '+c.raw.toLocaleString();
-  makeChart(canvasId,{type:'bar',
+  makeChart(canvasId,{type:'line',
     data:{labels:MC_SHORT,datasets:ds.map(d=>({label:d.label,data:mcColSeries(state,d.field),
-      backgroundColor:d.color,hoverBackgroundColor:d.color,borderWidth:0,
-      categoryPercentage:.98,barPercentage:.98}))},
+      borderColor:d.line,backgroundColor:d.fill,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.25,fill:true}))},
     options:o});
 }
 
 function renderMcareComp(state){
   renderMcareStack('mcareCompChart','mc-comp-sub',
     'Beneficiaries by coverage type · stacked to total Medicare · '+MC_L[0]+' – '+MC_L[MC_L.length-1],state,
-    [{label:'Original Medicare',field:'org',color:'#8A9099'},
-     {label:'Medicare Advantage',field:'ma',color:'#B45309'}]);
+    [{label:'Original Medicare',field:'org',line:'#6B7280',fill:'rgba(107,114,128,.28)'},
+     {label:'Medicare Advantage',field:'ma',line:'#B45309',fill:'rgba(180,83,9,.30)'}]);
 }
 function renderMcarePartd(state){
   const r=mcRec(state,MC_LATEST);
   renderMcareStack('mcarePartdChart','mc-partd-sub',
     (r?'Part D covers '+(r.partd/r.tot*100).toFixed(1)+'% of Medicare · ':'')+'standalone (PDP) vs. MA drug plans (MAPD)',state,
-    [{label:'PDP (standalone)',field:'pdp',color:'#2E9E63'},
-     {label:'MAPD (MA drug plan)',field:'mapd',color:'#B45309'}]);
+    [{label:'PDP (standalone)',field:'pdp',line:'#1A7A4A',fill:'rgba(26,122,74,.22)'},
+     {label:'MAPD (MA drug plan)',field:'mapd',line:'#B45309',fill:'rgba(180,83,9,.28)'}]);
 }
 function renderMcareBasis(state){
   const r=mcRec(state,MC_LATEST);
   renderMcareStack('mcareBasisChart','mc-basis-sub',
     'Entitlement basis · stacked to total Medicare'+(r?' · disabled = '+(r.dsbld/r.tot*100).toFixed(1)+'%':''),state,
-    [{label:'Aged (65+)',field:'aged',color:'#B45309'},
-     {label:'Disabled (under 65)',field:'dsbld',color:'#3B6FB0'}]);
+    [{label:'Aged (65+)',field:'aged',line:'#B45309',fill:'rgba(180,83,9,.26)'},
+     {label:'Disabled (under 65)',field:'dsbld',line:'#3B6FB0',fill:'rgba(59,111,176,.22)'}]);
 }
 
 function mcPenByState(){
