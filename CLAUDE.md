@@ -61,8 +61,8 @@ ACA cost-sharing section below). The monthly rebuild leaves it untouched.
 |---|---|
 | `Mcaid` | One row per state per month, plus a `United States` row |
 | `Mcaid Peak Baseline` | **Different layout** — 3 columns (`State`, `Reporting Period`, `Total Medicaid Enrollment`), one row per state + `United States`, all dated Mar 2023. Total enrollment only: no adult, no renewal fields. Reference point for the peak strip; never a series. |
-| `CHIP` | 3 columns (`State`, `Reporting Period`, `Total CHIP Enrollment`), one row per state per month + a `United States` row. Total enrollment only — no adult, no renewal fields. Currently Dec 2025–Apr 2026, 51 states + US. **CHIP is a separate population, not a Medicaid subset** (see below). |
-| `CHIP Peak Baseline` | Same 3-column layout as `CHIP`, one row per state + `United States`, all dated Mar 2023. Total CHIP enrollment only. Reference point for the CHIP peak strip; never a series. |
+| `CHIP` | 5 columns (`State`, `Reporting Period`, `Total CHIP Enrollment`, `Medicaid Child Enrollment`, `Medicaid and CHIP Child Enrollment`), one row per state per month + a `United States` row. Currently Dec 2025–Apr 2026, 51 states + US. **CHIP is a separate population, not a Medicaid subset** (see below). The dashboard **derives** Medicaid child from `Medicaid and CHIP Child` − `Total CHIP`; the sheet's own `Medicaid Child Enrollment` column is a cross-check only (see the Medicaid-child section). No adult or renewal fields. |
+| `CHIP Peak Baseline` | Same 5-column layout as `CHIP`, one row per state + `United States`, all dated Mar 2023. Reference point for the CHIP and Medicaid-child peak strips; never a series. In this sheet Arizona's `Medicaid and CHIP Child` is `0` (breakout not reported in its Feb 2020–Apr 2024 window), so its derived child peak is negative and suppressed (see below). |
 | `BHP` | Only DC, MN, NY, OR participate |
 | `Marketplace` | **Superseded — do not read.** Kept for reference only |
 | `Marketplace (2)` | The live Marketplace sheet. `Reporting Period` is the string `OEP` or a date |
@@ -189,14 +189,17 @@ Rules that keep it honest:
 
 The CHIP tab sits between Medicaid and Basic Health Program in the tab bar, with a distinct
 violet accent (`--chip:#5B4B9E`, light panel tint `--chip-light:#EDEBF6`) — separate from
-Medicaid navy, BHP teal, and Marketplace crimson. Fed by `load_chip()` and
-`load_chip_peak_baseline()` in `build_dashboard.py`, reading the `CHIP` and `CHIP Peak
-Baseline` sheets. Total CHIP enrollment only — there is no renewal data — so it is a simpler
-tab than Medicaid: a KPI row (current enrollment with month-over-month delta, the Mar 2023
-peak reference, change since peak in absolute and percent, and current as a share of peak), a
-state selector defaulting to National, an enrollment trend chart, a peak baseline strip with a
-proportional bar, and a state-ranking chart (top states nationally; state-vs-largest-states
-when a state is selected). Every chart routes through `makeChart`; value axes use `axisFmt`.
+Medicaid navy, BHP teal, and Marketplace crimson. Fed by `load_chip()`,
+`load_chip_peak_baseline()`, `load_chip_child()`, and `load_chip_child_peak()` in
+`build_dashboard.py`, reading the `CHIP` and `CHIP Peak Baseline` sheets. There is no renewal
+data, so it is a simpler tab than Medicaid: a KPI row (current CHIP enrollment with
+month-over-month delta, the Mar 2023 peak reference, change since peak in absolute and percent,
+and current as a share of peak — all Total CHIP), a state selector defaulting to National, an
+enrollment trend chart plotting **two distinct series — total CHIP (reported) and derived
+Medicaid child** (see below), a CHIP peak baseline strip with a proportional bar, a derived
+Medicaid-child peak comparison line beneath it, and a state-ranking chart (top states
+nationally; state-vs-largest-states when a state is selected — CHIP totals). Every chart routes
+through `makeChart`; value axes use `axisFmt`.
 
 **CHIP is a separate population, not a Medicaid subset.** It covers Medicaid-expansion CHIP,
 separate CHIP, and pregnant adults in separate CHIP. Medicaid and CHIP enrollment therefore
@@ -212,10 +215,13 @@ Hampshire was subsequently revised from 19,058 to 18,943, giving 7,213,381. The 
 workbook carries the revised NH value (18,943 → national 7,213,381). Either vintage is
 acceptable depending on the data's age; any *other* March mismatch means stop and report.
 
-**The Medicaid adjustments do NOT apply to CHIP.** The California continuity restatement concerned
-Medicaid limited-benefit enrollees only, and the Nevada March 2026 caveat concerned Medicaid
-*child* enrollment — neither touches CHIP. `load_chip()` applies no adjustment, and the CHIP
-tab carries neither disclosure.
+**The Medicaid adjustments do NOT apply to the CHIP total.** The California continuity
+restatement concerned Medicaid limited-benefit enrollees only, and the Nevada March 2026 caveat
+concerned Medicaid *child* enrollment — neither touches Total CHIP. `load_chip()` applies no
+adjustment, and the CHIP-total figures carry no California disclosure. **The Nevada caveat,
+however, now surfaces on this tab** because the tab derives and shows Medicaid child enrollment
+(the metric Nevada overstated) — see the Medicaid-child section below. California is not
+disclosed here because its revision did not touch child enrollment.
 
 **The Mar 2023 peak is a reference point, never a series point.** As on the Medicaid tab, it is
 never added to `CHIP_PERIODS` or any trend series (a 34-month gap would render as a straight
@@ -239,6 +245,70 @@ point-in-time.** Where they conflict, the CSV is authoritative, and differences 
 reflect state resubmissions (the New Hampshire March revision above is one example). Use PDF
 totals to validate a fresh load, but expect small variances rather than treating them as
 errors. This applies to Medicaid and CHIP alike.
+
+### Derived Medicaid child enrollment (CHIP tab)
+
+The CHIP tab also shows **Medicaid child enrollment**, which **CMS does not publish directly**
+in the Performance Indicator data. It is **derived**, per state per month, as:
+
+```
+Medicaid child = Medicaid and CHIP Child Enrollment − Total CHIP Enrollment
+```
+
+Both inputs are columns on the `CHIP` / `CHIP Peak Baseline` sheets. `load_chip_child()` and
+`load_chip_child_peak()` compute this via `derive_child()`; it is drawn as a **second, distinct
+line** on the trend chart (dashed navy, unfilled) alongside Total CHIP (solid filled violet).
+The two are **separate programs that add together — never stacked** (stacking would imply CHIP
+is a Medicaid subset, which it is not), and Medicaid child is always **labelled "derived"**, not
+reported. The sheets carry their own `Medicaid Child Enrollment` column; the dashboard derives
+the value independently and uses that column only as a cross-check (they match on every `CHIP`
+row).
+
+**"Medicaid and CHIP Child" is not purely children.** CMS's figure includes **pregnant adult
+women enrolled in separate CHIP**, so the derived "Medicaid child" figure is not strictly a
+child count. The arithmetic reconciles exactly (it is a clean subtraction of two published
+columns), but the *label* is imprecise — the surfaced value is best read as "Medicaid children
+plus a small pregnant-adult residual," and should not be presented as an exact child census.
+
+**Never render a derived value that is negative or zero.** A derived value ≤ 0 (or a missing
+input) means the state **did not report the child breakout that month** — not that it has no
+child enrollment — so `derive_child()` returns `None` and the dashboard renders a **gap**
+(`spanGaps:false`), never a number. In the current `CHIP` sheet (Dec 2025–Apr 2026) all 51
+states report positive in every month; the only ≤ 0 case anywhere is Arizona in the Mar 2023
+baseline (below).
+
+**National control totals (derived Medicaid child), validated in `load_chip_child()`:** the
+national row must equal the exact sum of reported states each month, and is checked against the
+CMS PDF state tables — **April 2026 = 28,235,643 (hard assert)**. March 2026 derives to
+**28,357,494** on the workbook's revised-NH vintage, **636 below the PDF's 28,358,130**; per the
+"two acceptable vintages"/CSV-authoritative rule above this is expected, so the build emits a
+note rather than failing. Any *other* control mismatch — especially on April — means stop and
+investigate.
+
+**Arizona — the child peak is suppressed.** CMS states Arizona did not report the Medicaid
+adult/child breakout from **Feb 2020 through Apr 2024**, and national child totals before May
+2024 include Arizona's CHIP only. The Mar 2023 baseline sits inside that window, so Arizona's
+`Medicaid and CHIP Child` there is `0` and its derived child peak is **−147,213** — unreal.
+Handling:
+
+- **Per-state:** Arizona's Medicaid-child *peak comparison* is **suppressed entirely** (a note
+  explains why); its post-May-2024 monthly values in `CHIP` are valid and **display normally**.
+- **National:** Arizona is **excluded from both endpoints** of the national child peak
+  comparison, not the whole comparison suppressed — dropping one contaminated cell should not
+  cost 50 states + DC of good data. `load_chip_child_peak()` builds the national child peak as
+  the **sum of reported states only** (Arizona's `None` is excluded) = **35,171,296** (this
+  equals the workbook's own pre-computed US `Medicaid Child` cell, which likewise floors
+  Arizona). The JS then subtracts Arizona's current children from the current endpoint so the
+  comparison is like-for-like (~35.17M → ~27.63M, −21.4%), and a note discloses that Arizona is
+  excluded from both endpoints. Arizona's current children **remain in the national trend/level**
+  above, where they are valid. **CHIP-total peak comparisons are unaffected throughout** — this
+  concerns the derived child series only.
+
+**Nevada — March 2026 child overstated.** CMS acknowledges a reporting error that overstated
+Nevada's March 2026 Medicaid *child* enrollment by roughly **12,000**, to be corrected upstream
+in a future release. **Do not adjust it** — CMS corrects it. Because the CHIP tab now shows the
+derived child series, the existing Nevada caveat is **extended to this tab** (added to
+`CHIP_CAVEATS`) and surfaces when Nevada is selected; its Total CHIP enrollment is unaffected.
 
 ## Medicare (its own tab)
 

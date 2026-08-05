@@ -84,6 +84,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .peak-bar-fill{height:100%;background:linear-gradient(90deg,#2E6BB0,var(--mcaid));border-radius:3px 0 0 3px;transition:width .4s ease;}
 .peak-note{flex-shrink:0;width:158px;font-size:8.5px;line-height:1.3;color:#7A5A2A;font-style:italic;}
 .peak-note:empty{display:none;}
+.peak-child-strip{flex-shrink:0;font-size:9.5px;line-height:1.4;color:#33405C;background:var(--surface);border:1px solid var(--border);border-left:3px dashed #0D1B3E;border-radius:6px;padding:5px 12px;margin-top:-4px;}
+.peak-child-strip .pc-tag{display:inline-block;font-weight:700;color:#0D1B3E;text-transform:uppercase;letter-spacing:.05em;font-size:8px;margin-right:8px;vertical-align:1px;}
+.peak-child-strip .pc-az{display:block;font-size:8.5px;color:#7A5A2A;font-style:italic;margin-top:2px;line-height:1.3;}
+.peak-child-strip:empty{display:none;}
 .chip-panel .peak-strip{border-left-color:var(--chip);}
 .chip-panel .peak-hd{color:var(--chip);}
 .chip-panel .peak-bartop b{color:var(--chip);}
@@ -301,6 +305,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       </div>
       <div class="peak-note" id="cp-peak-note"></div>
     </div>
+
+    <div class="peak-child-strip" id="cp-peak-child"></div>
 
     <div style="flex-shrink:0">
       <div class="cum-hd" id="cp-cum-hd" style="color:var(--chip);margin-top:0">Cumulative Impact <span></span></div>
@@ -565,6 +571,12 @@ const CHIP_NAT      = __CHIP_NAT__;
 const CHIP_STATES   = __CHIP_STATES__;
 const CHIP_PEAK     = __CHIP_PEAK__;
 const CHIP_PEAK_LABEL = __CHIP_PEAK_LABEL__;
+// Derived Medicaid child enrollment (a SEPARATE program from CHIP, not a subset).
+// Not published by CMS — derived as (Medicaid and CHIP child) − (Total CHIP);
+// null where a state did not report the breakout (rendered as a gap, never zero).
+const CHIP_CHILD_NAT    = __CHIP_CHILD_NAT__;
+const CHIP_CHILD_STATES = __CHIP_CHILD_STATES__;
+const CHIP_CHILD_PEAK   = __CHIP_CHILD_PEAK__;
 const MKT_OEP       = __MKT_OEP__;
 const MKT_NAT_OEP   = __MKT_NAT_OEP__;
 const POST_LABELS   = __POST_LABELS__;
@@ -865,30 +877,48 @@ const CHIP_CAVEATS={
   'Colorado':'includes retroactive enrollments, which makes its figures subject to later revision.',
   'Hawaii':'includes retroactive enrollments, which makes its figures subject to later revision.',
   'New Hampshire':'includes retroactive enrollments, which makes its figures subject to later revision.',
-  'Alaska':'did not include all CHIP enrollees for several months in late 2023 and early 2024.'
+  'Alaska':'did not include all CHIP enrollees for several months in late 2023 and early 2024.',
+  // Nevada's caveat is about the DERIVED Medicaid child series now shown here, not
+  // CHIP itself (extends the Nevada note on the Medicaid tab). Left as reported —
+  // CMS corrects it upstream.
+  'Nevada':'has its <b style="color:#5A4A1A">March 2026</b> Medicaid child enrollment (the derived series) overstated by roughly <b style="color:#5A4A1A">12,000</b> — a CMS reporting error inflated child enrollment, to be corrected in a future CMS release. Its total CHIP enrollment is unaffected, and its March→April change in the derived series is therefore understated.'
 };
 
 function chipVal(state,p){ return state ? ((CHIP_STATES[state]||{})[p] ?? null) : (CHIP_NAT[p] ?? null); }
 function chipSeries(state){ return CHIP_PERIODS.map(p=>chipVal(state,p)); }
+// Derived Medicaid child series (distinct program from CHIP; null = not reported).
+function chipChildVal(state,p){ return state ? ((CHIP_CHILD_STATES[state]||{})[p] ?? null) : (CHIP_CHILD_NAT[p] ?? null); }
+function chipChildSeries(state){ return CHIP_PERIODS.map(p=>chipChildVal(state,p)); }
 
 function renderChipTs(state){
   document.getElementById('cp-ts-title').innerHTML=(state||'National')+' Enrollment <span>Trend</span>';
-  document.getElementById('cp-ts-sub').textContent='Total CHIP enrollment · '+CHIP_LABELS[0]+' – '+CHIP_LABELS[CHIP_LABELS.length-1];
-  const s=chipSeries(state);
+  document.getElementById('cp-ts-sub').textContent='Medicaid child (derived) vs. total CHIP (reported) · '+CHIP_LABELS[0]+' – '+CHIP_LABELS[CHIP_LABELS.length-1];
+  // Two distinct series on one axis — Medicaid child and CHIP are SEPARATE
+  // programs that add together, so they are drawn as separate lines and never
+  // stacked (stacking would imply CHIP is a Medicaid subset). Medicaid child is
+  // dashed navy and unfilled to read as the DERIVED series; CHIP keeps its solid
+  // filled violet. Both may be null (a gap), never interpolated.
+  const chip=chipSeries(state), child=chipChildSeries(state);
   makeChart('chipTsChart',{
     type:'line',
-    data:{labels:CHIP_LABELS,datasets:[{label:'Total CHIP Enrollment',data:s,borderColor:'#5B4B9E',
-      backgroundColor:'rgba(91,75,158,.10)',borderWidth:2.5,pointRadius:s.map(v=>v==null?0:4),
-      pointBackgroundColor:'#5B4B9E',pointBorderColor:'#fff',pointBorderWidth:2,tension:.25,spanGaps:false,fill:true}]},
+    data:{labels:CHIP_LABELS,datasets:[
+      {label:'Medicaid child (derived)',data:child,borderColor:'#0D1B3E',
+        backgroundColor:'rgba(13,27,62,.05)',borderWidth:2.5,borderDash:[5,3],
+        pointRadius:child.map(v=>v==null?0:3.5),pointBackgroundColor:'#0D1B3E',
+        pointBorderColor:'#fff',pointBorderWidth:1.5,tension:.25,spanGaps:false,fill:false},
+      {label:'Total CHIP (reported)',data:chip,borderColor:'#5B4B9E',
+        backgroundColor:'rgba(91,75,158,.10)',borderWidth:2.5,pointRadius:chip.map(v=>v==null?0:4),
+        pointBackgroundColor:'#5B4B9E',pointBorderColor:'#fff',pointBorderWidth:2,tension:.25,spanGaps:false,fill:true}]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},
-        tooltip:{...T,callbacks:{label:c=>c.raw==null?' not reported':' '+c.raw.toLocaleString()}}},
+      plugins:{legend:{display:true,position:'top',align:'end',
+          labels:{boxWidth:24,boxHeight:2,color:'#0D1B3E',font:{size:9.5},padding:10,usePointStyle:false}},
+        tooltip:{...T,callbacks:{label:c=>' '+c.dataset.label+': '+(c.raw==null?'not reported':c.raw.toLocaleString())}}},
       scales:{x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}},
-        // beginAtZero (national + state): CHIP enrollment is genuinely flat, so
+        // beginAtZero (national + state): both series are genuinely flat, so
         // anchoring at zero renders change proportionally instead of letting
-        // auto-scale stretch a ~1-5% span across the whole plot. The national
-        // range widens to ~0–8M so axisFmt picks whole millions; states stay in
-        // thousands automatically. Applies to the CHIP trend chart only.
+        // auto-scale stretch a small span across the whole plot. Nationally the
+        // range spans ~0–30M (Medicaid child ~28M above CHIP ~7M — visibly
+        // separate populations that sum to ~35M); states stay in thousands.
         y:{beginAtZero:true,grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}
   });
 }
@@ -952,6 +982,38 @@ function renderChipPeak(state,key){
   g('cp-peak-pct').style.color=chg<0?'var(--warn)':'var(--ok)';
   g('cp-peak-share').textContent=share.toFixed(1)+'% of peak';
   g('cp-peak-bar').style.width=Math.max(0,Math.min(100,share))+'%';
+}
+
+// Derived Medicaid-child peak comparison — a separate line beneath the CHIP-total
+// peak strip (which it leaves untouched). Arizona is suppressed entirely: it did
+// not report the Medicaid/CHIP child breakout before May 2024, so its Mar 2023
+// baseline is not a real figure. For the national view Arizona is excluded from
+// BOTH endpoints — its unusable baseline is already out of CHIP_CHILD_PEAK, and
+// its ~604k current children are subtracted here for a like-for-like comparison
+// (they remain in the trend/KPIs above, where they are valid). CHIP-total peak
+// comparisons are unaffected throughout.
+function renderChipChildPeak(state,key){
+  const el=document.getElementById('cp-peak-child');
+  const TAG='<span class="pc-tag">Medicaid child · derived</span>';
+  if(state==='Arizona'){
+    el.innerHTML=TAG+'peak comparison unavailable — Arizona did not report the Medicaid/CHIP child breakout before May 2024, so its March 2023 baseline is not a real figure. Its monthly values above are valid from May 2024.';
+    return;
+  }
+  let peak=CHIP_CHILD_PEAK[state||'United States'];
+  let cur=chipChildVal(state,key);
+  let azNote='';
+  if(!state){                 // national: drop Arizona from the current endpoint too
+    const az=chipChildVal('Arizona',key);
+    if(cur!=null && az!=null){ cur-=az; azNote='<span class="pc-az">Arizona excluded from both endpoints for comparability — it did not report the child breakout before May 2024; its current children remain in the trend above.</span>'; }
+  }
+  if(peak==null||cur==null){
+    el.innerHTML=TAG+'peak comparison not available for this selection.';
+    return;
+  }
+  const chg=cur-peak, pct=chg/peak*100, sgn=chg<0?'−':'+', col=chg<0?'var(--warn)':'var(--ok)';
+  el.innerHTML=TAG+'Mar 2023 '+fmt(peak)+' → '+CHIP_LABELS[CHIP_PERIODS.indexOf(key)]+' '+fmt(cur)
+    +' · <b style="color:'+col+'">'+sgn+fmt(Math.abs(chg))+' ('+sgn+Math.abs(pct).toFixed(1)+'%)</b>'
+    +azNote;
 }
 
 function selectChipState(state){
@@ -1028,6 +1090,7 @@ function selectChipState(state){
   }
 
   renderChipPeak(state,key);
+  renderChipChildPeak(state,key);
   renderChipTs(state);
   renderChipRank(state);
 }

@@ -44,6 +44,29 @@ CHIP_SHEET = "CHIP"
 CHIP_PEAK_SHEET = "CHIP Peak Baseline"
 CHIP_PEAK_LABEL = "Mar 2023"
 
+# Medicaid child enrollment is NOT published directly by CMS in the Performance
+# Indicator data. It is DERIVED, per state per month, as
+#   Medicaid child = (Medicaid and CHIP Child Enrollment) − (Total CHIP Enrollment)
+# both of which the CHIP / CHIP Peak Baseline sheets carry. A derived value <= 0
+# (or a missing input) means the state did NOT report the child breakout that
+# month — not that it has no child enrollment — and is rendered as a gap, never
+# as a number. CMS's "Medicaid and CHIP Child Enrollment" also includes pregnant
+# adult women in separate CHIP, so the derived figure is not purely children; the
+# arithmetic reconciles exactly but the label is imprecise (see CLAUDE.md).
+CHIP_TOTAL_COL = "Total CHIP Enrollment"
+CHIP_MCCHILD_BOTH_COL = "Medicaid and CHIP Child Enrollment"
+# National derived Medicaid-child control totals from the CMS PDF state tables.
+# April is checked exactly; older months are revised over time (the workbook is
+# the authoritative later vintage — e.g. New Hampshire's March CHIP resubmission),
+# so a small delta from the point-in-time PDF is expected, not an error.
+CHIP_CHILD_CONTROL = {"2026-04": 28_235_643, "2026-03": 28_358_130}
+# Arizona did not report the Medicaid adult/child breakout from Feb 2020 through
+# Apr 2024, so its Mar 2023 peak child figure is unreal (Total CHIP > combined
+# child ⇒ negative). Its per-state child peak comparison is suppressed, and the
+# national child peak is built from reported states only (Arizona excluded from
+# both endpoints). Arizona's post-May-2024 monthly values are valid and display
+# normally.
+
 STATE_ABBR = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
     'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'DC': 'District of Columbia',
@@ -276,6 +299,94 @@ def load_chip_peak_baseline(xl):
     return peak
 
 
+def derive_child(both, chip):
+    """DERIVED Medicaid child = (Medicaid and CHIP child) − Total CHIP.
+
+    Returns None when the breakout was not reported — a missing input, or a
+    derived value <= 0 (Total CHIP >= combined child means the state reported
+    CHIP but not the Medicaid/CHIP child split that month). A None renders as a
+    gap on the dashboard; a derived value is never allowed to be negative or zero.
+    """
+    if both is None or chip is None:
+        return None
+    d = both - chip
+    return d if d > 0 else None
+
+
+def load_chip_child(xl):
+    """Derived Medicaid child enrollment by state + US, one value per month.
+
+    Not a CMS-published series — derived from the CHIP sheet's two child columns
+    via derive_child (see the module note). Returns (national, states) parallel
+    to load_chip; states that did not report the breakout in a month carry None
+    (rendered as a gap, never zero). The national row is validated as the exact
+    sum of reported states in every period, and against the CMS PDF state-table
+    control totals in CHIP_CHILD_CONTROL.
+    """
+    if CHIP_SHEET not in xl.sheet_names:
+        sys.exit(f"ERROR: '{CHIP_SHEET}' sheet missing from workbook")
+    df = pd.read_excel(xl, sheet_name=CHIP_SHEET)
+    df['State'] = df['State'].astype(str).map(normalize_dc)
+    df['P'] = pd.to_datetime(df['Reporting Period'])
+    df['key'] = df['P'].dt.strftime('%Y-%m')
+    periods = sorted(df['key'].unique())
+
+    states, national = {}, {}
+    for _, row in df.iterrows():
+        val = derive_child(to_int(row[CHIP_MCCHILD_BOTH_COL]),
+                           to_int(row[CHIP_TOTAL_COL]))
+        if row['State'] == 'United States':
+            national[row['key']] = val
+        else:
+            states.setdefault(row['State'], {})[row['key']] = val
+
+    for p in periods:
+        states_sum = sum(s[p] for s in states.values()
+                         if s.get(p) is not None)
+        if national.get(p) != states_sum:
+            sys.exit(f"ERROR: derived Medicaid child national {national.get(p)} "
+                     f"!= sum of reported states {states_sum} at {p}")
+
+    for p, ctrl in CHIP_CHILD_CONTROL.items():
+        got = national.get(p)
+        if got is None or got == ctrl:
+            continue
+        if p == "2026-04":
+            sys.exit(f"ERROR: derived Medicaid child national {p} = {got} "
+                     f"!= CMS control {ctrl}")
+        print(f"  note: derived Medicaid child national {p} = {got:,} vs "
+              f"CMS PDF {ctrl:,} (delta {got - ctrl:+,}; revised vintage)")
+
+    return national, states
+
+
+def load_chip_child_peak(xl):
+    """March 2023 peak DERIVED Medicaid child enrollment by state + US.
+
+    Reference point only, never a trend series (mirrors load_chip_peak_baseline).
+    Per state, derived via derive_child; a state that did not report the child
+    breakout in Mar 2023 carries None and its child peak comparison is suppressed
+    on the dashboard. Arizona sits inside its Feb 2020-Apr 2024 non-reporting
+    window, so its derived peak is negative -> None. The national child peak is
+    the sum of REPORTED states only, i.e. Arizona is excluded from both endpoints
+    (the current national child endpoint is likewise reduced by Arizona in the JS
+    so the comparison stays like-for-like; a per-tab note discloses this).
+    """
+    if CHIP_PEAK_SHEET not in xl.sheet_names:
+        sys.exit(f"ERROR: '{CHIP_PEAK_SHEET}' sheet missing from workbook")
+    df = pd.read_excel(xl, sheet_name=CHIP_PEAK_SHEET)
+    df['State'] = df['State'].astype(str).map(normalize_dc)
+
+    peak = {}
+    for _, row in df.iterrows():
+        if row['State'] == 'United States':
+            continue
+        peak[row['State']] = derive_child(to_int(row[CHIP_MCCHILD_BOTH_COL]),
+                                          to_int(row[CHIP_TOTAL_COL]))
+    peak['United States'] = sum(v for v in peak.values() if v is not None)
+    return peak
+
+
 def build_mix(periods, labels, national, states):
     """Renewal outcome mix. National blends PDF history (Mar-Nov 2025) with workbook data."""
     hist = json.loads(PDF_HISTORY.read_text())
@@ -438,6 +549,8 @@ def main():
     peak = load_peak_baseline(xl)
     chip_periods, chip_labels, chip_latest, chip_nat, chip_states = load_chip(xl)
     chip_peak = load_chip_peak_baseline(xl)
+    chip_child_nat, chip_child_states = load_chip_child(xl)
+    chip_child_peak = load_chip_child_peak(xl)
     mkt_oep, mkt_nat, post_labels, post_series = load_marketplace(xl)
     yoy = load_effectuated(xl)
     cost_sharing = load_cost_sharing()
@@ -466,6 +579,9 @@ def main():
         '__CHIP_STATES__': compact(chip_states),
         '__CHIP_PEAK__': compact(chip_peak),
         '__CHIP_PEAK_LABEL__': compact(CHIP_PEAK_LABEL),
+        '__CHIP_CHILD_NAT__': compact(chip_child_nat),
+        '__CHIP_CHILD_STATES__': compact(chip_child_states),
+        '__CHIP_CHILD_PEAK__': compact(chip_child_peak),
         '__MKT_OEP__': compact(mkt_oep),
         '__MKT_NAT_OEP__': compact(mkt_nat),
         '__POST_LABELS__': compact(post_labels),
@@ -495,6 +611,11 @@ def main():
           f"{chip_labels[-1]} national {chip_nat[chip_latest]:,}")
     print(f"  CHIP peak   {CHIP_PEAK_LABEL} pre-unwinding  "
           f"({len([s for s in chip_peak if s != 'United States'])} states + US)")
+    _az = chip_child_states.get('Arizona', {}).get(chip_latest)
+    print(f"  Mcaid child (derived)  {chip_labels[-1]} national {chip_child_nat[chip_latest]:,}  "
+          f"({sum(1 for s in chip_child_states.values() if s.get(chip_latest) is not None)} states reporting)")
+    print(f"    child peak {CHIP_PEAK_LABEL} national {chip_child_peak['United States']:,} "
+          f"(Arizona excluded, both endpoints; AZ peak={chip_child_peak.get('Arizona')})")
     print(f"  BHP         {bhp_labels[0]} - {bhp_labels[-1]}  ({len(bhp_series)} states)")
     mc_now = medicare['national'][medicare['latest']]
     print(f"  Medicare    {medicare['labels'][0]} - {medicare['labels'][-1]}  "
