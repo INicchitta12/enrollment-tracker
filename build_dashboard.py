@@ -387,6 +387,40 @@ def load_chip_child_peak(xl):
     return peak
 
 
+def load_chip_both(xl):
+    """Reported 'Medicaid and CHIP Child Enrollment' (the combined child column)
+    by state + US, one value per month.
+
+    This is the raw reported column — the sum of Total CHIP and derived Medicaid
+    child — surfaced as a top-panel KPI alongside its two components. Not a
+    derivation and no adjustment applies. Validated as the exact sum of reported
+    states each month, and (as a cross-check) that it equals Total CHIP + derived
+    Medicaid child on the national row.
+    """
+    if CHIP_SHEET not in xl.sheet_names:
+        sys.exit(f"ERROR: '{CHIP_SHEET}' sheet missing from workbook")
+    df = pd.read_excel(xl, sheet_name=CHIP_SHEET)
+    df['State'] = df['State'].astype(str).map(normalize_dc)
+    df['P'] = pd.to_datetime(df['Reporting Period'])
+    df['key'] = df['P'].dt.strftime('%Y-%m')
+    periods = sorted(df['key'].unique())
+
+    states, national = {}, {}
+    for _, row in df.iterrows():
+        val = to_int(row[CHIP_MCCHILD_BOTH_COL])
+        if row['State'] == 'United States':
+            national[row['key']] = val
+        else:
+            states.setdefault(row['State'], {})[row['key']] = val
+
+    for p in periods:
+        states_sum = sum(s[p] for s in states.values() if s.get(p) is not None)
+        if national.get(p) != states_sum:
+            sys.exit(f"ERROR: Medicaid+CHIP child national {national.get(p)} "
+                     f"!= sum of states {states_sum} at {p}")
+    return national, states
+
+
 def build_mix(periods, labels, national, states):
     """Renewal outcome mix. National blends PDF history (Mar-Nov 2025) with workbook data."""
     hist = json.loads(PDF_HISTORY.read_text())
@@ -551,6 +585,7 @@ def main():
     chip_peak = load_chip_peak_baseline(xl)
     chip_child_nat, chip_child_states = load_chip_child(xl)
     chip_child_peak = load_chip_child_peak(xl)
+    chip_both_nat, chip_both_states = load_chip_both(xl)
     mkt_oep, mkt_nat, post_labels, post_series = load_marketplace(xl)
     yoy = load_effectuated(xl)
     cost_sharing = load_cost_sharing()
@@ -582,6 +617,8 @@ def main():
         '__CHIP_CHILD_NAT__': compact(chip_child_nat),
         '__CHIP_CHILD_STATES__': compact(chip_child_states),
         '__CHIP_CHILD_PEAK__': compact(chip_child_peak),
+        '__CHIP_BOTH_NAT__': compact(chip_both_nat),
+        '__CHIP_BOTH_STATES__': compact(chip_both_states),
         '__MKT_OEP__': compact(mkt_oep),
         '__MKT_NAT_OEP__': compact(mkt_nat),
         '__POST_LABELS__': compact(post_labels),
@@ -616,6 +653,8 @@ def main():
           f"({sum(1 for s in chip_child_states.values() if s.get(chip_latest) is not None)} states reporting)")
     print(f"    child peak {CHIP_PEAK_LABEL} national {chip_child_peak['United States']:,} "
           f"(Arizona excluded, both endpoints; AZ peak={chip_child_peak.get('Arizona')})")
+    print(f"  Mcaid+CHIP child (reported)  {chip_labels[-1]} national {chip_both_nat[chip_latest]:,} "
+          f"(= CHIP {chip_nat[chip_latest]:,} + child {chip_child_nat[chip_latest]:,})")
     print(f"  BHP         {bhp_labels[0]} - {bhp_labels[-1]}  ({len(bhp_series)} states)")
     mc_now = medicare['national'][medicare['latest']]
     print(f"  Medicare    {medicare['labels'][0]} - {medicare['labels'][-1]}  "

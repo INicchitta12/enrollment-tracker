@@ -93,6 +93,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .chip-panel .peak-strip-child .peak-hd{color:#0D1B3E;}
 .chip-panel .peak-strip-child .peak-bartop b{color:#0D1B3E;}
 .chip-panel .peak-strip-child .peak-bar-fill{background:linear-gradient(90deg,#3A4A6E,#0D1B3E);}
+/* Wider peak header so the program prefix (CHIP / Medicaid Child) fits cleanly */
+.chip-panel .peak-hd{width:132px;}
+/* Two Cumulative Impact strips (Total CHIP + Medicaid child) side by side */
+.cum-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+/* Ranking metric toggle (CHIP vs Medicaid child) */
+.rank-toggle{margin-left:auto;display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:2px;flex-shrink:0;}
+.rt-btn{font-family:inherit;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:transparent;border:0;border-radius:3px;padding:3px 7px;cursor:pointer;white-space:nowrap;}
+.rt-btn.active{background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.14);}
 .mcare-panel .peak-strip{border-left-color:var(--mcare);}
 .mcare-panel .peak-hd{color:var(--mcare);}
 .mcare-panel .peak-bartop b{color:var(--mcare);}
@@ -191,7 +199,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 <div class="tabs">
   <div class="tab active-mcaid" data-tab="mcaid" onclick="switchTab('mcaid')"><div class="tab-dot" style="background:#4A72C0"></div>Medicaid</div>
-  <div class="tab" data-tab="chip" onclick="switchTab('chip')"><div class="tab-dot" style="background:#7A68C0"></div>CHIP</div>
+  <div class="tab" data-tab="chip" onclick="switchTab('chip')"><div class="tab-dot" style="background:#7A68C0"></div>CHIP &amp; Medicaid Child</div>
   <div class="tab" data-tab="bhp" onclick="switchTab('bhp')"><div class="tab-dot" style="background:#3AA8B8"></div>Basic Health Program</div>
   <div class="tab" data-tab="mkt" onclick="switchTab('mkt')"><div class="tab-dot" style="background:#C04060"></div>ACA Marketplace</div>
   <div class="tab" data-tab="mcare" onclick="switchTab('mcare')"><div class="tab-dot" style="background:#D9822B"></div>Medicare</div>
@@ -333,6 +341,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     <div class="kpi-row">
       <div class="kpi" id="cp-enroll" style="border-top:3px solid var(--chip)"><div class="kpi-label">Total CHIP Enrollment <span style="font-weight:600;color:var(--chip);letter-spacing:.04em">&middot; reported</span></div><div class="kpi-top"><div class="kpi-value big">&mdash;</div><span class="kpi-delta flat" id="cp-enroll-d"></span></div><div class="kpi-sub">&mdash;</div></div>
       <div class="kpi" id="cp-child" style="border-top:3px solid #0D1B3E"><div class="kpi-label">Medicaid Child Enrollment <span style="font-weight:600;color:#0D1B3E;letter-spacing:.04em">&middot; derived</span></div><div class="kpi-top"><div class="kpi-value big">&mdash;</div><span class="kpi-delta flat" id="cp-child-d"></span></div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="cp-both" style="border-top:3px solid #3D4E8C"><div class="kpi-label">Medicaid &amp; CHIP Child Enrollment <span style="font-weight:600;color:#3D4E8C;letter-spacing:.04em">&middot; reported</span></div><div class="kpi-top"><div class="kpi-value big">&mdash;</div><span class="kpi-delta flat" id="cp-both-d"></span></div><div class="kpi-sub">&mdash;</div></div>
     </div>
 
     <div class="data-note compact" id="cp-state-note" style="display:none"></div>
@@ -393,7 +402,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     </div>
 
     <div class="peak-strip" id="cp-peak">
-      <div class="peak-hd">vs. Pre-Unwinding Peak<span id="cp-peak-cap">Mar 2023 &middot; total enrollment</span></div>
+      <div class="peak-hd">CHIP &middot; vs. Pre-Unwinding Peak<span id="cp-peak-cap">Mar 2023 &middot; total CHIP (reported)</span></div>
       <div class="peak-metrics">
         <div><div class="peak-lbl">Mar 2023 Peak</div><div class="peak-val" id="cp-peak-peak">&mdash;</div></div>
         <div><div class="peak-lbl" id="cp-peak-cur-lbl">Current</div><div class="peak-val" id="cp-peak-cur">&mdash;</div></div>
@@ -408,7 +417,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     </div>
 
     <div class="peak-strip peak-strip-child" id="cp-peak-child">
-      <div class="peak-hd">vs. Pre-Unwinding Peak<span id="cp-pc-cap">Mar 2023 &middot; Medicaid child (derived)</span></div>
+      <div class="peak-hd">Medicaid Child &middot; vs. Pre-Unwinding Peak<span id="cp-pc-cap">Mar 2023 &middot; Medicaid child (derived)</span></div>
       <div class="peak-metrics">
         <div><div class="peak-lbl">Mar 2023 Peak</div><div class="peak-val" id="cp-pc-peak">&mdash;</div></div>
         <div><div class="peak-lbl" id="cp-pc-cur-lbl">Current</div><div class="peak-val" id="cp-pc-cur">&mdash;</div></div>
@@ -422,12 +431,22 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       <div class="peak-note" id="cp-pc-note"></div>
     </div>
 
-    <div style="flex-shrink:0">
-      <div class="cum-hd" id="cp-cum-hd" style="color:var(--chip);margin-top:0">Cumulative Impact <span></span></div>
-      <div class="cum-strip">
-        <div class="cum-cell"><div class="cum-lbl">Net Enrollment Change</div><div class="cum-val" id="cp-cum-net">&mdash;</div><div class="cum-sub" id="cp-cum-net-sub">&mdash;</div></div>
-        <div class="cum-cell"><div class="cum-lbl">Average Monthly Change</div><div class="cum-val" id="cp-cum-avg">&mdash;</div><div class="cum-sub" id="cp-cum-avg-sub">&mdash;</div></div>
-        <div class="cum-cell"><div class="cum-lbl">vs. March 2023 Peak</div><div class="cum-val" id="cp-cum-peak">&mdash;</div><div class="cum-sub" id="cp-cum-peak-sub">&mdash;</div></div>
+    <div class="cum-pair" style="flex-shrink:0">
+      <div>
+        <div class="cum-hd" id="cp-cum-hd" style="color:var(--chip);margin-top:0">Cumulative Impact &middot; Total CHIP <span></span></div>
+        <div class="cum-strip">
+          <div class="cum-cell"><div class="cum-lbl">Net Enrollment Change</div><div class="cum-val" id="cp-cum-net">&mdash;</div><div class="cum-sub" id="cp-cum-net-sub">&mdash;</div></div>
+          <div class="cum-cell"><div class="cum-lbl">Average Monthly Change</div><div class="cum-val" id="cp-cum-avg">&mdash;</div><div class="cum-sub" id="cp-cum-avg-sub">&mdash;</div></div>
+          <div class="cum-cell"><div class="cum-lbl">vs. March 2023 Peak</div><div class="cum-val" id="cp-cum-peak">&mdash;</div><div class="cum-sub" id="cp-cum-peak-sub">&mdash;</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="cum-hd" id="cp-cchild-hd" style="color:#0D1B3E;margin-top:0">Cumulative Impact &middot; Medicaid Child (derived) <span></span></div>
+        <div class="cum-strip">
+          <div class="cum-cell"><div class="cum-lbl">Net Enrollment Change</div><div class="cum-val" id="cp-cchild-net">&mdash;</div><div class="cum-sub" id="cp-cchild-net-sub">&mdash;</div></div>
+          <div class="cum-cell"><div class="cum-lbl">Average Monthly Change</div><div class="cum-val" id="cp-cchild-avg">&mdash;</div><div class="cum-sub" id="cp-cchild-avg-sub">&mdash;</div></div>
+          <div class="cum-cell"><div class="cum-lbl">vs. March 2023 Peak</div><div class="cum-val" id="cp-cchild-peak">&mdash;</div><div class="cum-sub" id="cp-cchild-peak-sub">&mdash;</div></div>
+        </div>
       </div>
     </div>
 
@@ -438,7 +457,12 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div class="chart-wrap"><canvas id="chipTsChart"></canvas></div>
       </div>
       <div class="chart-card">
-        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--chip)"></div><div class="chart-title" id="cp-rank-title">Top States</div></div>
+        <div class="chart-card-header"><div class="card-accent-bar" id="cp-rank-accent" style="background:var(--chip)"></div><div class="chart-title" id="cp-rank-title">Top States</div>
+          <div class="rank-toggle" id="cp-rank-toggle">
+            <button type="button" class="rt-btn active" data-m="chip" onclick="setChipRankMetric('chip')">Total CHIP</button>
+            <button type="button" class="rt-btn" data-m="child" onclick="setChipRankMetric('child')">Medicaid child</button>
+          </div>
+        </div>
         <div class="chart-sub" id="cp-rank-sub"></div>
         <div class="chart-wrap"><canvas id="chipRankChart"></canvas></div>
       </div>
@@ -793,6 +817,10 @@ const CHIP_PEAK_LABEL = "Mar 2023";
 const CHIP_CHILD_NAT    = {"2025-12":28795815,"2026-01":28618720,"2026-02":28446120,"2026-03":28357494,"2026-04":28235643};
 const CHIP_CHILD_STATES = {"Alaska":{"2025-12":72260,"2026-01":72099,"2026-02":72317,"2026-03":71801,"2026-04":71819},"Alabama":{"2025-12":478657,"2026-01":475673,"2026-02":475064,"2026-03":473835,"2026-04":472692},"Arkansas":{"2025-12":330927,"2026-01":314788,"2026-02":315988,"2026-03":315638,"2026-04":320374},"Arizona":{"2025-12":621988,"2026-01":616066,"2026-02":608244,"2026-03":607087,"2026-04":603674},"California":{"2025-12":3374880,"2026-01":3344819,"2026-02":3317153,"2026-03":3276885,"2026-04":3238030},"Colorado":{"2025-12":384018,"2026-01":384184,"2026-02":385082,"2026-03":385198,"2026-04":388546},"Connecticut":{"2025-12":339796,"2026-01":339462,"2026-02":338537,"2026-03":338003,"2026-04":337449},"District of Columbia":{"2025-12":77957,"2026-01":77092,"2026-02":77518,"2026-03":77324,"2026-04":77091},"Delaware":{"2025-12":92718,"2026-01":92155,"2026-02":91635,"2026-03":91459,"2026-04":90849},"Florida":{"2025-12":2156084,"2026-01":2149852,"2026-02":2138601,"2026-03":2126301,"2026-04":2123101},"Georgia":{"2025-12":1122113,"2026-01":1120215,"2026-02":1113757,"2026-03":1111894,"2026-04":1114862},"Hawaii":{"2025-12":128215,"2026-01":128004,"2026-02":127997,"2026-03":128062,"2026-04":128820},"Iowa":{"2025-12":244819,"2026-01":244633,"2026-02":246679,"2026-03":248265,"2026-04":248461},"Idaho":{"2025-12":132072,"2026-01":131618,"2026-02":131484,"2026-03":132957,"2026-04":132131},"Illinois":{"2025-12":1033485,"2026-01":1026432,"2026-02":1023998,"2026-03":1020895,"2026-04":1030809},"Indiana":{"2025-12":580536,"2026-01":571991,"2026-02":563260,"2026-03":553540,"2026-04":542212},"Kansas":{"2025-12":203426,"2026-01":204313,"2026-02":203324,"2026-03":203788,"2026-04":200127},"Kentucky":{"2025-12":468797,"2026-01":465575,"2026-02":457847,"2026-03":450131,"2026-04":446239},"Louisiana":{"2025-12":542015,"2026-01":540363,"2026-02":534194,"2026-03":532637,"2026-04":515076},"Massachusetts":{"2025-12":495496,"2026-01":494694,"2026-02":492255,"2026-03":490210,"2026-04":487563},"Maryland":{"2025-12":471601,"2026-01":469788,"2026-02":468756,"2026-03":469939,"2026-04":467444},"Maine":{"2025-12":112126,"2026-01":117119,"2026-02":117231,"2026-03":117349,"2026-04":118190},"Michigan":{"2025-12":719044,"2026-01":717135,"2026-02":714946,"2026-03":715034,"2026-04":708103},"Minnesota":{"2025-12":595889,"2026-01":592845,"2026-02":591420,"2026-03":591521,"2026-04":590911},"Missouri":{"2025-12":438709,"2026-01":435543,"2026-02":430273,"2026-03":431418,"2026-04":433982},"Mississippi":{"2025-12":309341,"2026-01":309019,"2026-02":308430,"2026-03":307523,"2026-04":306455},"Montana":{"2025-12":70010,"2026-01":69677,"2026-02":69450,"2026-03":69288,"2026-04":67544},"North Carolina":{"2025-12":1076325,"2026-01":1068704,"2026-02":1056396,"2026-03":1045782,"2026-04":1031283},"North Dakota":{"2025-12":45451,"2026-01":45311,"2026-02":45306,"2026-03":45314,"2026-04":45244},"Nebraska":{"2025-12":133517,"2026-01":133593,"2026-02":134038,"2026-03":134297,"2026-04":133785},"New Hampshire":{"2025-12":67121,"2026-01":66696,"2026-02":66196,"2026-03":66206,"2026-04":66076},"New Jersey":{"2025-12":547676,"2026-01":544559,"2026-02":544891,"2026-03":544875,"2026-04":547526},"New Mexico":{"2025-12":264832,"2026-01":263930,"2026-02":263410,"2026-03":262935,"2026-04":264188},"Nevada":{"2025-12":268668,"2026-01":268603,"2026-02":267732,"2026-03":279179,"2026-04":266697},"New York":{"2025-12":1796810,"2026-01":1789550,"2026-02":1776166,"2026-03":1781246,"2026-04":1779024},"Ohio":{"2025-12":931820,"2026-01":920812,"2026-02":911320,"2026-03":904604,"2026-04":896895},"Oklahoma":{"2025-12":428820,"2026-01":428400,"2026-02":423051,"2026-03":418210,"2026-04":421620},"Oregon":{"2025-12":286936,"2026-01":286619,"2026-02":286705,"2026-03":287131,"2026-04":287248},"Pennsylvania":{"2025-12":1126771,"2026-01":1123907,"2026-02":1127110,"2026-03":1126906,"2026-04":1123335},"Rhode Island":{"2025-12":84749,"2026-01":84519,"2026-02":78105,"2026-03":82702,"2026-04":82732},"South Carolina":{"2025-12":492210,"2026-01":489792,"2026-02":486261,"2026-03":484511,"2026-04":484874},"South Dakota":{"2025-12":61966,"2026-01":62036,"2026-02":61979,"2026-03":62605,"2026-04":61945},"Tennessee":{"2025-12":648081,"2026-01":648578,"2026-02":650822,"2026-03":641137,"2026-04":640928},"Texas":{"2025-12":2767793,"2026-01":2723103,"2026-02":2693121,"2026-03":2694110,"2026-04":2683769},"Utah":{"2025-12":131109,"2026-01":129843,"2026-02":129137,"2026-03":128416,"2026-04":127477},"Virginia":{"2025-12":606633,"2026-01":605113,"2026-02":602188,"2026-03":601390,"2026-04":600395},"Vermont":{"2025-12":51977,"2026-01":51885,"2026-02":51783,"2026-03":51457,"2026-04":51196},"Washington":{"2025-12":753547,"2026-01":752454,"2026-02":750591,"2026-03":748785,"2026-04":752954},"Wisconsin":{"2025-12":436558,"2026-01":436411,"2026-02":436255,"2026-03":438730,"2026-04":435349},"West Virginia":{"2025-12":155044,"2026-01":154501,"2026-02":154098,"2026-03":153271,"2026-04":153779},"Wyoming":{"2025-12":34422,"2026-01":34647,"2026-02":34019,"2026-03":35713,"2026-04":34770}};
 const CHIP_CHILD_PEAK   = {"Alaska":93516,"Alabama":596195,"Arkansas":404879,"Arizona":null,"California":3997740,"Colorado":533164,"Connecticut":357501,"District of Columbia":84946,"Delaware":118352,"Florida":3006508,"Georgia":1411272,"Hawaii":142118,"Iowa":318341,"Idaho":172679,"Illinois":1227847,"Indiana":750949,"Kansas":269538,"Kentucky":505675,"Louisiana":616118,"Massachusetts":554415,"Maryland":567504,"Maine":122548,"Michigan":989818,"Minnesota":640361,"Missouri":715873,"Mississippi":402777,"Montana":104038,"North Carolina":1106530,"North Dakota":55827,"Nebraska":161824,"New Hampshire":84159,"New Jersey":693281,"New Mexico":331330,"Nevada":309696,"New York":2096997,"Ohio":1109449,"Oklahoma":507919,"Oregon":305649,"Pennsylvania":1333346,"Rhode Island":92887,"South Carolina":648153,"South Dakota":82683,"Tennessee":801706,"Texas":4090702,"Utah":201228,"Virginia":744703,"Vermont":60863,"Washington":830541,"Wisconsin":568864,"West Virginia":200202,"Wyoming":48085,"United States":35171296};
+// Reported "Medicaid and CHIP Child Enrollment" — the combined child column
+// (Total CHIP + derived Medicaid child), surfaced as a top-panel KPI.
+const CHIP_BOTH_NAT     = {"2025-12":36039776,"2026-01":35859778,"2026-02":35673778,"2026-03":35570875,"2026-04":35381450};
+const CHIP_BOTH_STATES  = {"Alaska":{"2025-12":85106,"2026-01":84968,"2026-02":85172,"2026-03":84644,"2026-04":84559},"Alabama":{"2025-12":671861,"2026-01":670277,"2026-02":671282,"2026-03":671336,"2026-04":670794},"Arkansas":{"2025-12":414424,"2026-01":398948,"2026-02":399359,"2026-03":399211,"2026-04":398851},"Arizona":{"2025-12":734622,"2026-01":728611,"2026-02":719644,"2026-03":717657,"2026-04":713597},"California":{"2025-12":4603626,"2026-01":4582795,"2026-02":4558107,"2026-03":4522491,"2026-04":4487712},"Colorado":{"2025-12":524097,"2026-01":524667,"2026-02":524426,"2026-03":524485,"2026-04":526518},"Connecticut":{"2025-12":365119,"2026-01":365023,"2026-02":364027,"2026-03":363652,"2026-04":363019},"District of Columbia":{"2025-12":94241,"2026-01":93257,"2026-02":93708,"2026-03":93214,"2026-04":92804},"Delaware":{"2025-12":106707,"2026-01":106101,"2026-02":105642,"2026-03":105358,"2026-04":104633},"Florida":{"2025-12":2317039,"2026-01":2312874,"2026-02":2303879,"2026-03":2294379,"2026-04":2294707},"Georgia":{"2025-12":1307613,"2026-01":1303671,"2026-02":1295769,"2026-03":1294177,"2026-04":1289530},"Hawaii":{"2025-12":152977,"2026-01":153346,"2026-02":153572,"2026-03":153757,"2026-04":154830},"Iowa":{"2025-12":329791,"2026-01":329393,"2026-02":331383,"2026-03":332348,"2026-04":331978},"Idaho":{"2025-12":151739,"2026-01":151205,"2026-02":151079,"2026-03":152742,"2026-04":151728},"Illinois":{"2025-12":1351821,"2026-01":1347296,"2026-02":1345411,"2026-03":1340538,"2026-04":1335551},"Indiana":{"2025-12":703263,"2026-01":694304,"2026-02":683558,"2026-03":672154,"2026-04":659235},"Kansas":{"2025-12":276016,"2026-01":277116,"2026-02":275564,"2026-03":275752,"2026-04":270959},"Kentucky":{"2025-12":601664,"2026-01":599606,"2026-02":586488,"2026-03":576091,"2026-04":566149},"Louisiana":{"2025-12":679336,"2026-01":677406,"2026-02":670589,"2026-03":669409,"2026-04":646884},"Massachusetts":{"2025-12":686697,"2026-01":682951,"2026-02":675642,"2026-03":669209,"2026-04":662258},"Maryland":{"2025-12":668222,"2026-01":665959,"2026-02":664200,"2026-03":664957,"2026-04":663770},"Maine":{"2025-12":139262,"2026-01":138550,"2026-02":138365,"2026-03":138277,"2026-04":138048},"Michigan":{"2025-12":886131,"2026-01":884441,"2026-02":881875,"2026-03":882051,"2026-04":873412},"Minnesota":{"2025-12":600115,"2026-01":596949,"2026-02":595402,"2026-03":595558,"2026-04":594879},"Missouri":{"2025-12":572269,"2026-01":569790,"2026-02":564663,"2026-03":567261,"2026-04":566397},"Mississippi":{"2025-12":392964,"2026-01":392722,"2026-02":391962,"2026-03":390776,"2026-04":389580},"Montana":{"2025-12":89777,"2026-01":89469,"2026-02":89255,"2026-03":89325,"2026-04":87088},"North Carolina":{"2025-12":1421278,"2026-01":1413056,"2026-02":1402085,"2026-03":1392899,"2026-04":1380297},"North Dakota":{"2025-12":50838,"2026-01":50725,"2026-02":50698,"2026-03":50731,"2026-04":50654},"Nebraska":{"2025-12":170364,"2026-01":170842,"2026-02":171311,"2026-03":171752,"2026-04":169659},"New Hampshire":{"2025-12":86109,"2026-01":85603,"2026-02":85181,"2026-03":85149,"2026-04":84991},"New Jersey":{"2025-12":805907,"2026-01":801131,"2026-02":801330,"2026-03":801978,"2026-04":808680},"New Mexico":{"2025-12":308545,"2026-01":307948,"2026-02":307319,"2026-03":307046,"2026-04":306682},"Nevada":{"2025-12":315744,"2026-01":315938,"2026-02":314810,"2026-03":326058,"2026-04":312777},"New York":{"2025-12":2459230,"2026-01":2449167,"2026-02":2433605,"2026-03":2434237,"2026-04":2429359},"Ohio":{"2025-12":1174157,"2026-01":1163012,"2026-02":1153381,"2026-03":1142311,"2026-04":1129766},"Oklahoma":{"2025-12":507825,"2026-01":503117,"2026-02":500957,"2026-03":501776,"2026-04":502677},"Oregon":{"2025-12":470891,"2026-01":470685,"2026-02":469532,"2026-03":469480,"2026-04":467994},"Pennsylvania":{"2025-12":1407181,"2026-01":1402637,"2026-02":1405664,"2026-03":1407178,"2026-04":1400429},"Rhode Island":{"2025-12":118453,"2026-01":118532,"2026-02":113265,"2026-03":117228,"2026-04":116498},"South Carolina":{"2025-12":605042,"2026-01":603148,"2026-02":599752,"2026-03":597283,"2026-04":597302},"South Dakota":{"2025-12":76384,"2026-01":76440,"2026-02":76579,"2026-03":77344,"2026-04":76398},"Tennessee":{"2025-12":829861,"2026-01":829627,"2026-02":828632,"2026-03":821979,"2026-04":822309},"Texas":{"2025-12":3112769,"2026-01":3067916,"2026-02":3038945,"2026-03":3028185,"2026-04":3016772},"Utah":{"2025-12":165721,"2026-01":164522,"2026-02":163819,"2026-03":163026,"2026-04":161719},"Virginia":{"2025-12":800142,"2026-01":797822,"2026-02":793061,"2026-03":791972,"2026-04":789449},"Vermont":{"2025-12":57370,"2026-01":57353,"2026-02":57249,"2026-03":56962,"2026-04":56723},"Washington":{"2025-12":818165,"2026-01":817682,"2026-02":816314,"2026-03":815121,"2026-04":814620},"Wisconsin":{"2025-12":536307,"2026-01":536351,"2026-02":536303,"2026-03":535481,"2026-04":532571},"West Virginia":{"2025-12":194725,"2026-01":194149,"2026-02":193963,"2026-03":193025,"2026-04":192819},"Wyoming":{"2025-12":40269,"2026-01":40680,"2026-02":40000,"2026-03":41865,"2026-04":40835}};
 const MKT_OEP       = {"Alaska":{"total":26079,"new":4584,"reenroll":21495,"active":15845,"auto":5650,"aptc":19249,"avgPrem":1043,"avgNet":344,"cat":0,"bronze":12441,"silver":2618,"gold":11020,"plat":0},"Alabama":{"total":455776,"new":60346,"reenroll":395430,"active":193074,"auto":202356,"aptc":415172,"avgPrem":743,"avgNet":126,"cat":1718,"bronze":198749,"silver":248467,"gold":6842,"plat":0},"Arkansas":{"total":160307,"new":29746,"reenroll":130561,"active":76556,"auto":54005,"aptc":139372,"avgPrem":839,"avgNet":162,"cat":1217,"bronze":52071,"silver":55449,"gold":50562,"plat":1008},"Arizona":{"total":357144,"new":56742,"reenroll":300402,"active":172889,"auto":127513,"aptc":295299,"avgPrem":688,"avgNet":229,"cat":737,"bronze":200376,"silver":142749,"gold":13282,"plat":0},"California":{"total":1927371,"new":235055,"reenroll":1692316,"active":538476,"auto":1153840,"aptc":1577627,"avgPrem":737,"avgNet":264,"cat":15592,"bronze":564476,"silver":1181687,"gold":107896,"plat":57720},"Colorado":{"total":277238,"new":37335,"reenroll":239903,"active":146249,"auto":93654,"aptc":191153,"avgPrem":673,"avgNet":318,"cat":1375,"bronze":106571,"silver":80695,"gold":88597,"plat":0},"Connecticut":{"total":156745,"new":26902,"reenroll":129843,"active":55130,"auto":74713,"aptc":123873,"avgPrem":1030,"avgNet":277,"cat":1741,"bronze":38213,"silver":101603,"gold":15188,"plat":0},"District of Columbia":{"total":16053,"new":3522,"reenroll":12531,"active":1456,"auto":11075,"aptc":3012,"avgPrem":815,"avgNet":725,"cat":433,"bronze":5263,"silver":3356,"gold":4705,"plat":2296},"Delaware":{"total":44663,"new":6758,"reenroll":37905,"active":23460,"auto":14445,"aptc":36026,"avgPrem":901,"avgNet":320,"cat":1123,"bronze":20891,"silver":10629,"gold":11564,"plat":456},"Florida":{"total":4538772,"new":725149,"reenroll":3813623,"active":2786806,"auto":1026817,"aptc":4295772,"avgPrem":806,"avgNet":106,"cat":3437,"bronze":1677199,"silver":2228615,"gold":624080,"plat":5441},"Georgia":{"total":1324295,"new":192032,"reenroll":1132263,"active":510966,"auto":621297,"aptc":1180015,"avgPrem":777,"avgNet":164,"cat":574,"bronze":512136,"silver":750552,"gold":59512,"plat":1521},"Hawaii":{"total":23380,"new":4130,"reenroll":19250,"active":12614,"auto":6636,"aptc":16702,"avgPrem":778,"avgNet":372,"cat":446,"bronze":9317,"silver":5663,"gold":4585,"plat":3369},"Iowa":{"total":123304,"new":17687,"reenroll":105617,"active":65823,"auto":39794,"aptc":93877,"avgPrem":615,"avgNet":235,"cat":184,"bronze":59093,"silver":28134,"gold":35893,"plat":0},"Idaho":{"total":120426,"new":15959,"reenroll":104467,"active":33279,"auto":71188,"aptc":92090,"avgPrem":509,"avgNet":202,"cat":563,"bronze":70540,"silver":36828,"gold":11669,"plat":826},"Illinois":{"total":448568,"new":74773,"reenroll":373795,"active":182167,"auto":191628,"aptc":382114,"avgPrem":816,"avgNet":230,"cat":282,"bronze":167455,"silver":141789,"gold":139042,"plat":0},"Indiana":{"total":300049,"new":42907,"reenroll":257142,"active":133201,"auto":123941,"aptc":250156,"avgPrem":623,"avgNet":222,"cat":0,"bronze":107691,"silver":184739,"gold":6908,"plat":0},"Kansas":{"total":192811,"new":26335,"reenroll":166476,"active":92554,"auto":73922,"aptc":170974,"avgPrem":779,"avgNet":160,"cat":130,"bronze":90801,"silver":87620,"gold":14260,"plat":0},"Kentucky":{"total":89028,"new":15624,"reenroll":73404,"active":28226,"auto":45178,"aptc":71435,"avgPrem":797,"avgNet":288,"cat":999,"bronze":35330,"silver":46821,"gold":5878,"plat":0},"Louisiana":{"total":296648,"new":31342,"reenroll":265306,"active":103783,"auto":161523,"aptc":270419,"avgPrem":759,"avgNet":144,"cat":0,"bronze":168905,"silver":112263,"gold":15480,"plat":0},"Massachusetts":{"total":403624,"new":56744,"reenroll":346880,"active":159341,"auto":187539,"aptc":292196,"avgPrem":594,"avgNet":325,"cat":889,"bronze":34062,"silver":358260,"gold":7385,"plat":3028},"Maryland":{"total":255612,"new":47815,"reenroll":207797,"active":61434,"auto":146363,"aptc":172309,"avgPrem":542,"avgNet":284,"cat":2564,"bronze":67563,"silver":76594,"gold":106187,"plat":2704},"Maine":{"total":58523,"new":8577,"reenroll":49946,"active":26149,"auto":23797,"aptc":43597,"avgPrem":913,"avgNet":340,"cat":550,"bronze":33814,"silver":19513,"gold":4392,"plat":254},"Michigan":{"total":497064,"new":64637,"reenroll":432427,"active":235220,"auto":197207,"aptc":402911,"avgPrem":657,"avgNet":222,"cat":8045,"bronze":239037,"silver":232730,"gold":17252,"plat":0},"Minnesota":{"total":139251,"new":24417,"reenroll":114834,"active":30875,"auto":83959,"aptc":68982,"avgPrem":639,"avgNet":437,"cat":0,"bronze":77802,"silver":40677,"gold":20772,"plat":0},"Missouri":{"total":365734,"new":46284,"reenroll":319450,"active":166907,"auto":152543,"aptc":316392,"avgPrem":724,"avgNet":173,"cat":791,"bronze":187274,"silver":138361,"gold":39308,"plat":0},"Mississippi":{"total":313392,"new":62394,"reenroll":250998,"active":119770,"auto":131228,"aptc":298865,"avgPrem":816,"avgNet":131,"cat":0,"bronze":113435,"silver":198108,"gold":1849,"plat":0},"Montana":{"total":73255,"new":10443,"reenroll":62812,"active":39032,"auto":23780,"aptc":56892,"avgPrem":729,"avgNet":230,"cat":3238,"bronze":47311,"silver":17554,"gold":5152,"plat":0},"North Carolina":{"total":761457,"new":125794,"reenroll":635663,"active":384487,"auto":251176,"aptc":662864,"avgPrem":755,"avgNet":180,"cat":0,"bronze":486199,"silver":232430,"gold":42828,"plat":0},"North Dakota":{"total":41014,"new":5230,"reenroll":35784,"active":25848,"auto":9936,"aptc":32183,"avgPrem":591,"avgNet":229,"cat":791,"bronze":21451,"silver":8516,"gold":10256,"plat":0},"Nebraska":{"total":128492,"new":14833,"reenroll":113659,"active":77150,"auto":36509,"aptc":111189,"avgPrem":800,"avgNet":217,"cat":0,"bronze":84672,"silver":35102,"gold":8718,"plat":0},"New Hampshire":{"total":66024,"new":11751,"reenroll":54273,"active":34260,"auto":20013,"aptc":36748,"avgPrem":553,"avgNet":342,"cat":1343,"bronze":30105,"silver":24549,"gold":10027,"plat":0},"New Jersey":{"total":509192,"new":77970,"reenroll":431222,"active":219933,"auto":211289,"aptc":418531,"avgPrem":734,"avgNet":277,"cat":1719,"bronze":124678,"silver":377437,"gold":5358,"plat":0},"New Mexico":{"total":83103,"new":12863,"reenroll":70240,"active":20159,"auto":50081,"aptc":68362,"avgPrem":842,"avgNet":299,"cat":0,"bronze":2596,"silver":30201,"gold":50306,"plat":0},"Nevada":{"total":104286,"new":20911,"reenroll":83375,"active":42654,"auto":40721,"aptc":85980,"avgPrem":659,"avgNet":234,"cat":291,"bronze":44202,"silver":55880,"gold":3913,"plat":0},"New York":{"total":210704,"new":31868,"reenroll":178836,"active":71295,"auto":107541,"aptc":89718,"avgPrem":812,"avgNet":636,"cat":4036,"bronze":104370,"silver":75396,"gold":15723,"plat":11179},"Ohio":{"total":469616,"new":73309,"reenroll":396307,"active":208141,"auto":188166,"aptc":387729,"avgPrem":665,"avgNet":233,"cat":0,"bronze":282120,"silver":168124,"gold":19372,"plat":0},"Oklahoma":{"total":261887,"new":33769,"reenroll":228118,"active":119580,"auto":108538,"aptc":237649,"avgPrem":727,"avgNet":161,"cat":1127,"bronze":152229,"silver":88181,"gold":20350,"plat":0},"Oregon":{"total":118372,"new":16801,"reenroll":101571,"active":70004,"auto":31567,"aptc":71031,"avgPrem":741,"avgNet":426,"cat":0,"bronze":65978,"silver":36311,"gold":16083,"plat":0},"Pennsylvania":{"total":501459,"new":81373,"reenroll":420086,"active":143158,"auto":276928,"aptc":400008,"avgPrem":742,"avgNet":251,"cat":497,"bronze":151590,"silver":131343,"gold":216977,"plat":1052},"Rhode Island":{"total":43446,"new":9818,"reenroll":33628,"active":8208,"auto":25420,"aptc":35699,"avgPrem":649,"avgNet":246,"cat":0,"bronze":13386,"silver":15232,"gold":14078,"plat":750},"South Carolina":{"total":587567,"new":84654,"reenroll":502913,"active":266081,"auto":236832,"aptc":524034,"avgPrem":655,"avgNet":139,"cat":0,"bronze":377450,"silver":193860,"gold":16257,"plat":0},"South Dakota":{"total":50951,"new":6685,"reenroll":44266,"active":32986,"auto":11280,"aptc":42465,"avgPrem":684,"avgNet":211,"cat":1672,"bronze":30223,"silver":14017,"gold":5039,"plat":0},"Tennessee":{"total":569310,"new":92921,"reenroll":476389,"active":259380,"auto":217009,"aptc":514288,"avgPrem":838,"avgNet":141,"cat":0,"bronze":319290,"silver":213810,"gold":36113,"plat":97},"Texas":{"total":4172233,"new":764316,"reenroll":3407917,"active":2072012,"auto":1335905,"aptc":3877775,"avgPrem":709,"avgNet":89,"cat":2669,"bronze":1299290,"silver":1147273,"gold":1723001,"plat":0},"Utah":{"total":387336,"new":46063,"reenroll":341273,"active":255681,"auto":85592,"aptc":350154,"avgPrem":571,"avgNet":120,"cat":0,"bronze":200835,"silver":176878,"gold":9194,"plat":429},"Virginia":{"total":370086,"new":58469,"reenroll":311617,"active":90220,"auto":221397,"aptc":288477,"avgPrem":575,"avgNet":215,"cat":3195,"bronze":156700,"silver":115308,"gold":93512,"plat":1371},"Vermont":{"total":30344,"new":2492,"reenroll":27852,"active":5725,"auto":22127,"aptc":23336,"avgPrem":1090,"avgNet":364,"cat":188,"bronze":10615,"silver":3470,"gold":14632,"plat":1439},"Washington":{"total":290109,"new":51635,"reenroll":238474,"active":77734,"auto":160740,"aptc":187093,"avgPrem":738,"avgNet":343,"cat":753,"bronze":86954,"silver":49999,"gold":152403,"plat":0},"Wisconsin":{"total":291336,"new":39582,"reenroll":251754,"active":172086,"auto":79668,"aptc":228117,"avgPrem":784,"avgNet":250,"cat":1238,"bronze":172872,"silver":96777,"gold":19614,"plat":835},"West Virginia":{"total":55879,"new":6922,"reenroll":48957,"active":22478,"auto":26479,"aptc":49659,"avgPrem":1314,"avgNet":208,"cat":0,"bronze":21474,"silver":15875,"gold":17784,"plat":0},"Wyoming":{"total":41545,"new":5503,"reenroll":36042,"active":24360,"auto":11682,"aptc":36186,"avgPrem":1217,"avgNet":235,"cat":0,"bronze":14824,"silver":9230,"gold":17491,"plat":0}};
 const MKT_NAT_OEP   = {"total":23130860,"new":3603771,"reenroll":19527089,"active":10714902,"auto":8812187,"aptc":20035756,"avgPrem":741,"avgNet":178,"cat":67489,"bronze":9151919,"silver":9847273,"gold":3968289,"plat":95890};
 const POST_LABELS   = ["OEP","Jan","Feb","Mar","Apr","May"];
@@ -1105,6 +1133,20 @@ function chipSeries(state){ return CHIP_PERIODS.map(p=>chipVal(state,p)); }
 // Derived Medicaid child series (distinct program from CHIP; null = not reported).
 function chipChildVal(state,p){ return state ? ((CHIP_CHILD_STATES[state]||{})[p] ?? null) : (CHIP_CHILD_NAT[p] ?? null); }
 function chipChildSeries(state){ return CHIP_PERIODS.map(p=>chipChildVal(state,p)); }
+// Reported combined "Medicaid and CHIP Child" series.
+function chipBothVal(state,p){ return state ? ((CHIP_BOTH_STATES[state]||{})[p] ?? null) : (CHIP_BOTH_NAT[p] ?? null); }
+
+// Medicaid-child peak endpoints with Arizona handling, shared by the child peak
+// strip and the child cumulative "vs. peak" cell so they stay consistent.
+// Arizona is suppressed (no real Mar 2023 child baseline); for National, Arizona
+// is excluded from BOTH endpoints — CHIP_CHILD_PEAK already floors it, and its
+// current children are subtracted from the current endpoint here.
+function childPeakEndpoints(state,key){
+  if(state==='Arizona') return {suppressed:true};
+  let peak=CHIP_CHILD_PEAK[state||'United States'], cur=chipChildVal(state,key), azExcluded=false;
+  if(!state){ const az=chipChildVal('Arizona',key); if(cur!=null&&az!=null){ cur-=az; azExcluded=true; } }
+  return {suppressed:false,peak,cur,azExcluded};
+}
 
 function renderChipTs(state){
   document.getElementById('cp-ts-title').innerHTML=(state||'National')+' Enrollment <span>Trend</span>';
@@ -1139,36 +1181,53 @@ function renderChipTs(state){
   });
 }
 
-function chipLatestByState(){
-  return Object.keys(CHIP_STATES).map(s=>({s:s,v:(CHIP_STATES[s]||{})[CHIP_LATEST]})).filter(o=>o.v!=null);
+// Ranking chart metric — user-togglable between Total CHIP and derived Medicaid
+// child. chipSel holds the current state selection so the toggle can re-render.
+let chipRankMetric='chip', chipSel=null;
+function chipRankValFn(){ return chipRankMetric==='child' ? chipChildVal : chipVal; }
+function chipRankByState(){
+  const src = chipRankMetric==='child' ? CHIP_CHILD_STATES : CHIP_STATES;
+  return Object.keys(src).map(s=>({s:s,v:(src[s]||{})[CHIP_LATEST]})).filter(o=>o.v!=null);
 }
+function setChipRankMetric(m){ chipRankMetric=m; renderChipRank(chipSel); }
 
 function renderChipRank(state){
+  const isChild=chipRankMetric==='child';
+  const rgb=isChild?'13,27,62':'91,75,158';            // navy for child, violet for CHIP
+  const seriesLbl=isChild?'Medicaid Child (derived)':'CHIP Enrollment';
+  const subLbl=isChild?'Derived Medicaid child · ':'Total CHIP enrollment · ';
+  const valFn=chipRankValFn();
+  // reflect the active metric on the toggle + accent bar
+  document.querySelectorAll('#cp-rank-toggle .rt-btn').forEach(b=>{
+    const on=b.dataset.m===chipRankMetric; b.classList.toggle('active',on);
+    b.style.color=on?(isChild?'#0D1B3E':'var(--chip)'):''; });
+  const acc=document.getElementById('cp-rank-accent'); if(acc) acc.style.background=isChild?'#0D1B3E':'var(--chip)';
+
   const title=document.getElementById('cp-rank-title'), sub=document.getElementById('cp-rank-sub');
   const latestLbl=CHIP_LABELS[CHIP_PERIODS.indexOf(CHIP_LATEST)];
   if(!state){
-    const top=chipLatestByState().sort((a,b)=>b.v-a.v).slice(0,12);
-    title.innerHTML='Top 12 States <span>· CHIP Enrollment</span>';
-    sub.textContent='Total CHIP enrollment · '+latestLbl;
+    const top=chipRankByState().sort((a,b)=>b.v-a.v).slice(0,12);
+    title.innerHTML='Top 12 States <span>· '+seriesLbl+'</span>';
+    sub.textContent=subLbl+latestLbl;
     makeChart('chipRankChart',{
       type:'bar',
-      data:{labels:top.map(o=>o.s),datasets:[{data:top.map(o=>o.v),backgroundColor:'rgba(91,75,158,.72)',
-        hoverBackgroundColor:'rgba(91,75,158,.92)',borderRadius:3,borderSkipped:false}]},
+      data:{labels:top.map(o=>o.s),datasets:[{data:top.map(o=>o.v),backgroundColor:'rgba('+rgb+',.72)',
+        hoverBackgroundColor:'rgba('+rgb+',.92)',borderRadius:3,borderSkipped:false}]},
       options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()}}},
         scales:{x:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}},
           y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9.5}},border:{display:false}}}}
     });
   } else {
-    const others=chipLatestByState().filter(o=>o.s!==state).sort((a,b)=>b.v-a.v).slice(0,5).map(o=>o.s);
+    const others=chipRankByState().filter(o=>o.s!==state).sort((a,b)=>b.v-a.v).slice(0,5).map(o=>o.s);
     const labels=[state,...others];
     title.innerHTML=state+' <span>vs. Largest States</span>';
-    sub.textContent='Total CHIP enrollment · '+latestLbl;
+    sub.textContent=subLbl+latestLbl;
     makeChart('chipRankChart',{
       type:'bar',
-      data:{labels:labels,datasets:[{data:labels.map(s=>chipVal(s,CHIP_LATEST)||0),
-        backgroundColor:labels.map(s=>s===state?'rgba(91,75,158,.9)':'rgba(91,75,158,.3)'),
-        hoverBackgroundColor:labels.map(s=>s===state?'rgba(91,75,158,1)':'rgba(91,75,158,.5)'),
+      data:{labels:labels,datasets:[{data:labels.map(s=>valFn(s,CHIP_LATEST)||0),
+        backgroundColor:labels.map(s=>s===state?'rgba('+rgb+',.9)':'rgba('+rgb+',.3)'),
+        hoverBackgroundColor:labels.map(s=>s===state?'rgba('+rgb+',1)':'rgba('+rgb+',.5)'),
         borderRadius:3,borderSkipped:false}]},
       options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()}}},
@@ -1215,19 +1274,14 @@ function renderChipChildPeak(state,key){
     g('cp-pc-share').textContent='—'; g('cp-pc-bar').style.width='0'; };
   g('cp-pc-cur-lbl').textContent=CHIP_LABELS[CHIP_PERIODS.indexOf(key)];
 
-  if(state==='Arizona'){        // no real Mar 2023 child baseline — suppress entirely
+  const ep=childPeakEndpoints(state,key);
+  if(ep.suppressed){            // Arizona — no real Mar 2023 child baseline
     blank();
     note.textContent='Arizona did not report the Medicaid/CHIP child breakout before May 2024, so its March 2023 baseline is not a real figure; the comparison is suppressed. Its monthly values above are valid.';
     return;
   }
-  let peak=CHIP_CHILD_PEAK[state||'United States'];
-  let cur=chipChildVal(state,key);
-  if(!state){                   // national: drop Arizona from the current endpoint too
-    const az=chipChildVal('Arizona',key);
-    if(cur!=null && az!=null) cur-=az;
-    note.textContent='Arizona excluded from both endpoints — it did not report the child breakout before May 2024; its current children remain in the trend above.';
-  } else { note.textContent=''; }
-
+  const peak=ep.peak, cur=ep.cur;
+  note.textContent = ep.azExcluded ? 'Arizona excluded from both endpoints — it did not report the child breakout before May 2024; its current children remain in the trend above.' : '';
   if(peak==null||cur==null){ blank(); if(!note.textContent) note.textContent='Peak comparison not available for this selection.'; return; }
   const chg=cur-peak, pctChg=chg/peak*100, share=cur/peak*100;
   g('cp-pc-peak').textContent=fmt(peak);
@@ -1240,7 +1294,29 @@ function renderChipChildPeak(state,key){
   g('cp-pc-bar').style.width=Math.max(0,Math.min(100,share))+'%';
 }
 
+// Fill one Cumulative Impact strip (net change + average monthly change) from a
+// value accessor over the state's reported months; returns {lastIdx,lastVal} so
+// the caller can fill the series-specific "vs. Mar 2023 Peak" cell. Header shows
+// the actual month range (state spans can differ).
+function fillCumStrip(hdId,prefix,label,valFn,state){
+  let firstIdx=-1,lastIdx=-1,firstVal=null,lastVal=null;
+  CHIP_PERIODS.forEach((p,i)=>{ const v=valFn(state,p);
+    if(v!=null){ if(firstIdx<0){firstIdx=i;firstVal=v;} lastIdx=i;lastVal=v; } });
+  const hd=document.getElementById(hdId), sgn=v=>v<0?'−':'+';
+  if(firstIdx<0){ hd.innerHTML=label+' <span></span>';
+    ['net','avg','peak'].forEach(k=>setCum(prefix+k,prefix+k+'-sub','—','—',null)); return null; }
+  hd.innerHTML=label+' <span>· '+CHIP_LABELS[firstIdx]+' – '+CHIP_LABELS[lastIdx]+'</span>';
+  const net=lastVal-firstVal, netPct=firstVal?net/firstVal*100:0;
+  setCum(prefix+'net',prefix+'net-sub', sgn(net)+Math.abs(net).toLocaleString(),
+    sgn(net)+Math.abs(netPct).toFixed(2)+'% since '+CHIP_LABELS[firstIdx], net<0?'var(--warn)':'var(--ok)');
+  const intervals=lastIdx-firstIdx, avg=intervals>0?Math.round(net/intervals):0;
+  setCum(prefix+'avg',prefix+'avg-sub', sgn(avg)+Math.abs(avg).toLocaleString(),
+    intervals>0?('per month · '+intervals+(intervals===1?' interval':' intervals')):'single month', avg<0?'var(--warn)':'var(--ok)');
+  return {lastIdx,lastVal};
+}
+
 function selectChipState(state){
+  chipSel=state;
   document.querySelectorAll('#panel-chip .state-pill').forEach(b=>b.classList.remove('active'));
   const id=state?'chip-btn-'+state.replace(/ /g,'-').replace(/\./g,''):'chip-btn-national';
   const b=document.getElementById(id); if(b) b.classList.add('active');
@@ -1266,6 +1342,13 @@ function selectChipState(state){
   setKpi('cp-child', child!=null?fmt(child):'—', child!=null?(loc+' · '+lbl+' · derived'):'not reported', '#0D1B3E');
   setDelta('cp-child-d', child, childPrev, 'up');
 
+  // Reported "Medicaid and CHIP Child Enrollment" — the combined column
+  // (Total CHIP + Medicaid child), shown as its own top-panel KPI.
+  const both=chipBothVal(state,key);
+  const bothPrev=ki>0?chipBothVal(state,CHIP_PERIODS[ki-1]):null;
+  setKpi('cp-both', both!=null?fmt(both):'—', both!=null?(loc+' · '+lbl+' · CHIP + Medicaid child'):'not reported', '#3D4E8C');
+  setDelta('cp-both-d', both, bothPrev, 'up');
+
   const sn=document.getElementById('cp-state-note');
   if(state && CHIP_CAVEATS[state]){
     sn.style.display='flex';
@@ -1273,39 +1356,28 @@ function selectChipState(state){
       +'<span><b style="color:#5A4A1A">'+state+'</b> '+CHIP_CAVEATS[state]+'</span>';
   } else { sn.style.display='none'; sn.innerHTML=''; }
 
-  // Cumulative Impact strip — first→last available month for this view. CHIP has
-  // no renewal data, so the cells are net change, average monthly change, and
-  // change vs the Mar 2023 peak. Everything is derived from the data (state spans
-  // can differ); the header shows the actual month range.
-  let firstIdx=-1,lastIdx=-1,firstVal=null,lastVal=null;
-  CHIP_PERIODS.forEach((p,i)=>{ const v=chipVal(state,p);
-    if(v!=null){ if(firstIdx<0){firstIdx=i;firstVal=v;} lastIdx=i;lastVal=v; } });
-  const cumHd=document.getElementById('cp-cum-hd');
+  // Two Cumulative Impact strips (Dec 2025 – Apr 2026) — Total CHIP and derived
+  // Medicaid child — each labelled so it is clear which is which. Net change and
+  // average monthly change come from each series directly; the "vs. Mar 2023
+  // Peak" cell uses the series' own peak rule (the child cell shares the
+  // Arizona-aware childPeakEndpoints logic with the child peak strip).
   const sgn=v=>v<0?'−':'+';
-  if(firstIdx>=0){
-    cumHd.innerHTML='Cumulative Impact <span>· '+CHIP_LABELS[firstIdx]+' – '+CHIP_LABELS[lastIdx]+'</span>';
-    const net=lastVal-firstVal, netPct=firstVal?net/firstVal*100:0;
-    setCum('cp-cum-net','cp-cum-net-sub',
-      sgn(net)+Math.abs(net).toLocaleString(),
-      sgn(net)+Math.abs(netPct).toFixed(2)+'% since '+CHIP_LABELS[firstIdx],
-      net<0?'var(--warn)':'var(--ok)');
-    const intervals=lastIdx-firstIdx, avg=intervals>0?Math.round(net/intervals):0;
-    setCum('cp-cum-avg','cp-cum-avg-sub',
-      sgn(avg)+Math.abs(avg).toLocaleString(),
-      intervals>0?('per month · '+intervals+(intervals===1?' interval':' intervals')):'single month',
-      avg<0?'var(--warn)':'var(--ok)');
-    if(peak!=null){
-      const pk=lastVal-peak, pkPct=pk/peak*100, sh=lastVal/peak*100;
-      setCum('cp-cum-peak','cp-cum-peak-sub',
-        sgn(pk)+Math.abs(pk).toLocaleString(),
-        sgn(pk)+Math.abs(pkPct).toFixed(1)+'% · '+sh.toFixed(1)+'% of peak',
+  const chipCum=fillCumStrip('cp-cum-hd','cp-cum-','Cumulative Impact · Total CHIP',chipVal,state);
+  if(chipCum){
+    if(peak!=null){ const pk=chipCum.lastVal-peak, pkPct=pk/peak*100, sh=chipCum.lastVal/peak*100;
+      setCum('cp-cum-peak','cp-cum-peak-sub', sgn(pk)+Math.abs(pk).toLocaleString(),
+        sgn(pk)+Math.abs(pkPct).toFixed(1)+'% · '+sh.toFixed(1)+'% of peak', pk<0?'var(--warn)':'var(--ok)');
+    } else setCum('cp-cum-peak','cp-cum-peak-sub','—','no peak baseline',null);
+  }
+  const childCum=fillCumStrip('cp-cchild-hd','cp-cchild-','Cumulative Impact · Medicaid Child (derived)',chipChildVal,state);
+  if(childCum){
+    const ep=childPeakEndpoints(state,CHIP_PERIODS[childCum.lastIdx]);
+    if(ep.suppressed){ setCum('cp-cchild-peak','cp-cchild-peak-sub','—','suppressed for Arizona',null); }
+    else if(ep.peak!=null && ep.cur!=null){ const pk=ep.cur-ep.peak, pkPct=pk/ep.peak*100, sh=ep.cur/ep.peak*100;
+      setCum('cp-cchild-peak','cp-cchild-peak-sub', sgn(pk)+Math.abs(pk).toLocaleString(),
+        sgn(pk)+Math.abs(pkPct).toFixed(1)+'% · '+sh.toFixed(1)+'% of peak'+(ep.azExcluded?' · excl. AZ':''),
         pk<0?'var(--warn)':'var(--ok)');
-    } else { setCum('cp-cum-peak','cp-cum-peak-sub','—','no peak baseline',null); }
-  } else {
-    cumHd.innerHTML='Cumulative Impact <span></span>';
-    setCum('cp-cum-net','cp-cum-net-sub','—','—',null);
-    setCum('cp-cum-avg','cp-cum-avg-sub','—','—',null);
-    setCum('cp-cum-peak','cp-cum-peak-sub','—','—',null);
+    } else setCum('cp-cchild-peak','cp-cchild-peak-sub','—','no peak baseline',null);
   }
 
   renderChipPeak(state,key);
@@ -1742,7 +1814,7 @@ function selectMcareState(state){
 // ══ TABS ══
 const META={
   mcaid:{p:'Medicaid \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Renewal Tracker \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1]},
-  chip:{p:'CHIP \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Enrollment Data \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1]},
+  chip:{p:'CHIP & Medicaid Child \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Enrollment Data \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1]},
   bhp:{p:'BHP \u00b7 Jan\u2013Jul 2026',s:'CMS Basic Health Program Enrollment Data \u00b7 2026'},
   mkt:{p:'ACA Marketplace \u00b7 OEP + Effectuated 2026',s:'CMS Marketplace OEP Snapshot &amp; Effectuated Enrollment \u00b7 2026'},
   mcare:{p:'Medicare \u00b7 '+MC_L[MC_L.length-1],s:'CMS Medicare Monthly Enrollment \u00b7 50 states + DC \u00b7 '+MC_L[MC_L.length-1]}
