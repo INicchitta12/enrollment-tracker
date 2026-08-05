@@ -192,14 +192,15 @@ violet accent (`--chip:#5B4B9E`, light panel tint `--chip-light:#EDEBF6`) — se
 Medicaid navy, BHP teal, and Marketplace crimson. Fed by `load_chip()`,
 `load_chip_peak_baseline()`, `load_chip_child()`, and `load_chip_child_peak()` in
 `build_dashboard.py`, reading the `CHIP` and `CHIP Peak Baseline` sheets. There is no renewal
-data, so it is a simpler tab than Medicaid: a KPI row (current CHIP enrollment with
-month-over-month delta, the Mar 2023 peak reference, change since peak in absolute and percent,
-and current as a share of peak — all Total CHIP), a state selector defaulting to National, an
-enrollment trend chart plotting **two distinct series — total CHIP (reported) and derived
-Medicaid child** (see below), a CHIP peak baseline strip with a proportional bar, a derived
-Medicaid-child peak comparison line beneath it, and a state-ranking chart (top states
-nationally; state-vs-largest-states when a state is selected — CHIP totals). Every chart routes
-through `makeChart`; value axes use `axisFmt`.
+data, so it is a simpler tab than Medicaid. The **top panel (KPI row) reports the two
+enrollment totals side by side — Total CHIP (reported) and Medicaid child (derived), each with a
+month-over-month delta; peak and peak-comparison figures are deliberately kept OFF the top panel
+and live in the peak strips below**. Then a state selector defaulting to National, an enrollment
+trend chart plotting **two distinct series — total CHIP (reported) and derived Medicaid child**
+(see below), **two mirrored "vs. Pre-Unwinding Peak" strips** (CHIP total in violet, and a
+derived Medicaid-child strip in navy that mimics it — same metrics and proportional bar), and a
+state-ranking chart (top states nationally; state-vs-largest-states when a state is selected —
+CHIP totals). Every chart routes through `makeChart`; value axes use `axisFmt`.
 
 **CHIP is a separate population, not a Medicaid subset.** It covers Medicaid-expansion CHIP,
 separate CHIP, and pregnant adults in separate CHIP. Medicaid and CHIP enrollment therefore
@@ -256,8 +257,10 @@ Medicaid child = Medicaid and CHIP Child Enrollment − Total CHIP Enrollment
 ```
 
 Both inputs are columns on the `CHIP` / `CHIP Peak Baseline` sheets. `load_chip_child()` and
-`load_chip_child_peak()` compute this via `derive_child()`; it is drawn as a **second, distinct
-line** on the trend chart (dashed navy, unfilled) alongside Total CHIP (solid filled violet).
+`load_chip_child_peak()` compute this via `derive_child()`; it is reported across the tab — a
+top-panel KPI, a **second, distinct line** on the trend chart (dashed navy, unfilled) alongside
+Total CHIP (solid filled violet), and its own "vs. Pre-Unwinding Peak" strip mirroring the CHIP
+one (`renderChipChildPeak()` mimics `renderChipPeak()`).
 The two are **separate programs that add together — never stacked** (stacking would imply CHIP
 is a Medicaid subset, which it is not), and Medicaid child is always **labelled "derived"**, not
 reported. The sheets carry their own `Medicaid Child Enrollment` column; the dashboard derives
