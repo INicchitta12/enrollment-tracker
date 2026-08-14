@@ -804,6 +804,22 @@ const MCAID_CAVEATS = {
   'Georgia':'<b style="color:#5A4A1A">Georgia</b> reports beneficiaries granted a new 12-month eligibility period after a change in circumstances <b style="color:#5A4A1A">together with</b> those due for renewal, which inflates its renewals-due count — so Georgia’s renewal-outcome mix is not directly comparable to other states’. (CMS Data Notes; ongoing.)',
   'North Carolina':'<b style="color:#5A4A1A">North Carolina</b> reports renewal outcomes only for renewals it initiated and scheduled to complete in the report month, excluding renewals due it could not initiate in time — so its renewals-due count runs low relative to other states. (CMS Data Notes; ongoing.)',
 };
+// Work-requirement WATCH LIST — a policy-monitoring flag, NOT a CMS data-quality
+// caveat. The federal Medicaid work requirements let states grant enrollees who
+// attest they are too sick or disabled to work a grace period on coverage through
+// 2027, with verification phased in from 2028. These states are declining that
+// grace period and demanding proof earlier, so their disenrollment may diverge
+// from other states' — flagged here to watch, not to adjust. Surfaced under the
+// state selector alongside any CMS caveat above (e.g. North Carolina shows both).
+const MCAID_WORKREQ_WATCH = new Set([
+  'Arkansas','Idaho','Indiana','Iowa','North Carolina','North Dakota','Ohio','Utah',
+]);
+const WORKREQ_WATCH_NOTE =
+  ' is on a <b style="color:#1B3A6B">watch list</b> for divergent Medicaid disenrollment. '
+ +'It is declining the federal grace period that lets enrollees who attest they are too '
+ +'sick or disabled to work keep coverage through 2027 (verification phased in from 2028), '
+ +'requiring proof earlier instead. Watch its disenrollment against other states. '
+ +'<i>Policy-monitoring flag, not a CMS data caveat.</i>';
 const CHIP_PERIODS  = ["2025-12","2026-01","2026-02","2026-03","2026-04"];
 const CHIP_LABELS   = ["Dec 2025","Jan 2026","Feb 2026","Mar 2026","Apr 2026"];
 const CHIP_LATEST   = "2026-04";
@@ -1016,11 +1032,21 @@ function selectMcaidState(state){
   // Per-state Medicaid caveats from the CMS "Data Notes" appendix
   // (see data/cms_data_notes.md). Nevada affects an enrollment total; Georgia
   // and North Carolina affect the comparability of the renewal-outcome mix.
+  // A state can carry both a CMS data caveat and the work-requirement watch flag
+  // (e.g. North Carolina); stack each on its own row with a distinct marker —
+  // ⚠ amber for the data caveat, ⚑ blue for the policy watch flag.
   const sn=document.getElementById('mk-state-note');
-  if(state && MCAID_CAVEATS[state]){
-    sn.style.display='flex';
-    sn.innerHTML='<span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">⚠</span>'
-      +'<span>'+MCAID_CAVEATS[state]+'</span>';
+  const notes=[];
+  if(state && MCAID_CAVEATS[state])
+    notes.push(['⚠','var(--brand-amber)',MCAID_CAVEATS[state]]);
+  if(state && MCAID_WORKREQ_WATCH.has(state))
+    notes.push(['⚑','#1B3A6B','<b style="color:#1B3A6B">'+state+'</b>'+WORKREQ_WATCH_NOTE]);
+  if(notes.length){
+    sn.style.display='flex'; sn.style.flexDirection='column'; sn.style.gap='4px';
+    sn.innerHTML=notes.map(n=>
+      '<span style="display:flex;gap:7px;align-items:flex-start">'
+      +'<span style="color:'+n[1]+';flex-shrink:0;font-size:12px">'+n[0]+'</span>'
+      +'<span>'+n[2]+'</span></span>').join('');
   } else {
     sn.style.display='none'; sn.innerHTML='';
   }
