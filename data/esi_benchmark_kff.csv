@@ -1,0 +1,30 @@
+Year,Metric,Coverage,Value,Unit,Notes
+2025,Average annual premium,Single,9325,USD,Up 5% from 2024
+2025,Average annual premium,Family,26993,USD,Up 6% ($1408) from 2024
+2024,Average annual premium,Family,25572,USD,Up 7% from 2023
+2025,Worker premium contribution,Single,1440,USD,16% of premium
+2025,Worker premium contribution,Family,6850,USD,26% of premium
+2024,Worker premium contribution,Family,6296,USD,
+2025,Employer premium contribution,Family,20143,USD,Derived: family premium less worker contribution
+2025,Worker contribution share,Single,16,Percent,
+2025,Worker contribution share,Family,26,Percent,
+2025,Average general annual deductible,Single,1886,USD,Among covered workers facing a deductible
+2024,Average general annual deductible,Single,1773,USD,
+2020,Average general annual deductible,Single,1617,USD,Five-year comparison point
+2025,Average deductible - small firms (<200 workers),Single,2631,USD,
+2025,Average deductible - large firms (200+ workers),Single,1670,USD,
+2025,Average annual premium - HDHP/SO,Single,8620,USD,High-deductible plan with savings option
+2025,Average annual premium - HDHP/SO,Family,25379,USD,
+2025,Average annual premium - PPO,Single,9818,USD,
+2025,Average annual premium - PPO,Family,28272,USD,
+2025,Workers with single deductible of $2000 or more,All,34,Percent,
+2025,Covered workers at small firms with deductible $2000+,All,53,Percent,Firms under 200 workers
+2025,Covered workers in self-funded plans,All,67,Percent,27% small firms / 80% large firms
+2025,Workers facing single OOP max above $3000,All,72,Percent,
+2025,Workers facing single OOP max above $6000,All,21,Percent,
+2025,Wage growth,Context,4.0,Percent,Year over year
+2025,General inflation,Context,2.7,Percent,Year over year
+2025,Five-year change in family premium,Context,26.0,Percent,2020-2025 cumulative
+2025,Five-year change in worker family contribution,Context,23.0,Percent,2020-2025 cumulative
+2025,Five-year change in wages,Context,28.6,Percent,2020-2025 cumulative
+2025,Five-year change in inflation,Context,23.5,Percent,2020-2025 cumulative

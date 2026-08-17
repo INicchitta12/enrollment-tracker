@@ -18,6 +18,7 @@
   --bhp:#007C8C;--bhp-light:#E5F4F6;
   --mkt:#8B1A30;--mkt-light:#F5E8EB;
   --mcare:#B45309;--mcare-light:#F7EEE1;
+  --esi:#2F6F8F;--esi-light:#E7EFF3;
   --ok:#1A7A4A;--ok-light:#E6F4EC;
   --warn:#C0392B;--pend:#5A6A84;
   --font:'Arial',sans-serif;--mono:'JetBrains Mono','Courier New',monospace;
@@ -38,6 +39,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .tab.active-bhp{background:var(--bhp-light);color:var(--bhp);border-color:var(--border);border-bottom-color:var(--bhp-light);font-weight:600;}
 .tab.active-mkt{background:var(--mkt-light);color:var(--mkt);border-color:var(--border);border-bottom-color:var(--mkt-light);font-weight:600;}
 .tab.active-mcare{background:var(--mcare-light);color:var(--mcare);border-color:var(--border);border-bottom-color:var(--mcare-light);font-weight:600;}
+.tab.active-esi{background:var(--esi-light);color:var(--esi);border-color:var(--border);border-bottom-color:var(--esi-light);font-weight:600;}
 .panels{flex:1;overflow:hidden;position:relative;}
 .panel{position:absolute;inset:0;padding:10px 14px;display:flex;flex-direction:column;gap:8px;opacity:0;pointer-events:none;transition:opacity .15s;}
 .panel.active{opacity:1;pointer-events:auto;}
@@ -46,6 +48,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .panel.bhp-panel{background:var(--bhp-light);}
 .panel.mkt-panel{background:var(--mkt-light);}
 .panel.mcare-panel{background:var(--mcare-light);}
+.panel.esi-panel{background:var(--esi-light);}
 .state-bar{display:flex;align-items:center;gap:4px;flex-shrink:0;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;box-shadow:0 1px 3px rgba(0,0,0,.06);max-height:66px;overflow-y:auto;}
 .state-bar-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);flex-shrink:0;margin-right:3px;}
 .state-pill{font-family:var(--font);font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap;}
@@ -54,6 +57,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .chip-panel .state-pill.active{background:var(--chip);color:#fff;border-color:var(--chip);font-weight:600;}
 .mkt-panel .state-pill.active{background:var(--mkt);color:#fff;border-color:var(--mkt);font-weight:600;}
 .mcare-panel .state-pill.active{background:var(--mcare);color:#fff;border-color:var(--mcare);font-weight:600;}
+.esi-panel .state-pill.active{background:var(--esi);color:#fff;border-color:var(--esi);font-weight:600;}
 .kpi-row{display:flex;gap:8px;flex-shrink:0;}
 .kpi{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
 .kpi-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:4px;}
@@ -118,7 +122,36 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .l-bhp{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;}
 .l-mkt{grid-template-columns:34fr 30fr 36fr;grid-template-rows:1fr 1fr;}
 .l-mcare{grid-template-columns:38fr 31fr 31fr;grid-template-rows:1fr 1fr;}
+.l-esi{grid-template-columns:38fr 31fr 31fr;grid-template-rows:1fr 1fr;}
+.esi-wide{grid-column:span 2;}
 .span-rows{grid-row:span 2;}
+/* ESI accent on the shared strip/pill/peak primitives */
+.esi-panel .peak-strip{border-left-color:var(--esi);}
+.esi-panel .peak-hd{color:var(--esi);}
+.esi-panel .rt-btn.active{color:var(--esi);}
+/* ESI access funnel strip: offer -> eligibility -> take-up -> enrolled, with both
+   offer-rate denominators shown side by side. Recomputes for the current
+   selection (national or state); all values are shares (0-100), never counts. */
+.funnel-strip{display:flex;align-items:stretch;gap:8px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--esi);border-radius:6px;padding:7px 12px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.funnel-hd{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--esi);flex-shrink:0;line-height:1.35;width:112px;align-self:center;}
+.funnel-hd span{display:block;color:var(--muted);font-weight:600;letter-spacing:.01em;text-transform:none;font-size:8.5px;margin-top:1px;}
+.funnel-cells{display:flex;gap:7px;flex:1;min-width:0;}
+.funnel-cell{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:5px 9px;display:flex;flex-direction:column;min-width:0;}
+.funnel-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.funnel-val{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--esi);line-height:1;}
+.funnel-den{font-size:8px;color:var(--muted);margin-top:2px;line-height:1.2;}
+.funnel-arrow{align-self:center;color:var(--border);font-size:12px;flex-shrink:0;}
+/* KFF national benchmark table (National view only, right card). Clearly a
+   survey benchmark, never the national series and never shown on a state view. */
+.kff-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.kff-table th{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:right;padding:4px 7px 5px;border-bottom:1px solid var(--border);}
+.kff-table th:first-child{text-align:left;}
+.kff-table td{padding:6px 7px;text-align:right;font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--surface-2);}
+.kff-table tr:last-child td{border-bottom:none;}
+.kff-table td.kff-metric{text-align:left;font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);border-left:3px solid transparent;}
+.kff-note{font-size:9px;line-height:1.35;color:var(--muted);margin-top:auto;padding-top:8px;}
+/* Vintage chip shown on each panel/card — sources differ (ACS 2024, MEPS 2025, KFF 2025) */
+.vtag{font-family:var(--mono);font-size:8px;font-weight:700;color:var(--esi);background:var(--esi-light);border:1px solid #BcD4DE;border-radius:3px;padding:1px 5px;letter-spacing:.02em;white-space:nowrap;margin-left:auto;flex-shrink:0;}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 13px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);min-height:0;}
 .chart-card-header{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-shrink:0;}
 .card-accent-bar{width:3px;height:15px;border-radius:2px;flex-shrink:0;}
@@ -192,7 +225,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 <div class="header">
   <div class="header-left">
     <span class="header-title">Enrollment Tracker</span>
-    <span class="header-sub">Medicaid &middot; CHIP &middot; BHP &middot; ACA Marketplace &middot; Medicare</span>
+    <span class="header-sub">Medicaid &middot; CHIP &middot; BHP &middot; ACA Marketplace &middot; Medicare &middot; Employer</span>
   </div>
   <span class="period-badge" id="hdrPeriod">Medicaid &middot; Mar 2026</span>
 </div>
@@ -203,6 +236,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   <div class="tab" data-tab="bhp" onclick="switchTab('bhp')"><div class="tab-dot" style="background:#3AA8B8"></div>Basic Health Program</div>
   <div class="tab" data-tab="mkt" onclick="switchTab('mkt')"><div class="tab-dot" style="background:#C04060"></div>ACA Marketplace</div>
   <div class="tab" data-tab="mcare" onclick="switchTab('mcare')"><div class="tab-dot" style="background:#D9822B"></div>Medicare</div>
+  <div class="tab" data-tab="esi" onclick="switchTab('esi')"><div class="tab-dot" style="background:#2F6F8F"></div>Employer Coverage</div>
 </div>
 
 <div class="panels">
@@ -571,6 +605,83 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     </div>
   </div>
 
+  <!-- ══ EMPLOYER COVERAGE (ESI) ══ -->
+  <div class="panel esi-panel" id="panel-esi">
+    <div class="kpi-row">
+      <div class="kpi" id="esi-cov" style="border-top:3px solid var(--esi)"><div class="kpi-label">ESI Coverage &middot; Persons</div><div class="kpi-value big">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="esi-offer" style="border-top:3px solid #3E7FA0"><div class="kpi-label">Offer Rate</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="esi-single" style="border-top:3px solid #4A8AAA"><div class="kpi-label">Single Premium</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="esi-family" style="border-top:3px solid #4A8AAA"><div class="kpi-label">Family Premium</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+      <div class="kpi" id="esi-ded" style="border-top:3px solid #5A97B4"><div class="kpi-label">Single Deductible</div><div class="kpi-value">&mdash;</div><div class="kpi-sub">&mdash;</div></div>
+    </div>
+
+    <div class="data-note compact">
+      <span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">&#9888;</span>
+      <span><b style="color:#5A4A1A">Employer coverage is annual survey data and lags the other tabs.</b> Coverage counts are <b style="color:#5A4A1A">ACS __ESI_ACS_YEAR__</b> (persons, point-in-time) and <b style="color:#5A4A1A">CPS ASEC</b> (persons, prior calendar year); cost &amp; access are <b style="color:#5A4A1A">MEPS-IC __ESI_MEPS_YEAR__</b> (private-sector enrolled employees, excludes state/local government); the benchmark is <b style="color:#5A4A1A">KFF EHBS</b>. Person counts (ACS/CPS) and employee-based rates (MEPS) are <b style="color:#5A4A1A">different units</b> &mdash; never summed or combined.</span>
+    </div>
+
+    <div class="data-note compact" id="esi-state-note" style="display:none"></div>
+
+    <div class="state-bar"><span class="state-bar-label">View:</span>
+      ESI_PILLS
+    </div>
+
+    <div class="funnel-strip" id="esi-funnel">
+      <div class="funnel-hd">Access Funnel<span id="esi-funnel-cap">National &middot; MEPS-IC __ESI_MEPS_YEAR__</span></div>
+      <div class="funnel-cells">
+        <div class="funnel-cell"><div class="funnel-lbl">Offer &middot; establishments</div><div class="funnel-val" id="esi-f-ofe">&mdash;</div><div class="funnel-den">% of establishments</div></div>
+        <div class="funnel-cell"><div class="funnel-lbl">Offer &middot; employees</div><div class="funnel-val" id="esi-f-ofm">&mdash;</div><div class="funnel-den">% of employees at any estab.</div></div>
+        <span class="funnel-arrow">&rarr;</span>
+        <div class="funnel-cell"><div class="funnel-lbl">Eligible</div><div class="funnel-val" id="esi-f-elig">&mdash;</div><div class="funnel-den">% of emp. where offered</div></div>
+        <span class="funnel-arrow">&rarr;</span>
+        <div class="funnel-cell"><div class="funnel-lbl">Take-up</div><div class="funnel-val" id="esi-f-take">&mdash;</div><div class="funnel-den">% of eligible enrolling</div></div>
+        <span class="funnel-arrow">&rarr;</span>
+        <div class="funnel-cell"><div class="funnel-lbl">Enrolled</div><div class="funnel-val" id="esi-f-enr">&mdash;</div><div class="funnel-den">% of emp. where offered</div></div>
+      </div>
+    </div>
+
+    <div class="lower l-esi">
+      <div class="chart-card span-rows">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--esi)"></div><div class="chart-title" id="esi-cov-title">National ESI <span>Coverage Trend</span></div><span class="vtag" id="esi-cov-vtag">CPS ASEC</span></div>
+        <div class="chart-sub" id="esi-cov-sub"></div>
+        <div class="chart-wrap"><canvas id="esiCovChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--esi)"></div><div class="chart-title" id="esi-cost-title">Premiums <span>by State</span></div>
+          <div class="rank-toggle" id="esi-cost-metric">
+            <button class="rt-btn active" onclick="esiCostMetric('prem')">Premium</button>
+            <button class="rt-btn" onclick="esiCostMetric('contrib')">Worker contrib.</button>
+            <button class="rt-btn" onclick="esiCostMetric('ded')">Deductible</button>
+          </div>
+          <div class="rank-toggle" id="esi-cost-cov" style="margin-left:6px">
+            <button class="rt-btn active" onclick="esiCostCov('single')">Single</button>
+            <button class="rt-btn" onclick="esiCostCov('family')">Family</button>
+          </div>
+        </div>
+        <div class="chart-sub" id="esi-cost-sub"></div>
+        <div class="chart-wrap"><canvas id="esiCostChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--esi)"></div><div class="chart-title" id="esi-access-title">Take-up <span>by State</span></div>
+          <div class="rank-toggle" id="esi-access-metric">
+            <button class="rt-btn" onclick="esiAccessMetric('ofe')">Offer&middot;est</button>
+            <button class="rt-btn" onclick="esiAccessMetric('ofm')">Offer&middot;emp</button>
+            <button class="rt-btn" onclick="esiAccessMetric('elig')">Elig.</button>
+            <button class="rt-btn active" onclick="esiAccessMetric('take')">Take-up</button>
+            <button class="rt-btn" onclick="esiAccessMetric('enr')">Enrolled</button>
+          </div>
+        </div>
+        <div class="chart-sub" id="esi-access-sub"></div>
+        <div class="chart-wrap"><canvas id="esiAccessChart"></canvas></div>
+      </div>
+      <div class="chart-card esi-wide" id="esi-bench-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--esi)"></div><div class="chart-title" id="esi-bench-title">National Cost Benchmark <span>&middot; KFF EHBS</span></div><span class="vtag" id="esi-bench-vtag">KFF EHBS</span></div>
+        <div class="chart-sub" id="esi-bench-sub"></div>
+        <div id="esi-bench-body"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div class="footer">
@@ -643,6 +754,23 @@ const CS_YEAR       = __CS_YEAR__;
 const BHP_LABELS    = __BHP_LABELS__;
 const BHP_SERIES    = __BHP_SERIES__;
 const MEDICARE      = __MEDICARE__;
+// ══ EMPLOYER COVERAGE (ESI) ══ four sources, deliberately kept apart:
+//   ESI_ACS  — {state|US: covered PERSONS}, single survey year (point-in-time)
+//   ESI_CPS  — [[year, persons]] national only, prior-calendar-year (the only trend)
+//   ESI_MEPS — {state|US: {rates + dollars}} enrolled EMPLOYEES, private sector
+//   ESI_KFF  — national survey benchmark for the current year (never a state view)
+// Person counts (ACS/CPS) and employee-based rates (MEPS) are different units and
+// are never summed, divided, or charted across. State data is single-year, so
+// every state view is cross-sectional — no state trend lines anywhere.
+const ESI_ACS       = __ESI_ACS__;
+const ESI_ACS_YEAR  = __ESI_ACS_YEAR__;
+const ESI_CPS       = __ESI_CPS__;
+const ESI_MEPS      = __ESI_MEPS__;
+const ESI_MEPS_YEAR = __ESI_MEPS_YEAR__;
+const ESI_KFF       = __ESI_KFF__;
+// Per-state ESI caveat map — wired like MCARE_CAVEATS for future MEPS/ACS
+// footnotes (none flagged in the current vintages); surfaced under the selector.
+const ESI_CAVEATS   = {};
 
 const charts = {};
 function makeChart(id, cfg){ if(charts[id]){charts[id].destroy(); delete charts[id];}
@@ -1633,13 +1761,210 @@ function selectMcareState(state){
   renderMcareRank(state);
 }
 
+// ══ EMPLOYER COVERAGE (ESI) ══
+// Never mixes units: ACS/CPS person counts and MEPS employee-based rates/dollars
+// live in separate panels; state views are cross-sectional (single survey year).
+const esiUsd = n => n==null ? '—' : '$'+Math.round(n).toLocaleString();
+const esiPct = n => n==null ? '—' : n.toFixed(1)+'%';
+const ESI_ACC = {ofe:'Offer rate · establishments',ofm:'Offer rate · employees',
+  elig:'Eligibility',take:'Take-up',enr:'Enrolled'};
+const ESI_COST = {prem:{single:'ps',family:'pf',lbl:'Average premium'},
+  contrib:{single:'cs',family:'cf',lbl:'Worker contribution'},
+  ded:{single:'ds',family:'df',lbl:'Deductible'}};
+let esiState=null, esiCostKey='prem', esiCovKey='single', esiAccKey='take';
+function esiMeps(state){ return state?(ESI_MEPS[state]||null):ESI_MEPS['United States']; }
+// Five largest states by ACS covered persons — the cross-state comparison set.
+function esiLargest(exclude){
+  return Object.keys(ESI_ACS).filter(s=>s!=='United States'&&s!==exclude)
+    .sort((a,b)=>ESI_ACS[b]-ESI_ACS[a]).slice(0,5);
+}
+
+function renderEsiFunnel(state){
+  const d=esiMeps(state); const loc=state||'National';
+  document.getElementById('esi-funnel-cap').textContent=loc+' · MEPS-IC '+ESI_MEPS_YEAR;
+  const g=(id,v)=>document.getElementById(id).textContent=esiPct(v);
+  g('esi-f-ofe',d?d.ofe:null); g('esi-f-ofm',d?d.ofm:null); g('esi-f-elig',d?d.elig:null);
+  g('esi-f-take',d?d.take:null); g('esi-f-enr',d?d.enr:null);
+}
+
+// Coverage card. National: the CPS national trend (2017–2024, the only real ESI
+// time series) with the ACS point overlaid — two DIFFERENT measures of covered
+// persons on one axis (CPS is prior-calendar-year, ACS point-in-time), shown as
+// distinct marks, never connected. State: ACS cross-sectional ranking (no trend).
+function renderEsiCov(state){
+  const title=document.getElementById('esi-cov-title'), sub=document.getElementById('esi-cov-sub'),
+        vtag=document.getElementById('esi-cov-vtag');
+  if(!state){
+    vtag.textContent='CPS ASEC + ACS';
+    title.innerHTML='National ESI <span>Coverage Trend</span>';
+    sub.textContent='Covered persons · CPS ASEC '+ESI_CPS[0][0]+'–'+ESI_CPS[ESI_CPS.length-1][0]
+      +' (prior-calendar-year) · with the ACS '+ESI_ACS_YEAR+' point-in-time estimate (different measure, not connected)';
+    const labels=ESI_CPS.map(r=>String(r[0]));
+    const acsIdx=ESI_CPS.findIndex(r=>r[0]===ESI_ACS_YEAR);
+    const acsPts=ESI_CPS.map((r,i)=>i===acsIdx?ESI_ACS['United States']:null);
+    makeChart('esiCovChart',{type:'line',
+      data:{labels:labels,datasets:[
+        {label:'CPS ASEC (calendar-year)',data:ESI_CPS.map(r=>r[1]),borderColor:'#2F6F8F',
+          backgroundColor:'rgba(47,111,143,.10)',borderWidth:2.5,pointRadius:3,pointHoverRadius:5,
+          pointBackgroundColor:'#2F6F8F',tension:.2,fill:true},
+        {label:'ACS '+ESI_ACS_YEAR+' (point-in-time)',data:acsPts,borderColor:'#B06A16',
+          backgroundColor:'#B06A16',pointRadius:6,pointHoverRadius:7,pointStyle:'rectRot',
+          showLine:false}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:10,boxHeight:10,font:{size:9.5},color:'#5A6A84',usePointStyle:true}},
+          tooltip:{...T,callbacks:{label:c=>c.raw==null?'':' '+c.dataset.label+': '+c.raw.toLocaleString()+' persons'}}},
+        // Auto-scaled with generous grace so the genuine ~3% drift over 8 years sits
+        // in a middle band rather than stretching full-height and overstating a trend.
+        scales:{x:{grid:{color:'#E8EFF7'},ticks:{color:'#5A6A84',font:{size:10}},border:{display:false}},
+          y:{grace:'120%',grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}});
+  } else {
+    vtag.textContent='ACS '+ESI_ACS_YEAR;
+    title.innerHTML=state+' <span>vs. Largest States</span>';
+    sub.textContent='ESI covered persons · ACS '+ESI_ACS_YEAR+' (point-in-time) · cross-sectional, single year';
+    const names=[state,...esiLargest(state)];
+    makeChart('esiCovChart',{type:'bar',
+      data:{labels:names,datasets:[{data:names.map(s=>ESI_ACS[s]),
+        backgroundColor:names.map(s=>s===state?'rgba(47,111,143,.9)':'rgba(47,111,143,.3)'),
+        hoverBackgroundColor:names.map(s=>s===state?'rgba(47,111,143,1)':'rgba(47,111,143,.5)'),
+        borderRadius:3,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()+' persons'}}},
+        scales:{x:{beginAtZero:true,grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}},
+          y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}}}}});
+  }
+}
+
+// Shared ranking builder for the MEPS cost & access cards. Dollar and percent
+// metrics both anchor at zero: several access rates (eligibility, take-up)
+// cluster, and a non-zero baseline would exaggerate small cross-state gaps.
+function esiRankBars(canvas,state,field,isPct,unitLabel){
+  const fmtv=isPct?(v=>v.toFixed(1)+'%'):esiUsd;
+  const xax={beginAtZero:true,grid:{color:'#E8EFF7'},
+    ticks:{callback:isPct?pctFmt:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}};
+  const valOf=s=>{const d=ESI_MEPS[s]; return d?d[field]:null;};
+  if(!state){
+    const top=Object.keys(ESI_MEPS).filter(s=>s!=='United States'&&valOf(s)!=null)
+      .sort((a,b)=>valOf(b)-valOf(a)).slice(0,12);
+    makeChart(canvas,{type:'bar',
+      data:{labels:top,datasets:[{data:top.map(valOf),backgroundColor:'rgba(47,111,143,.72)',
+        hoverBackgroundColor:'rgba(47,111,143,.92)',borderRadius:3,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+fmtv(c.raw)+' · '+unitLabel}}},
+        scales:{x:xax,y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9.5}},border:{display:false}}}}});
+  } else {
+    const names=[state,...esiLargest(state)];
+    makeChart(canvas,{type:'bar',
+      data:{labels:names,datasets:[{data:names.map(valOf),
+        backgroundColor:names.map(s=>s===state?'rgba(47,111,143,.9)':'rgba(47,111,143,.3)'),
+        hoverBackgroundColor:names.map(s=>s===state?'rgba(47,111,143,1)':'rgba(47,111,143,.5)'),
+        borderRadius:3,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+fmtv(c.raw)+' · '+unitLabel}}},
+        scales:{x:xax,y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}}}}});
+  }
+}
+
+function renderEsiCost(state){
+  const spec=ESI_COST[esiCostKey], field=spec[esiCovKey], covLbl=esiCovKey==='single'?'Single':'Family';
+  document.getElementById('esi-cost-title').innerHTML=spec.lbl+' <span>· '+covLbl+(state?' · vs largest':' · by state')+'</span>';
+  document.getElementById('esi-cost-sub').textContent='MEPS-IC '+ESI_MEPS_YEAR+' · private-sector, per enrolled employee'
+    +(state?'':' · top 12 states');
+  esiRankBars('esiCostChart',state,field,false,covLbl+' '+spec.lbl.toLowerCase());
+}
+function renderEsiAccess(state){
+  document.getElementById('esi-access-title').innerHTML=ESI_ACC[esiAccKey].replace(/ · .*/,'')
+    +' <span>· '+(state?'vs largest':'by state')+'</span>';
+  document.getElementById('esi-access-sub').textContent='MEPS-IC '+ESI_MEPS_YEAR+' · '+ESI_ACC[esiAccKey]
+    +(state?'':' · top 12 states');
+  esiRankBars('esiAccessChart',state,esiAccKey,true,ESI_ACC[esiAccKey]);
+}
+
+// Benchmark card. National: the KFF EHBS survey benchmark (never the national
+// series, never a state view). State: the MEPS cost detail for that state — KFF
+// is hidden entirely so no national benchmark leaks into a state view.
+function renderEsiBench(state){
+  const title=document.getElementById('esi-bench-title'), sub=document.getElementById('esi-bench-sub'),
+        vtag=document.getElementById('esi-bench-vtag'), body=document.getElementById('esi-bench-body');
+  const row=(m,s,f)=>'<tr><td class="kff-metric">'+m+'</td><td>'+s+'</td><td>'+f+'</td></tr>';
+  if(!state){
+    vtag.textContent='KFF EHBS '+ESI_KFF.year;
+    title.innerHTML='National Cost Benchmark <span>· KFF EHBS</span>';
+    sub.textContent='Survey benchmark for '+ESI_KFF.year+' — a national reference, not the ACS/MEPS series and never applied to a state';
+    body.innerHTML='<table class="kff-table"><thead><tr><th>Metric</th><th>Single</th><th>Family</th></tr></thead><tbody>'
+      +row('Average annual premium',esiUsd(ESI_KFF.premSingle),esiUsd(ESI_KFF.premFamily))
+      +row('Worker contribution',esiUsd(ESI_KFF.wcSingle),esiUsd(ESI_KFF.wcFamily))
+      +row('Worker share of premium',ESI_KFF.shareSingle+'%',ESI_KFF.shareFamily+'%')
+      +row('General annual deductible',esiUsd(ESI_KFF.dedSingle),'<span class="cs-na">n/a</span>')
+      +'</tbody></table>'
+      +'<div class="kff-note">KFF Employer Health Benefits Survey ('+ESI_KFF.year+'). A national, survey-based benchmark shown for comparison only. '
+      +'MEPS-IC ('+ESI_MEPS_YEAR+') runs a few points below KFF (different plan mix); the two are separate sources — this benchmark is national-only and never populates a state view.</div>';
+  } else {
+    const d=esiMeps(state);
+    vtag.textContent='MEPS-IC '+ESI_MEPS_YEAR;
+    title.innerHTML=state+' <span>· Cost Detail</span>';
+    sub.textContent='MEPS-IC '+ESI_MEPS_YEAR+' · private-sector, per enrolled employee (state benchmark unavailable from KFF — national only)';
+    const share=(c,p)=>(d&&d[p])?(d[c]/d[p]*100).toFixed(0)+'%':'—';
+    body.innerHTML='<table class="kff-table"><thead><tr><th>Metric</th><th>Single</th><th>Family</th></tr></thead><tbody>'
+      +row('Average premium',esiUsd(d&&d.ps),esiUsd(d&&d.pf))
+      +row('Worker contribution',esiUsd(d&&d.cs),esiUsd(d&&d.cf))
+      +row('Worker share of premium',share('cs','ps'),share('cf','pf'))
+      +row('Deductible',esiUsd(d&&d.ds),esiUsd(d&&d.df))
+      +'</tbody></table>'
+      +'<div class="kff-note">MEPS-IC '+ESI_MEPS_YEAR+' private-sector averages for '+state+'. KFF EHBS is national-only, so no state benchmark is shown here.</div>';
+  }
+}
+
+function esiCostMetric(m){ esiCostKey=m;
+  document.querySelectorAll('#esi-cost-metric .rt-btn').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().startsWith(
+    m==='prem'?'premium':m==='contrib'?'worker':'deductible')));
+  renderEsiCost(esiState); }
+function esiCostCov(c){ esiCovKey=c;
+  document.querySelectorAll('#esi-cost-cov .rt-btn').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase()===c));
+  renderEsiCost(esiState); }
+function esiAccessMetric(m){ esiAccKey=m;
+  const order=['ofe','ofm','elig','take','enr'];
+  document.querySelectorAll('#esi-access-metric .rt-btn').forEach((b,i)=>b.classList.toggle('active',order[i]===m));
+  renderEsiAccess(esiState); }
+
+function selectEsiState(state){
+  esiState=state;
+  document.querySelectorAll('#panel-esi .state-pill').forEach(b=>b.classList.remove('active'));
+  const id=state?'esi-btn-'+state.replace(/ /g,'-').replace(/\./g,''):'esi-btn-national';
+  const b=document.getElementById(id); if(b) b.classList.add('active');
+
+  const loc=state||'National', d=esiMeps(state), cov=ESI_ACS[loc==='National'?'United States':state];
+  setKpi('esi-cov', fmt(cov), loc+' · ACS '+ESI_ACS_YEAR+' · covered persons', 'var(--esi)');
+  setKpi('esi-offer', d?esiPct(d.ofm):'—',
+    d?'<b>'+esiPct(d.ofe)+'</b> of establishments · MEPS '+ESI_MEPS_YEAR:'—', '#3E7FA0');
+  const shS=(d&&d.ps)?Math.round(d.cs/d.ps*100):null, shF=(d&&d.pf)?Math.round(d.cf/d.pf*100):null;
+  setKpi('esi-single', d?esiUsd(d.ps):'—',
+    d?'worker pays <b>'+esiUsd(d.cs)+'</b> ('+shS+'%) · MEPS '+ESI_MEPS_YEAR:'—', '#2F6F8F');
+  setKpi('esi-family', d?esiUsd(d.pf):'—',
+    d?'worker pays <b>'+esiUsd(d.cf)+'</b> ('+shF+'%) · MEPS '+ESI_MEPS_YEAR:'—', '#2F6F8F');
+  setKpi('esi-ded', d?esiUsd(d.ds):'—',
+    d?'family <b>'+esiUsd(d.df)+'</b> · MEPS '+ESI_MEPS_YEAR:'—', '#2F6F8F');
+
+  const sn=document.getElementById('esi-state-note');
+  if(state && ESI_CAVEATS[state]){ sn.style.display='flex';
+    sn.innerHTML='<span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">⚠</span>'
+      +'<span><b style="color:#5A4A1A">'+state+'</b> '+ESI_CAVEATS[state]+'</span>';
+  } else { sn.style.display='none'; sn.innerHTML=''; }
+
+  renderEsiFunnel(state);
+  renderEsiCov(state);
+  renderEsiCost(state);
+  renderEsiAccess(state);
+  renderEsiBench(state);
+}
+
 // ══ TABS ══
 const META={
   mcaid:{p:'Medicaid \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Renewal Tracker \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1]},
   chip:{p:'CHIP & Medicaid Child \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Enrollment Data \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1]},
   bhp:{p:'BHP \u00b7 Jan\u2013Jul 2026',s:'CMS Basic Health Program Enrollment Data \u00b7 2026'},
   mkt:{p:'ACA Marketplace \u00b7 OEP + Effectuated 2026',s:'CMS Marketplace OEP Snapshot &amp; Effectuated Enrollment \u00b7 2026'},
-  mcare:{p:'Medicare \u00b7 '+MC_L[MC_L.length-1],s:'CMS Medicare Monthly Enrollment \u00b7 50 states + DC \u00b7 '+MC_L[MC_L.length-1]}
+  mcare:{p:'Medicare \u00b7 '+MC_L[MC_L.length-1],s:'CMS Medicare Monthly Enrollment \u00b7 50 states + DC \u00b7 '+MC_L[MC_L.length-1]},
+  esi:{p:'Employer Coverage \u00b7 ACS '+ESI_ACS_YEAR+' \u00b7 MEPS-IC '+ESI_MEPS_YEAR,s:'Census ACS &amp; CPS ASEC \u00b7 AHRQ MEPS-IC \u00b7 KFF EHBS \u00b7 annual survey data'}
 };
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(t=>{t.className='tab';if(t.dataset.tab===tab)t.classList.add('active-'+tab);});
@@ -1654,7 +1979,7 @@ document.getElementById('ftrDate').textContent='Generated '+new Date().toLocaleD
 // so the latest month shows on first load without waiting for a tab click.
 document.getElementById('hdrPeriod').textContent=META.mcaid.p;
 document.getElementById('ftrSrc').innerHTML='<span>'+META.mcaid.s+'</span>';
-requestAnimationFrame(()=>{ selectMcaidState(null); selectChipState(null); selectMktState(null); renderBhp(); selectMcareState(null); });
+requestAnimationFrame(()=>{ selectMcaidState(null); selectChipState(null); selectMktState(null); renderBhp(); selectMcareState(null); selectEsiState(null); });
 </script>
 </body>
 </html>

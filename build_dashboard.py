@@ -19,6 +19,15 @@ WORKBOOK = ROOT / "data" / "Enrollment_Tracker.xlsx"
 PDF_HISTORY = ROOT / "data" / "pdf_history.json"
 COST_SHARING = ROOT / "data" / "cost_sharing.csv"
 MEDICARE = ROOT / "data" / "medicare.json"
+# Employer-Sponsored Insurance (ESI) staged aggregates — each written from the
+# committed source files in source-data/ (Census ACS/CPS, AHRQ MEPS-IC, KFF EHBS)
+# by the one-off inspection/staging step, never read from source at build time.
+# ACS/CPS count covered PERSONS; MEPS counts enrolled EMPLOYEES (rates + dollars
+# only, no counts) — different units, kept in separate files, never blended.
+ESI_ACS_CSV = ROOT / "data" / "esi_coverage_acs.csv"
+ESI_CPS_CSV = ROOT / "data" / "esi_coverage_cps.csv"
+ESI_MEPS_CSV = ROOT / "data" / "esi_cost_meps.csv"
+ESI_KFF_CSV = ROOT / "data" / "esi_benchmark_kff.csv"
 TEMPLATE = ROOT / "template.html"
 OUTPUT = ROOT / "index.html"
 
@@ -565,6 +574,142 @@ def load_bhp(xl):
     return labels, series
 
 
+def load_esi_acs():
+    """Read data/esi_coverage_acs.csv -> ({state|'United States': persons}, year).
+
+    ACS employment-based coverage counts COVERED PERSONS at time of interview
+    (a single survey year). Point-in-time measure; never combined with the MEPS
+    enrolled-employee figures or the CPS calendar-year counts.
+    """
+    import csv as _csv
+    if not ESI_ACS_CSV.exists():
+        sys.exit(f"ERROR: ESI ACS data not found at {ESI_ACS_CSV}")
+    out, year = {}, None
+    with ESI_ACS_CSV.open(newline="", encoding="utf-8") as f:
+        for row in _csv.DictReader(f):
+            out[row["State"]] = int(row["CoveredPersons"])
+            year = int(row["Year"])
+    # National row must be present and match the sum of states within ACS's
+    # independent rounding (values are published rounded to the nearest 1,000).
+    if "United States" not in out:
+        sys.exit("ERROR: ESI ACS missing United States row")
+    ssum = sum(v for s, v in out.items() if s != "United States")
+    if abs(out["United States"] - ssum) > 50_000:
+        sys.exit(f"ERROR: ESI ACS US {out['United States']:,} != sum of states {ssum:,}")
+    return out, year
+
+
+def load_esi_cps():
+    """Read data/esi_coverage_cps.csv -> [[year, persons], ...] (national only).
+
+    CPS ASEC employment-based coverage counts COVERED PERSONS during the prior
+    calendar year — a different reference period from ACS, so the two national
+    totals differ for the same nominal year (expected, not an error). This is the
+    only real ESI time series; state data is single-year and cross-sectional.
+    """
+    import csv as _csv
+    if not ESI_CPS_CSV.exists():
+        sys.exit(f"ERROR: ESI CPS data not found at {ESI_CPS_CSV}")
+    rows = []
+    with ESI_CPS_CSV.open(newline="", encoding="utf-8") as f:
+        for row in _csv.DictReader(f):
+            rows.append([int(row["Year"]), int(row["CoveredPersons"])])
+    rows.sort()
+    return rows
+
+
+# MEPS-IC CSV columns -> compact JS keys. Rates (percent) and dollars only; no
+# enrolled-employee count is carried (counts come from ACS). Both offer-rate
+# denominators are kept distinct: 'ofe' = % of establishments that offer,
+# 'ofm' = % of employees at establishments that offer — different metrics.
+ESI_MEPS_COLS = {
+    "OfferRate_Estab_pct": "ofe",
+    "OfferRate_Emp_pct": "ofm",
+    "Eligible_pct_of_emp_at_offering": "elig",
+    "TakeUp_pct_of_eligible": "take",
+    "Enrolled_pct_of_emp_at_offering": "enr",
+    "SinglePremium_USD": "ps",
+    "SingleContribution_USD": "cs",
+    "FamilyPremium_USD": "pf",
+    "FamilyContribution_USD": "cf",
+    "SingleDeductible_USD": "ds",
+    "FamilyDeductible_USD": "df",
+}
+
+
+def load_esi_meps(acs_states):
+    """Read data/esi_cost_meps.csv -> ({state|'United States': {key: value}}, year).
+
+    MEPS-IC private-sector Table II — excludes state and local government. Counts
+    enrolled EMPLOYEES (one worker covering a family is a single enrollee), a
+    different unit from the ACS/CPS person counts. Single-year, so state views are
+    cross-sectional only. `acs_states` is passed in to assert the two sources cover
+    the same jurisdictions before either is wired to the shared state selector.
+    """
+    import csv as _csv
+    if not ESI_MEPS_CSV.exists():
+        sys.exit(f"ERROR: ESI MEPS data not found at {ESI_MEPS_CSV}")
+
+    def num(v):
+        return None if v is None or v == "" else float(v)
+
+    out, year = {}, None
+    with ESI_MEPS_CSV.open(newline="", encoding="utf-8") as f:
+        for row in _csv.DictReader(f):
+            rec = {}
+            for col, key in ESI_MEPS_COLS.items():
+                x = num(row[col])
+                rec[key] = int(x) if x is not None and x == int(x) else x
+            out[row["State"]] = rec
+            year = int(row["Year"])
+    if "United States" not in out:
+        sys.exit("ERROR: ESI MEPS missing United States row")
+    meps_states = {s for s in out if s != "United States"}
+    if meps_states != set(acs_states):
+        only_m = sorted(meps_states - set(acs_states))
+        only_a = sorted(set(acs_states) - meps_states)
+        sys.exit(f"ERROR: ESI MEPS/ACS jurisdictions differ; MEPS-only={only_m} ACS-only={only_a}")
+    return out, year
+
+
+def load_esi_kff():
+    """Read data/esi_benchmark_kff.csv -> compact national-benchmark dict.
+
+    KFF EHBS is NATIONAL only and a survey-based benchmark for the current year —
+    it must never populate a state view and is never charted as the national
+    series (CPS is the series). Pulls the headline current-year values used by the
+    benchmark card; the raw CSV is retained for provenance.
+    """
+    import csv as _csv
+    if not ESI_KFF_CSV.exists():
+        sys.exit(f"ERROR: ESI KFF data not found at {ESI_KFF_CSV}")
+    rows = list(_csv.DictReader(ESI_KFF_CSV.open(newline="", encoding="utf-8")))
+    if not rows:
+        sys.exit("ERROR: ESI KFF benchmark is empty")
+    year = str(max(int(r["Year"]) for r in rows))
+
+    def pick(metric, coverage):
+        for r in rows:
+            if r["Year"] == year and r["Metric"] == metric and r["Coverage"] == coverage:
+                return int(r["Value"])
+        return None
+
+    kff = {
+        "year": int(year),
+        "premSingle": pick("Average annual premium", "Single"),
+        "premFamily": pick("Average annual premium", "Family"),
+        "wcSingle": pick("Worker premium contribution", "Single"),
+        "wcFamily": pick("Worker premium contribution", "Family"),
+        "shareSingle": pick("Worker contribution share", "Single"),
+        "shareFamily": pick("Worker contribution share", "Family"),
+        "dedSingle": pick("Average general annual deductible", "Single"),
+    }
+    missing = [k for k, v in kff.items() if v is None]
+    if missing:
+        sys.exit(f"ERROR: ESI KFF benchmark missing {year} values: {missing}")
+    return kff
+
+
 def state_pills(prefix, fn, names):
     out = [f'<button class="state-pill active" onclick="{fn}(null)" id="{prefix}-btn-national">National</button>']
     for s in sorted(names):
@@ -591,6 +736,11 @@ def main():
     cost_sharing = load_cost_sharing()
     bhp_labels, bhp_series = load_bhp(xl)
     medicare = load_medicare()
+    esi_acs, esi_acs_year = load_esi_acs()
+    esi_cps = load_esi_cps()
+    esi_acs_states = [s for s in esi_acs if s != 'United States']
+    esi_meps, esi_meps_year = load_esi_meps(esi_acs_states)
+    esi_kff = load_esi_kff()
 
     compact = lambda o: json.dumps(o, separators=(',', ':'))
     replacements = {
@@ -629,6 +779,13 @@ def main():
         '__BHP_LABELS__': compact(bhp_labels),
         '__BHP_SERIES__': compact(bhp_series),
         '__MEDICARE__': compact(medicare),
+        'ESI_PILLS': state_pills('esi', 'selectEsiState', esi_acs_states),
+        '__ESI_ACS__': compact(esi_acs),
+        '__ESI_ACS_YEAR__': compact(esi_acs_year),
+        '__ESI_CPS__': compact(esi_cps),
+        '__ESI_MEPS__': compact(esi_meps),
+        '__ESI_MEPS_YEAR__': compact(esi_meps_year),
+        '__ESI_KFF__': compact(esi_kff),
     }
 
     html = TEMPLATE.read_text()
@@ -663,6 +820,14 @@ def main():
     print(f"  Marketplace OEP + {len(post_labels) - 1} months  ({len(mkt_oep)} states)")
     cs_states = [s for s in cost_sharing if s != 'United States']
     print(f"  Cost sharing {CS_BENEFIT_YEAR} plan-level avg  ({len(cs_states)} states + US)")
+    print(f"  ESI ACS     {esi_acs_year} covered persons  ({len(esi_acs_states)} states + US)  "
+          f"US {esi_acs['United States']:,}")
+    print(f"  ESI CPS     {esi_cps[0][0]}–{esi_cps[-1][0]} national covered persons  "
+          f"({esi_cps[-1][0]} {esi_cps[-1][1]:,}; ACS–CPS {esi_acs_year} gap "
+          f"{esi_acs['United States']-dict(esi_cps).get(esi_acs_year,0):+,})")
+    print(f"  ESI MEPS    {esi_meps_year} private-sector rates+dollars  ({len(esi_acs_states)} states + US)  "
+          f"US single prem ${esi_meps['United States']['ps']:,}")
+    print(f"  ESI KFF     {esi_kff['year']} national benchmark (survey; not the national series)")
     print(f"  Outcome mix {mix['natLabels'][0]} - {mix['natLabels'][-1]} national, "
           f"{mix['stLabels'][0]} - {mix['stLabels'][-1]} by state")
 
