@@ -1,15 +1,25 @@
 name: Build dashboard
 
-# Rebuilds index.html from the workbook + data files on every push and PR, and
-# fails if the build's own validation trips (a tripped reconciliation/control-total
-# assert, or an unsubstituted __PLACEHOLDER__) OR if the committed index.html is
-# stale — i.e. template.html / build_dashboard.py changed but index.html was not
-# rebuilt. GitHub Pages serves the committed index.html, so this keeps the live
-# artifact honest.
+# Rebuilds index.html from the workbook + data files and fails if the build's own
+# validation trips (a tripped reconciliation/control-total assert, or an
+# unsubstituted __PLACEHOLDER__) OR if the committed index.html / README is stale
+# — i.e. template.html / build_dashboard.py changed but the output was not rebuilt.
+# GitHub Pages serves the committed index.html, so this keeps the live artifact
+# honest.
+#
+# Runs on every PR (the pre-merge gate) and on pushes to main (catches direct
+# uploads that bypass a PR). Feature-branch pushes are covered by their PR, so we
+# don't also run on them — that would double every run. cancel-in-progress drops
+# superseded runs so a rapid series of pushes doesn't pile up in the queue.
 
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
