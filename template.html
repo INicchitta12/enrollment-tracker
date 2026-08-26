@@ -412,22 +412,22 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     </div>
     <div class="data-note">
       <span style="color:var(--brand-amber);flex-shrink:0;font-size:13px">&#9888;</span>
-      <span>Reporting coverage varies. <b style="color:#5A4A1A">Minnesota</b> reports through Jul 2026 and <b style="color:#5A4A1A">Oregon</b> through Jun 2026; <b style="color:#5A4A1A">New York</b> through Apr 2026; <b style="color:#5A4A1A">DC</b> has reported Jan 2026 only. National total reflects January, the one month all four states report.</span>
+      <span>Reporting coverage varies. <b style="color:#5A4A1A">New York</b> and <b style="color:#5A4A1A">Minnesota</b> report through Aug 2026 and <b style="color:#5A4A1A">Oregon</b> through Jul 2026; <b style="color:#5A4A1A">DC</b> has reported Jan 2026 only. National total reflects January, the one month all four states report.</span>
     </div>
     <div class="lower l-bhp">
       <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:#4F46C8"></div><div class="chart-title">New York <span>&middot; EP Expansion</span></div></div>
-        <div class="chart-sub">Reported Jan &ndash; Apr 2026</div>
+        <div class="chart-sub">Reported Jan &ndash; Aug 2026</div>
         <div class="chart-wrap"><canvas id="bhpNY"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:#007C8C"></div><div class="chart-title">Minnesota</div></div>
-        <div class="chart-sub">Reported Jan &ndash; Jul 2026</div>
+        <div class="chart-sub">Reported Jan &ndash; Aug 2026</div>
         <div class="chart-wrap"><canvas id="bhpMN"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:#1A7A4A"></div><div class="chart-title">Oregon</div></div>
-        <div class="chart-sub">Reported Jan &ndash; Jun 2026</div>
+        <div class="chart-sub">Reported Jan &ndash; Jul 2026</div>
         <div class="chart-wrap"><canvas id="bhpOR"></canvas></div>
       </div>
       <div class="chart-card">
@@ -1961,7 +1961,7 @@ function selectEsiState(state){
 const META={
   mcaid:{p:'Medicaid \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Renewal Tracker \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1]},
   chip:{p:'CHIP & Medicaid Child \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1],s:'CMS Medicaid &amp; CHIP Enrollment Data \u00b7 '+CHIP_LABELS[CHIP_LABELS.length-1]},
-  bhp:{p:'BHP \u00b7 Jan\u2013Jul 2026',s:'CMS Basic Health Program Enrollment Data \u00b7 2026'},
+  bhp:{p:'BHP \u00b7 Jan\u2013'+BHP_LABELS[BHP_LABELS.length-1],s:'CMS Basic Health Program Enrollment Data \u00b7 2026'},
   mkt:{p:'ACA Marketplace \u00b7 OEP + Effectuated 2026',s:'CMS Marketplace OEP Snapshot &amp; Effectuated Enrollment \u00b7 2026'},
   mcare:{p:'Medicare \u00b7 '+MC_L[MC_L.length-1],s:'CMS Medicare Monthly Enrollment \u00b7 50 states + DC \u00b7 '+MC_L[MC_L.length-1]},
   esi:{p:'Employer Coverage \u00b7 ACS '+ESI_ACS_YEAR+' \u00b7 MEPS-IC '+ESI_MEPS_YEAR,s:'Census ACS &amp; CPS ASEC \u00b7 AHRQ MEPS-IC \u00b7 KFF EHBS \u00b7 annual survey data'}
