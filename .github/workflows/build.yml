@@ -1,0 +1,35 @@
+name: Build dashboard
+
+# Rebuilds index.html from the workbook + data files on every push and PR, and
+# fails if the build's own validation trips (a tripped reconciliation/control-total
+# assert, or an unsubstituted __PLACEHOLDER__) OR if the committed index.html is
+# stale — i.e. template.html / build_dashboard.py changed but index.html was not
+# rebuilt. GitHub Pages serves the committed index.html, so this keeps the live
+# artifact honest.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Rebuild dashboard (validates asserts + placeholders)
+        run: python build_dashboard.py
+
+      - name: Check committed index.html / README are up to date
+        run: |
+          if ! git diff --exit-code --stat index.html README.md; then
+            echo "::error::index.html or README.md is out of date. Run 'make update' (or 'python build_dashboard.py') and commit the result."
+            exit 1
+          fi

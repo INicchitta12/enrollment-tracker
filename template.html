@@ -404,49 +404,49 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   <!-- ══ BHP ══ -->
   <div class="panel bhp-panel" id="panel-bhp">
     <div class="kpi-row">
-      <div class="kpi" style="border-top:3px solid var(--bhp)"><div class="kpi-label">National BHP Enrollment</div><div class="kpi-value big" style="color:var(--bhp)">1,852,758</div><div class="kpi-sub">Jan 2026 &middot; 4 participating states</div></div>
-      <div class="kpi" style="border-top:3px solid #4F46C8"><div class="kpi-label">New York</div><div class="kpi-value" style="color:#4F46C8">1,720,756</div><div class="kpi-sub"><b>92.9%</b> of national &middot; Jan 2026</div></div>
-      <div class="kpi" style="border-top:3px solid var(--bhp)"><div class="kpi-label">Minnesota</div><div class="kpi-value">78,540</div><div class="kpi-sub"><b>4.2%</b> of national &middot; Jan 2026</div></div>
-      <div class="kpi" style="border-top:3px solid #1A7A4A"><div class="kpi-label">Oregon</div><div class="kpi-value" style="color:#1A7A4A">37,740</div><div class="kpi-sub"><b>2.0%</b> of national &middot; Jan 2026</div></div>
-      <div class="kpi" style="border-top:3px solid #B0307A"><div class="kpi-label">District of Columbia</div><div class="kpi-value" style="color:#B0307A">15,722</div><div class="kpi-sub"><b>0.8%</b> of national &middot; Jan 2026</div></div>
+      <div class="kpi" style="border-top:3px solid var(--bhp)"><div class="kpi-label">National BHP Enrollment</div><div class="kpi-value big" style="color:var(--bhp)">__BHP_NAT_TOTAL__</div><div class="kpi-sub">__BHP_NAT_MONTH__ &middot; __BHP_N_STATES__ participating states</div></div>
+      <div class="kpi" style="border-top:3px solid #4F46C8"><div class="kpi-label">New York</div><div class="kpi-value" style="color:#4F46C8">__BHP_NY_VAL__</div><div class="kpi-sub"><b>__BHP_NY_PCT__%</b> of national &middot; __BHP_NAT_MONTH__</div></div>
+      <div class="kpi" style="border-top:3px solid var(--bhp)"><div class="kpi-label">Minnesota</div><div class="kpi-value">__BHP_MN_VAL__</div><div class="kpi-sub"><b>__BHP_MN_PCT__%</b> of national &middot; __BHP_NAT_MONTH__</div></div>
+      <div class="kpi" style="border-top:3px solid #1A7A4A"><div class="kpi-label">Oregon</div><div class="kpi-value" style="color:#1A7A4A">__BHP_OR_VAL__</div><div class="kpi-sub"><b>__BHP_OR_PCT__%</b> of national &middot; __BHP_NAT_MONTH__</div></div>
+      <div class="kpi" style="border-top:3px solid #B0307A"><div class="kpi-label">District of Columbia</div><div class="kpi-value" style="color:#B0307A">__BHP_DC_VAL__</div><div class="kpi-sub"><b>__BHP_DC_PCT__%</b> of national &middot; __BHP_NAT_MONTH__</div></div>
     </div>
     <div class="data-note">
       <span style="color:var(--brand-amber);flex-shrink:0;font-size:13px">&#9888;</span>
-      <span>Reporting coverage varies. <b style="color:#5A4A1A">New York</b> and <b style="color:#5A4A1A">Minnesota</b> report through Aug 2026 and <b style="color:#5A4A1A">Oregon</b> through Jul 2026; <b style="color:#5A4A1A">DC</b> has reported Jan 2026 only. National total reflects January, the one month all four states report.</span>
+      <span>__BHP_COVERAGE__</span>
     </div>
     <div class="lower l-bhp">
       <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:#4F46C8"></div><div class="chart-title">New York <span>&middot; EP Expansion</span></div></div>
-        <div class="chart-sub">Reported Jan &ndash; Aug 2026</div>
+        <div class="chart-sub">__BHP_NY_RANGE__</div>
         <div class="chart-wrap"><canvas id="bhpNY"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:#007C8C"></div><div class="chart-title">Minnesota</div></div>
-        <div class="chart-sub">Reported Jan &ndash; Aug 2026</div>
+        <div class="chart-sub">__BHP_MN_RANGE__</div>
         <div class="chart-wrap"><canvas id="bhpMN"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:#1A7A4A"></div><div class="chart-title">Oregon</div></div>
-        <div class="chart-sub">Reported Jan &ndash; Jul 2026</div>
+        <div class="chart-sub">__BHP_OR_RANGE__</div>
         <div class="chart-wrap"><canvas id="bhpOR"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:#B0307A"></div><div class="chart-title">District of Columbia</div></div>
-        <div class="chart-sub">Launched Jan 2026 &middot; one month reported</div>
+        <div class="chart-sub">__BHP_DC_RANGE__</div>
         <div class="chart-wrap"><canvas id="bhpDC"></canvas></div>
       </div>
       <div class="chart-card" style="grid-column:span 2">
-        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--bhp)"></div><div class="chart-title">State Share &middot; <span>January 2026</span></div></div>
-        <div class="chart-sub">New York accounts for 92.9% of national BHP enrollment</div>
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--bhp)"></div><div class="chart-title">State Share &middot; <span>__BHP_NAT_MONTH_LONG__</span></div></div>
+        <div class="chart-sub">__BHP_TOP_STATE__ accounts for __BHP_TOP_PCT__% of national BHP enrollment</div>
         <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:7px;">
-          <div class="st-row"><div class="st-label">New York</div><div class="st-track"><div class="st-fill" style="width:92.9%;background:linear-gradient(90deg,#2E1EA8,#4F46C8)"><span class="st-count">1,720,756</span></div></div><div class="st-pct">92.9%</div></div>
-          <div class="st-row"><div class="st-label">Minnesota</div><div class="st-track"><div class="st-fill" style="width:4.2%;background:linear-gradient(90deg,#005A68,#007C8C)"><span class="st-count">78,540</span></div></div><div class="st-pct">4.2%</div></div>
-          <div class="st-row"><div class="st-label">Oregon</div><div class="st-track"><div class="st-fill" style="width:2.0%;background:linear-gradient(90deg,#0F5A30,#1A7A4A)"><span class="st-count">37,740</span></div></div><div class="st-pct">2.0%</div></div>
-          <div class="st-row"><div class="st-label">District of Columbia</div><div class="st-track"><div class="st-fill" style="width:0.8%;background:linear-gradient(90deg,#801058,#B0307A)"><span class="st-count">15,722</span></div></div><div class="st-pct">0.8%</div></div>
+          <div class="st-row"><div class="st-label">New York</div><div class="st-track"><div class="st-fill" style="width:__BHP_NY_PCT__%;background:linear-gradient(90deg,#2E1EA8,#4F46C8)"><span class="st-count">__BHP_NY_VAL__</span></div></div><div class="st-pct">__BHP_NY_PCT__%</div></div>
+          <div class="st-row"><div class="st-label">Minnesota</div><div class="st-track"><div class="st-fill" style="width:__BHP_MN_PCT__%;background:linear-gradient(90deg,#005A68,#007C8C)"><span class="st-count">__BHP_MN_VAL__</span></div></div><div class="st-pct">__BHP_MN_PCT__%</div></div>
+          <div class="st-row"><div class="st-label">Oregon</div><div class="st-track"><div class="st-fill" style="width:__BHP_OR_PCT__%;background:linear-gradient(90deg,#0F5A30,#1A7A4A)"><span class="st-count">__BHP_OR_VAL__</span></div></div><div class="st-pct">__BHP_OR_PCT__%</div></div>
+          <div class="st-row"><div class="st-label">District of Columbia</div><div class="st-track"><div class="st-fill" style="width:__BHP_DC_PCT__%;background:linear-gradient(90deg,#801058,#B0307A)"><span class="st-count">__BHP_DC_VAL__</span></div></div><div class="st-pct">__BHP_DC_PCT__%</div></div>
           <div style="border-top:1px solid var(--border);margin-top:3px;padding-top:7px;display:flex;align-items:center;gap:10px;">
             <div class="st-label" style="color:var(--bhp);font-weight:700">National Total</div>
-            <span style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--bhp)">1,852,758</span>
-            <span style="font-size:10px;color:var(--muted)">Jan 2026</span>
+            <span style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--bhp)">__BHP_NAT_TOTAL__</span>
+            <span style="font-size:10px;color:var(--muted)">__BHP_NAT_MONTH__</span>
           </div>
         </div>
       </div>
