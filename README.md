@@ -39,7 +39,7 @@ data rather than drifting — do not edit the table between the markers by hand.
 | CHIP &amp; Medicaid Child | CMS Medicaid &amp; CHIP Enrollment Snapshot | Dec 2025 – Apr 2026 |
 | National renewal outcome mix | CMS snapshot PDF (Mar–Nov 2025) + workbook | Mar 2025 – Apr 2026 |
 | BHP | CMS Basic Health Program | Jan 2026 – Aug 2026 (national total: Jan 2026) |
-| ACA Marketplace | CMS Marketplace OEP snapshot + effectuated enrollment | OEP 2026 + effectuated through May 2026 |
+| ACA Marketplace | CMS Marketplace OEP snapshot + effectuated enrollment | OEP 2026 + effectuated through Aug 2026 |
 | Medicare | CMS Medicare Monthly Enrollment | Jan 2023 – May 2026 |
 | ACA cost sharing | CMS Exchange PUFs (Plan Attributes; Benefits &amp; Cost-Sharing) | 2026 benefit year |
 | Employer coverage (ESI) | Census ACS/CPS · AHRQ MEPS-IC · KFF EHBS | ACS 2024 · MEPS-IC 2025 |
