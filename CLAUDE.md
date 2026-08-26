@@ -336,12 +336,25 @@ derived child series, the existing Nevada caveat is **extended to this tab** (ad
 The Medicare tab is the last tab in the bar, with a distinct **burnt-orange accent**
 (`--mcare:#B45309`, light panel tint `--mcare-light:#F7EEE1`) — separate from Medicaid
 navy, CHIP violet, BHP teal, and Marketplace crimson. It does **not** come from the
-workbook: `build_medicare.py` reads the raw CMS Medicare Monthly Enrollment CSV **straight
-from its zip** in `source-data/Medicare_Monthly_Data.zip` and writes a small per-state
-monthly summary to `data/medicare.json`; `build_dashboard.py`'s `load_medicare()` reads only
-that JSON and **never touches the raw source at build time** (same split as cost sharing).
-Rerun `build_medicare.py` only when CMS publishes a refreshed Medicare file. The extracted
-CSV is gitignored (`Medicare_Monthly_Data.csv`).
+workbook: `build_medicare.py` reads two raw CMS sources and **merges** them into a small
+per-state monthly summary at `data/medicare.json`; `build_dashboard.py`'s `load_medicare()`
+reads only that JSON and **never touches the raw source at build time** (same split as cost
+sharing). The two sources:
+
+- `source-data/Medicare_Monthly_Data.zip` — the archived **full history** (Jan 2023 onward).
+  Large, so tracked compressed; the extracted CSV is gitignored.
+- `source-data/Medicare_Monthly_Data.csv` — the **latest monthly drop**, uncompressed. CMS's
+  download carries only the most recent months (currently Jan–May 2026) and **revises** those
+  months relative to the archived history, so where the two overlap the CSV **wins** (CMS
+  revisions are authoritative — see the "revised over time" rule below); months the CSV does
+  not cover come from the zip unchanged. This is optional: if the CSV is absent the build
+  proceeds from the zip alone. The new CSV format also carries `BENE_GEO_LVL`/`State_Abrvtn`/
+  `FIPS_Cd` columns the older zip omits, but level is still inferred (below) so both parse
+  identically.
+
+To land a new month (and its revisions), drop the refreshed CSV in place and rerun
+`build_medicare.py`; re-archive the zip only if you want the raw history extended past what the
+CSV overlays. The console summary prints which months came from the CSV drop.
 
 **The headline metric is Medicare Advantage penetration** — MA (`MA_AND_OTH_BENES`, labelled
 "MA & other health plans", since it also covers cost plans/PACE) as a share of beneficiaries
@@ -353,9 +366,10 @@ trend, ranking, and lookback bar all use this A&B denominator; `mcPen()` is the 
 
 Data traps handled in `build_medicare.py` (all verified against the file):
 
-- **One file, three geography levels + annual roll-ups.** The CSV has no `Bene_Geo_Lvl`
-  column (the dictionary lists one; the data omits it, along with `State_Abrvtn` and
-  `FIPS_Cd`). Level is inferred: `BENE_STATE_DESC == "National"`, else
+- **Three geography levels + annual roll-ups per file.** The archived zip's CSV has no
+  `Bene_Geo_Lvl` column (the dictionary lists one; that vintage omits it, along with
+  `State_Abrvtn` and `FIPS_Cd`; the newer drop restores them). To parse both vintages the same
+  way, level is **inferred** rather than read from that column: `BENE_STATE_DESC == "National"`, else
   `BENE_COUNTY_DESC == "Total"` is a **state** row, else a **county** row. It also carries
   annual `MONTH == "Year"` roll-ups. We keep **state-level, real-month rows only** and never
   sum counties or let a `Year` row into a series.

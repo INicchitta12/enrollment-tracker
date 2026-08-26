@@ -2,11 +2,21 @@
 """
 Aggregate the CMS Medicare Monthly Enrollment file into data/medicare.json.
 
-Reads the raw CMS CSV straight from its zip in source-data/ (the extracted CSV
-is far too large for the repo and is gitignored) and writes a small per-state
+Reads from TWO raw CMS sources and merges them, writing a small per-state
 monthly summary that build_dashboard.py injects. build_dashboard.py never reads
-the raw source — it reads only data/medicare.json. Rerun this only when CMS
-publishes a refreshed Medicare Monthly Enrollment file (a new zip).
+the raw source — it reads only data/medicare.json.
+
+  * source-data/Medicare_Monthly_Data.zip — the archived full history (Jan 2023
+    onward). Large, so tracked compressed; the extracted CSV is gitignored.
+  * source-data/Medicare_Monthly_Data.csv — the latest monthly drop CMS
+    publishes. It carries only the most recent months (currently Jan–May 2026),
+    and CMS REVISES those recent months relative to the archived history, so
+    where the two overlap the CSV wins (CMS revisions are authoritative; see the
+    "revised over time" note in CLAUDE.md). Months the CSV does not cover come
+    from the zip unchanged. This is how a new month (and its revisions) lands:
+    drop the refreshed CSV in place and rerun — no need to re-archive the zip.
+
+Rerun this only when CMS publishes a refreshed Medicare Monthly Enrollment file.
 
     python build_medicare.py
 
@@ -44,7 +54,8 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).parent
-SOURCE_ZIP = ROOT / "source-data" / "Medicare_Monthly_Data.zip"
+SOURCE_ZIP = ROOT / "source-data" / "Medicare_Monthly_Data.zip"   # archived full history
+SOURCE_CSV = ROOT / "source-data" / "Medicare_Monthly_Data.csv"   # latest drop (wins on overlap)
 CSV_NAME = "Medicare_Monthly_Data.csv"
 OUTPUT = ROOT / "data" / "medicare.json"
 
@@ -88,7 +99,7 @@ def num(cell):
     return int(s.replace(",", ""))
 
 
-def read_rows():
+def read_zip_rows():
     if not SOURCE_ZIP.exists():
         sys.exit(f"ERROR: Medicare source zip not found at {SOURCE_ZIP}")
     import csv
@@ -99,11 +110,23 @@ def read_rows():
             yield from csv.DictReader(text)
 
 
-def main():
-    states = {}            # stateName -> {period: {key: int}}
-    seen = {}              # period -> set(stateName) for completeness check
+def read_csv_rows():
+    """The latest monthly drop, uncompressed in source-data/. Optional: if it is
+    absent the build proceeds from the zip alone."""
+    if not SOURCE_CSV.exists():
+        return
+    import csv
+    with SOURCE_CSV.open(encoding="utf-8-sig") as fh:
+        yield from csv.DictReader(fh)
 
-    for row in read_rows():
+
+def ingest(rows, states, seen):
+    """Parse state-month rows from one source into states/seen, returning the set
+    of periods it contributed. Called for the zip first, then the CSV — a later
+    call OVERWRITES an earlier one for the same state-month, so the CSV (the fresh
+    drop, with CMS's revisions) wins wherever the two overlap."""
+    contributed = set()
+    for row in rows:
         month = row["MONTH"]
         if month not in MONTHS:                       # skip annual "Year" rows
             continue
@@ -136,6 +159,16 @@ def main():
 
         states.setdefault(st, {})[period] = rec
         seen.setdefault(period, set()).add(st)
+        contributed.add(period)
+    return contributed
+
+
+def main():
+    states = {}            # stateName -> {period: {key: int}}
+    seen = {}              # period -> set(stateName) for completeness check
+
+    ingest(read_zip_rows(), states, seen)             # archived full history
+    csv_periods = ingest(read_csv_rows(), states, seen)  # latest drop wins on overlap
 
     periods = sorted(seen)
     if not periods:
@@ -183,6 +216,12 @@ def main():
     print(f"Wrote {OUTPUT.relative_to(ROOT)}  ({size_kb} KB)")
     print(f"  {len(states)} states + DC (territories excluded)  ·  "
           f"{labels[0]} – {labels[-1]}  ({len(periods)} months)")
+    if csv_periods:
+        cp = sorted(csv_periods)
+        print(f"  latest CSV drop supplied {cp[0]} – {cp[-1]} "
+              f"({len(cp)} months, revisions win over the archived zip)")
+    else:
+        print("  no latest CSV drop found — built from the archived zip alone")
     print(f"  National {labels[-1]}: total {n_now['tot']:,}  ·  "
           f"MA penetration {n_now['ma'] / n_now['abtot'] * 100:.1f}% (of A&B)  ·  "
           f"dual {n_now['dual'] / n_now['tot'] * 100:.1f}%  ·  "
