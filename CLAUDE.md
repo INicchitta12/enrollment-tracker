@@ -398,8 +398,8 @@ Disabled — and a state MA-penetration ranking (top-12 nationally; selected-sta
 is chosen). The lookback month is derived as three years before the latest month, so it tracks
 forward as new data lands.
 
-**Dual-eligibles are the bridge to the Medicaid tab.** `DUAL_TOT_BENES` (17.4% of Medicare,
-~12.0M nationally) counts beneficiaries jointly enrolled in Medicaid — the same people appear
+**Dual-eligibles are the bridge to the Medicaid tab.** `DUAL_TOT_BENES` (17.0% of Medicare,
+~11.7M nationally) counts beneficiaries jointly enrolled in Medicaid — the same people appear
 on the Medicaid tab. Only `DUAL_TOT` is surfaced: the full/partial dual split
 (`FULL_DUAL`/`PART_DUAL`) is suppressed in ~26–28 small-state cells, so it is not shown.
 
