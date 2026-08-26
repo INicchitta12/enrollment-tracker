@@ -9,12 +9,16 @@ Usage:  python build_dashboard.py
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
 import pandas as pd
 
 ROOT = Path(__file__).parent
+README = ROOT / "README.md"
+COVERAGE_START = "<!-- COVERAGE:START -->"
+COVERAGE_END = "<!-- COVERAGE:END -->"
 WORKBOOK = ROOT / "data" / "Enrollment_Tracker.xlsx"
 PDF_HISTORY = ROOT / "data" / "pdf_history.json"
 COST_SHARING = ROOT / "data" / "cost_sharing.csv"
@@ -559,6 +563,54 @@ def load_medicare():
     return mc
 
 
+# BHP participants, in the fixed top-to-bottom display order used by the KPI row and
+# the state-share strip. Only DC, MN, NY, OR participate (see CLAUDE.md). Colours and
+# layout live in template.html; every volatile FIGURE below is computed here so a
+# monthly workbook drop needs no hand-editing of the markup.
+BHP_STATE_ORDER = ['New York', 'Minnesota', 'Oregon', 'District of Columbia']
+
+
+def _bhp_range(vals, labels):
+    """Per-state chart-card subtitle: 'Reported Jan – Aug 2026', or
+    'Reported Jan 2026 only' when a state has a single reported month."""
+    idx = [i for i, v in enumerate(vals) if v is not None]
+    first, last = labels[idx[0]], labels[idx[-1]]
+    return f"Reported {first} only" if first == last else f"Reported {first} &ndash; {last}"
+
+
+def _bhp_coverage(byState, nat_month_long, n_states):
+    """Generate the coverage-caveat sentence (HTML) from each state's reported range,
+    grouping states that report through the same month. Self-updating: no month or
+    state name is hand-written in the template."""
+    def bold(name):
+        return f'<b style="color:#5A4A1A">{name}</b>'
+
+    multi, single = [], []
+    for name in BHP_STATE_ORDER:
+        d = byState[name]
+        (single if d['nMonths'] == 1 else multi).append(name)
+
+    clauses = []
+    # multi-month states grouped by their last reported month, most recent first
+    groups = {}
+    for name in multi:
+        groups.setdefault(byState[name]['last'], []).append(name)
+    for last in sorted(groups, key=lambda l: byState[groups[l][0]]['lastIdx'], reverse=True):
+        names = groups[last]
+        joined = names[0] if len(names) == 1 else ' and '.join(
+            [', '.join(bold(n) for n in names[:-1]), bold(names[-1])] if len(names) > 2
+            else [bold(n) for n in names])
+        if len(names) == 1:
+            joined = bold(names[0])
+        verb = 'report' if len(names) > 1 else 'reports'
+        clauses.append(f'{joined} {verb} through {last}')
+    for name in single:
+        clauses.append(f'{bold(name)} has reported {byState[name]["last"]} only')
+
+    return (f'Reporting coverage varies. {"; ".join(clauses)}. National total reflects '
+            f'{nat_month_long}, the most recent month all {n_states} states report.')
+
+
 def load_bhp(xl):
     df = pd.read_excel(xl, sheet_name="BHP")
     df['State'] = df['State'].astype(str).map(normalize_dc)
@@ -567,11 +619,56 @@ def load_bhp(xl):
 
     months = sorted(df['P'].unique())
     labels = [pd.Timestamp(m).strftime('%b %Y') for m in months]
+    labels_long = [pd.Timestamp(m).strftime('%B %Y') for m in months]
     series = {}
     for name, group in df[df['State'] != 'United States'].groupby('State'):
         g = group.set_index('P')
         series[name] = [to_int(g.loc[m, 'v']) if m in g.index else None for m in months]
-    return labels, series
+
+    participants = [s for s in BHP_STATE_ORDER if s in series]
+    if set(participants) != set(series):
+        sys.exit(f"ERROR: BHP sheet has unexpected states {sorted(set(series) - set(participants))}; "
+                 "add them to BHP_STATE_ORDER (with colours in template.html) before building")
+
+    # National figure = the most recent month in which EVERY participant reports (DC,
+    # which reports only January, caps this today). Different measures otherwise.
+    nat_idx = [i for i in range(len(months))
+               if all(series[s][i] is not None for s in participants)]
+    if not nat_idx:
+        sys.exit("ERROR: no BHP month has all participating states reporting; national total undefined")
+    ni = nat_idx[-1]
+    nat_total = sum(series[s][ni] for s in participants)
+
+    # Cross-check against the workbook's own United States row when it is populated.
+    us = df[df['State'] == 'United States'].set_index('P')['v']
+    us_val = to_int(us.get(months[ni])) if months[ni] in us.index else None
+    if us_val is not None and us_val != nat_total:
+        sys.exit(f"ERROR: BHP United States row {us_val:,} != sum of states {nat_total:,} "
+                 f"for {labels[ni]}")
+
+    byState = {}
+    for name in participants:
+        vals = series[name]
+        idx = [i for i, v in enumerate(vals) if v is not None]
+        byState[name] = {
+            'val': vals[ni],
+            'pct': vals[ni] / nat_total * 100,
+            'range': _bhp_range(vals, labels),
+            'first': labels[idx[0]], 'last': labels[idx[-1]], 'lastIdx': idx[-1],
+            'nMonths': len(idx),
+        }
+    top = max(participants, key=lambda s: byState[s]['val'])
+
+    kpi = {
+        'natTotal': nat_total,
+        'natMonth': labels[ni],
+        'natMonthLong': labels_long[ni],
+        'nStates': len(participants),
+        'byState': byState,
+        'top': {'name': top, 'pct': byState[top]['pct']},
+        'coverage': _bhp_coverage(byState, labels_long[ni], len(participants)),
+    }
+    return labels, series, kpi
 
 
 def load_esi_acs():
@@ -718,6 +815,26 @@ def state_pills(prefix, fn, names):
     return '\n      '.join(out)
 
 
+def update_readme_coverage(rows):
+    """Splice an auto-generated coverage table into README.md between the COVERAGE
+    markers, so the published date ranges track the data instead of drifting by hand.
+    No-op if README.md or the markers are absent (build never fails on this)."""
+    if not README.exists():
+        return
+    text = README.read_text()
+    if COVERAGE_START not in text or COVERAGE_END not in text:
+        return
+    table = ["| Domain | Source | Coverage |", "|---|---|---|"]
+    table += [f"| {d} | {s} | {c} |" for d, s, c in rows]
+    block = (f"{COVERAGE_START}\n"
+             "<!-- auto-generated by build_dashboard.py — do not edit by hand -->\n\n"
+             + "\n".join(table) + f"\n\n{COVERAGE_END}")
+    new = re.sub(re.escape(COVERAGE_START) + ".*?" + re.escape(COVERAGE_END),
+                 lambda _: block, text, flags=re.S)
+    if new != text:
+        README.write_text(new)
+
+
 def main():
     if not WORKBOOK.exists():
         sys.exit(f"ERROR: workbook not found at {WORKBOOK}")
@@ -734,7 +851,7 @@ def main():
     mkt_oep, mkt_nat, post_labels, post_series = load_marketplace(xl)
     yoy = load_effectuated(xl)
     cost_sharing = load_cost_sharing()
-    bhp_labels, bhp_series = load_bhp(xl)
+    bhp_labels, bhp_series, bhp_kpi = load_bhp(xl)
     medicare = load_medicare()
     esi_acs, esi_acs_year = load_esi_acs()
     esi_cps = load_esi_cps()
@@ -778,6 +895,13 @@ def main():
         '__CS_YEAR__': compact(CS_BENEFIT_YEAR),
         '__BHP_LABELS__': compact(bhp_labels),
         '__BHP_SERIES__': compact(bhp_series),
+        '__BHP_NAT_TOTAL__': f"{bhp_kpi['natTotal']:,}",
+        '__BHP_NAT_MONTH__': bhp_kpi['natMonth'],
+        '__BHP_NAT_MONTH_LONG__': bhp_kpi['natMonthLong'],
+        '__BHP_N_STATES__': str(bhp_kpi['nStates']),
+        '__BHP_COVERAGE__': bhp_kpi['coverage'],
+        '__BHP_TOP_STATE__': bhp_kpi['top']['name'],
+        '__BHP_TOP_PCT__': f"{bhp_kpi['top']['pct']:.1f}",
         '__MEDICARE__': compact(medicare),
         'ESI_PILLS': state_pills('esi', 'selectEsiState', esi_acs_states),
         '__ESI_ACS__': compact(esi_acs),
@@ -788,6 +912,13 @@ def main():
         '__ESI_KFF__': compact(esi_kff),
     }
 
+    for st, sid in (('New York', 'NY'), ('Minnesota', 'MN'),
+                    ('Oregon', 'OR'), ('District of Columbia', 'DC')):
+        d = bhp_kpi['byState'][st]
+        replacements[f'__BHP_{sid}_VAL__'] = f"{d['val']:,}"
+        replacements[f'__BHP_{sid}_PCT__'] = f"{d['pct']:.1f}"
+        replacements[f'__BHP_{sid}_RANGE__'] = d['range']
+
     html = TEMPLATE.read_text()
     for placeholder, value in replacements.items():
         html = html.replace(placeholder, value)
@@ -797,6 +928,25 @@ def main():
         sys.exit(f"ERROR: unsubstituted placeholders: {leftover}")
 
     OUTPUT.write_text(html)
+
+    update_readme_coverage([
+        ("Medicaid", "CMS Medicaid &amp; CHIP Enrollment Snapshot",
+         f"{labels[0]} – {labels[-1]}"),
+        ("CHIP &amp; Medicaid Child", "CMS Medicaid &amp; CHIP Enrollment Snapshot",
+         f"{chip_labels[0]} – {chip_labels[-1]}"),
+        ("National renewal outcome mix", "CMS snapshot PDF (Mar–Nov 2025) + workbook",
+         f"{mix['natLabels'][0]} – {mix['natLabels'][-1]}"),
+        ("BHP", "CMS Basic Health Program",
+         f"{bhp_labels[0]} – {bhp_labels[-1]} (national total: {bhp_kpi['natMonth']})"),
+        ("ACA Marketplace", "CMS Marketplace OEP snapshot + effectuated enrollment",
+         f"OEP 2026 + effectuated through {post_labels[-1]} 2026"),
+        ("Medicare", "CMS Medicare Monthly Enrollment",
+         f"{medicare['labels'][0]} – {medicare['labels'][-1]}"),
+        ("ACA cost sharing", "CMS Exchange PUFs (Plan Attributes; Benefits &amp; Cost-Sharing)",
+         f"{CS_BENEFIT_YEAR} benefit year"),
+        ("Employer coverage (ESI)", "Census ACS/CPS · AHRQ MEPS-IC · KFF EHBS",
+         f"ACS {esi_acs_year} · MEPS-IC {esi_meps_year}"),
+    ])
 
     print(f"Built {OUTPUT.name}  ({len(html) // 1024} KB)")
     print(f"  Medicaid    {labels[0]} - {labels[-1]}  ({len(mc_states)} states)")
