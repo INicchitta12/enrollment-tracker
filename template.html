@@ -707,7 +707,7 @@ const PEAK_LABEL    = __PEAK_LABEL__;
 // for a single month and dropped from later editions (resolved), so a standing
 // warning would misread; it stays documented in the register.
 const MCAID_CAVEATS = {
-  'Nevada':'<b style="color:#5A4A1A">Nevada</b>’s <b style="color:#5A4A1A">March 2026</b> total is overstated by roughly <b style="color:#5A4A1A">12,000</b> — a CMS reporting error inflated child enrollment (adult enrollment is unaffected), to be corrected in a future CMS release. Its March→April change is therefore understated.',
+  'Nevada':'<b style="color:#5A4A1A">Nevada</b>’s <b style="color:#5A4A1A">March 2026</b> adult/child split is distorted — a CMS reporting error overstated child enrollment by roughly <b style="color:#5A4A1A">12,000</b>, understating <b style="color:#5A4A1A">adult</b> enrollment by about the same amount. Its <b style="color:#5A4A1A">total</b> Medicaid enrollment is unaffected (CMS published a −0.3% March change, in line with neighbouring months); only the March adult figure and its March→April adult change are affected. To be corrected in a future CMS release.',
   'Georgia':'<b style="color:#5A4A1A">Georgia</b> reports beneficiaries granted a new 12-month eligibility period after a change in circumstances <b style="color:#5A4A1A">together with</b> those due for renewal, which inflates its renewals-due count — so Georgia’s renewal-outcome mix is not directly comparable to other states’. (CMS Data Notes; ongoing.)',
   'North Carolina':'<b style="color:#5A4A1A">North Carolina</b> reports renewal outcomes only for renewals it initiated and scheduled to complete in the report month, excluding renewals due it could not initiate in time — so its renewals-due count runs low relative to other states. (CMS Data Notes; ongoing.)',
 };
@@ -954,8 +954,9 @@ function selectMcaidState(state){
   setBar('mk-bar-inelig', d.ineligible/d.disenrolled*100,d.ineligible.toLocaleString(),'mk-pct-inelig');
 
   // Per-state Medicaid caveats from the CMS "Data Notes" appendix
-  // (see data/cms_data_notes.md). Nevada affects an enrollment total; Georgia
-  // and North Carolina affect the comparability of the renewal-outcome mix.
+  // (see data/cms_data_notes.md). Nevada affects the adult/child split, not the
+  // total; Georgia and North Carolina affect the comparability of the
+  // renewal-outcome mix.
   // A state can carry both a CMS data caveat and the work-requirement watch flag
   // (e.g. North Carolina); stack each on its own row with a distinct marker —
   // ⚠ amber for the data caveat, ⚑ blue for the policy watch flag.
@@ -1075,7 +1076,7 @@ const CHIP_CAVEATS={
   // Nevada's caveat is about the DERIVED Medicaid child series now shown here, not
   // CHIP itself (extends the Nevada note on the Medicaid tab). Left as reported —
   // CMS corrects it upstream.
-  'Nevada':'has its <b style="color:#5A4A1A">March 2026</b> Medicaid child enrollment (the derived series) overstated by roughly <b style="color:#5A4A1A">12,000</b> — a CMS reporting error inflated child enrollment, to be corrected in a future CMS release. Its total CHIP enrollment is unaffected, and its March→April change in the derived series is therefore understated.'
+  'Nevada':'has its <b style="color:#5A4A1A">March 2026</b> Medicaid child enrollment (the derived series) overstated by roughly <b style="color:#5A4A1A">12,000</b> — a CMS reporting error, offset by an equal understatement of Medicaid adult, so its <b style="color:#5A4A1A">total</b> Medicaid enrollment is unaffected. Its total CHIP enrollment is unaffected too, and its March→April change in the derived series is overstated as a decline. CMS dropped this note from the May 2026 edition, but the correction has not yet reached the data — left as reported.'
 };
 
 function chipVal(state,p){ return state ? ((CHIP_STATES[state]||{})[p] ?? null) : (CHIP_NAT[p] ?? null); }

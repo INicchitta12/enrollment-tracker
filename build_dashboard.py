@@ -69,10 +69,16 @@ CHIP_PEAK_LABEL = "Mar 2023"
 CHIP_TOTAL_COL = "Total CHIP Enrollment"
 CHIP_MCCHILD_BOTH_COL = "Medicaid and CHIP Child Enrollment"
 # National derived Medicaid-child control totals from the CMS PDF state tables.
-# April is checked exactly; older months are revised over time (the workbook is
-# the authoritative later vintage — e.g. New Hampshire's March CHIP resubmission),
-# so a small delta from the point-in-time PDF is expected, not an error.
-CHIP_CHILD_CONTROL = {"2026-04": 28_235_643, "2026-03": 28_358_130}
+# The recent months are checked exactly; older months are revised over time (the
+# workbook is the authoritative later vintage — e.g. New Hampshire's March CHIP
+# resubmission), so a small delta from the point-in-time PDF is expected, not an
+# error.
+CHIP_CHILD_CONTROL = {"2026-05": 28_080_687, "2026-04": 28_235_643,
+                      "2026-03": 28_358_130}
+# Months checked as hard failures: those whose workbook vintage still matches the
+# CMS PDF exactly. Older months drift as states resubmit (March carries New
+# Hampshire's CHIP revision), so they only emit a note.
+CHIP_CHILD_CONTROL_STRICT = {"2026-05", "2026-04"}
 # Arizona did not report the Medicaid adult/child breakout from Feb 2020 through
 # Apr 2024, so its Mar 2023 peak child figure is unreal (Total CHIP > combined
 # child ⇒ negative). Its per-state child peak comparison is suppressed, and the
@@ -364,7 +370,7 @@ def load_chip_child(xl):
         got = national.get(p)
         if got is None or got == ctrl:
             continue
-        if p == "2026-04":
+        if p in CHIP_CHILD_CONTROL_STRICT:
             sys.exit(f"ERROR: derived Medicaid child national {p} = {got} "
                      f"!= CMS control {ctrl}")
         print(f"  note: derived Medicaid child national {p} = {got:,} vs "
