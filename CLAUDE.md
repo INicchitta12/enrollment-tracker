@@ -12,7 +12,7 @@ consolidated and deduplicated across editions. **Consult it before you:**
 
 - **add or refresh any data** — check whether the new month or state carries a known caveat;
 - **investigate an anomaly** — an implausible jump is often a documented CMS reporting issue, not
-  a real change or a bug (see the April 2026 watch items below for the pattern);
+  a real change or a bug (see the watch items below for the pattern);
 - **change how a metric is calculated** — a caveat may explain, or be undone by, the change.
 
 **Any state flagged as an active caveat there must have its caveat surfaced on the dashboard when
@@ -61,7 +61,7 @@ ACA cost-sharing section below). The monthly rebuild leaves it untouched.
 |---|---|
 | `Mcaid` | One row per state per month, plus a `United States` row |
 | `Mcaid Peak Baseline` | **Different layout** — 3 columns (`State`, `Reporting Period`, `Total Medicaid Enrollment`), one row per state + `United States`, all dated Mar 2023. Total enrollment only: no adult, no renewal fields. Reference point for the peak strip; never a series. |
-| `CHIP` | 5 columns (`State`, `Reporting Period`, `Total CHIP Enrollment`, `Medicaid Child Enrollment`, `Medicaid and CHIP Child Enrollment`), one row per state per month + a `United States` row. Currently Dec 2025–Apr 2026, 51 states + US. **CHIP is a separate population, not a Medicaid subset** (see below). The dashboard **derives** Medicaid child from `Medicaid and CHIP Child` − `Total CHIP`; the sheet's own `Medicaid Child Enrollment` column is a cross-check only (see the Medicaid-child section). No adult or renewal fields. |
+| `CHIP` | 5 columns (`State`, `Reporting Period`, `Total CHIP Enrollment`, `Medicaid Child Enrollment`, `Medicaid and CHIP Child Enrollment`), one row per state per month + a `United States` row. Currently Dec 2025–May 2026, 51 states + US. **CHIP is a separate population, not a Medicaid subset** (see below). The dashboard **derives** Medicaid child from `Medicaid and CHIP Child` − `Total CHIP`; the sheet's own `Medicaid Child Enrollment` column is a cross-check only (see the Medicaid-child section). No adult or renewal fields. |
 | `CHIP Peak Baseline` | Same 5-column layout as `CHIP`, one row per state + `United States`, all dated Mar 2023. Reference point for the CHIP and Medicaid-child peak strips; never a series. In this sheet Arizona's `Medicaid and CHIP Child` is `0` (breakout not reported in its Feb 2020–Apr 2024 window), so its derived child peak is negative and suppressed (see below). |
 | `BHP` | Only DC, MN, NY, OR participate |
 | `Marketplace` | **Superseded — do not read.** Kept for reference only |
@@ -116,13 +116,22 @@ California enrollment was 10,715,787 — shown unchanged. The restatement touche
 only; no renewal field is altered. The national row is the exact sum of states, so national
 enrollment is re-derived from state totals after the restatement rather than adjusted separately,
 and the sum-of-states identity is checked before it is applied. A visible note on the Medicaid tab
-discloses this to viewers. Because March and April are both left as reported, the raw March→April
-change (−138,192) flows through untouched — steeper than the ~−107,000 pre-revision trend but far
-from the −491,182 one-time March reclassification drop, so the level-shift interpretation holds
-and the constants are unchanged.
+discloses this to viewers. Because March onward is left as reported, the raw post-revision changes flow
+through untouched: March→April −138,192 and April→May −71,676 — both far from the −491,182
+one-time March reclassification drop, so the level-shift interpretation holds and the constants
+are unchanged.
+
+*Corroborated by the May 2026 data.* With two full post-revision months in hand, California's
+average monthly change on the revised basis is **−104,934 total / −76,044 adult** (Apr–May),
+against the **−106,996 / −78,132** pre-revision Dec–Feb trend used as the counterfactual for
+March — a gap of just **1.9% / 2.7%**. The trend either side of the March cliff is effectively
+the same, which is exactly what a one-time level shift predicts and what a second, undisclosed
+exclusion would not. May's −71,676 is the *smallest* monthly decline in the series, not another
+drop. The May 2026 edition also repeats the California data note **verbatim**, still stating the
+state has not revised prior months — so no restatement has occurred and the adjustment stays.
 
 *Why March, not November?* CMS's Dec 2025–Feb 2026 editions dated this revision to November 2025,
-then the Mar–Apr editions restated it to March 2026 (see `data/cms_data_notes.md`). The workbook
+then the Mar–May editions restated it to March 2026 (see `data/cms_data_notes.md`). The workbook
 data settle it: California runs a smooth trend Dec→Feb (−103,503, −110,489) and then a single
 −491,182 cliff at Feb→March — there is **no level break in the Dec/Jan/Feb figures**, so the
 exclusion landed in the March data and those earlier months are fully on the old include-basis.
@@ -136,18 +145,68 @@ typo (confirmed against all three CMS control totals: 66,725,217 total, 38,489,5
 `United States` rows were preserved — a full openpyxl round-trip drops those caches and
 breaks the national rows. If a future drop repeats the typo, re-check the year before building.
 
-**Nevada's March 2026 total is overstated by ~12,000.** CMS acknowledges a reporting error
-that inflated Nevada's March *child* enrollment (adult enrollment is unaffected), to be
-corrected in a future CMS release. Do **not** adjust the figure — CMS corrects it upstream.
-The Medicaid tab surfaces a caveat when Nevada is selected, noting the March total is
-overstated and its March→April change is therefore understated.
+**Nevada's March 2026 adult/child split is distorted by ~12,000 — the total is not.** CMS's
+April 2026 note says Nevada's March *child* enrollment was overstated by approximately 12,000
+due to a reporting error. It says nothing about the total, and the data show why: the child
+overstatement is **offset by an almost equal understatement of Medicaid adult**, so Nevada's
+March *total* is unaffected. In the workbook, March moves child **+11,447** and adult
+**−13,183**, while the total moves only **−1,736** — squarely in family with its neighbours
+(−576, −2,531); April reverses it (child −12,482, adult +9,951). CMS's own March 2026 edition
+published Nevada's March total at **−0.3%**, confirming the total was never disturbed. Do
+**not** adjust the figures — CMS corrects them upstream. The Medicaid tab surfaces the caveat
+against the **adult** figure and the CHIP tab against the **derived child** figure; neither
+claims the total is wrong.
 
-**April 2026 watch items (not CMS-flagged, left as reported).** Two states show implausible
-month-over-month movement that may be genuine or a reporting artifact; documented here rather
-than silently presented. *Idaho:* renewal rate jumps 73.5%→97.5% while procedural
-disenrollments collapse from 4,348 (19.6%) to 13 (0.1%) of 24,149 due. *Alabama:* renewals
-due more than double (94,392→201,219) while ex parte falls 41.7%→20.6%. Re-check both against
-the next CMS release.
+⚠️ *Earlier editions of this file and of the dashboard caveat described the March **total** as
+overstated by 12,000. That was a mis-transcription of the CMS note and is corrected above.*
+
+**The May 2026 edition dropped the Nevada note, but the data are not yet corrected.** The May
+Data Notes appendix no longer carries it, yet the May state tables report **May only** (no March
+column), and every Dec 2025–Apr 2026 cell in the workbook is unchanged from the April vintage —
+the March spike and its April reversal are both still present. The register's usual "a caveat
+that stops being repeated is resolved" heuristic is therefore **overridden here by direct
+inspection**: the caveat stays on both tabs until a March revision actually lands in the data.
+Re-check on the next drop.
+
+**Watch items (not CMS-flagged, left as reported).** States showing month-over-month movement
+implausible enough to suggest a reporting artifact rather than a real shift; documented here
+rather than silently presented. Nothing is adjusted.
+
+*Idaho — resolved as a recurring artifact, still watch.* The April reading (renewed 97.5%,
+procedural 13 of 24,149 due = 0.1%) **fully reverted in May**: renewed 65.3%, procedural 6,039
+(25.3%), ex parte 46.3% — back in family with Dec/Jan/Mar (66.4/69.7/73.5% renewed, 25.6/21.6/
+19.6% procedural). Note the shape: **February and April are both anomalous in the same
+direction** (renewed ≥95%, procedural ≈0) while Dec, Jan, Mar and May are normal. That
+alternating pattern points to a periodic reporting/timing artifact in Idaho's submission, not a
+policy change. Treat any future near-zero Idaho procedural month as suspect.
+
+*Alabama — cohort spike explained; a residual shift is not.* The April doubling of renewals due
+(94,392→201,219) is **mechanical**: Alabama's `Renewal Due` equals its `Renewal Initiated` two
+months earlier in every month of the series, so April's cohort is February's unusually large
+initiation. May reverts to 101,259 (= March's initiation), as predicted. But the outcome mix has
+**not** fully reverted: procedural disenrollment ran 9.2 / 7.6 / 6.1 / 5.6% Dec–Mar, then
+**12.7%** in April and **17.2%** in May — roughly triple the pre-April level and the highest in
+the series — while ex parte (36.4%) is still below its 41.7–42.9% Dec–Mar band. The cohort-size
+story does not explain that. Re-check on the next drop.
+
+*Alaska — new in May 2026.* Renewals due jump **17,318→30,712 (+77%)** and completion
+deteriorates sharply: renewed **44.5%→27.4%** (the lowest of any state in May), form-based
+renewals 17.2%→9.5%, procedural 24.5%→31.3%, and pending 20.6%→**33.7%** — a third of the
+cohort unresolved at month end. Alaska is one of the states whose `due` does **not** track a
+lagged `initiated`, so this is not a clean cohort effect. Consistent with a state overwhelmed by
+an enlarged cohort, but a reporting change cannot be ruled out. **Highest-priority re-check.**
+
+*Benign cohort swings (no action).* Montana (due −62%), Hawaii (+50%) and Kentucky (−41%) all
+moved sharply in May, but each tracks its own lagged `initiated` cohort and their outcome mixes
+stayed stable — mechanical, not a reporting change.
+
+*Structural note — `due` is a lagged `initiated`.* In **19 states** the `Beneficiaries with a
+Renewal Due` figure equals that state's `Beneficiaries with a Renewal Initiated` from a fixed
+number of months earlier (1, 2 or 3, state-specific) in **every** month of the series — Alabama
+and Kentucky lag 2 and 1 respectively. This is consistent with CMS's cohort reporting (outcomes
+are reported in the month the cohort is due) and means large swings in `renewals due` are often
+propagated cohort sizes rather than reporting errors. Check this before flagging a due-count
+spike.
 
 **BHP reporting coverage is uneven** — states report through different months. Charts plot
 only each state's reported range. NY's figure is Essential Plan Expansion under a 1332
@@ -219,12 +278,12 @@ Every chart routes through `makeChart`; value axes use `axisFmt`.
 
 **CHIP is a separate population, not a Medicaid subset.** It covers Medicaid-expansion CHIP,
 separate CHIP, and pregnant adults in separate CHIP. Medicaid and CHIP enrollment therefore
-add together rather than overlap: for April 2026, Medicaid (66,725,217, the raw workbook US
-total) + CHIP (7,145,807) = 73,871,024. `load_chip()` verifies the `United States` row equals
+add together rather than overlap: for May 2026, Medicaid (66,388,522, the raw workbook US
+total) + CHIP (7,137,750) = 73,526,272 — matching the combined total CMS publishes. `load_chip()` verifies the `United States` row equals
 the exact sum of states in every period; if that identity fails, a state is missing or
 something is double-counted — stop and investigate rather than building. National CHIP control
 totals (summed across states): Dec 2025 7,243,961; Jan 2026 7,241,058; Feb 2026 7,227,658;
-Mar 2026 7,213,381; Apr 2026 7,145,807.
+Mar 2026 7,213,381; Apr 2026 7,145,807; May 2026 7,137,750.
 
 **The March total has two acceptable vintages.** The CMS PDF published 7,213,496, but New
 Hampshire was subsequently revised from 19,058 to 18,943, giving 7,213,381. The current
@@ -300,11 +359,13 @@ baseline (below).
 
 **National control totals (derived Medicaid child), validated in `load_chip_child()`:** the
 national row must equal the exact sum of reported states each month, and is checked against the
-CMS PDF state tables — **April 2026 = 28,235,643 (hard assert)**. March 2026 derives to
-**28,357,494** on the workbook's revised-NH vintage, **636 below the PDF's 28,358,130**; per the
-"two acceptable vintages"/CSV-authoritative rule above this is expected, so the build emits a
-note rather than failing. Any *other* control mismatch — especially on April — means stop and
-investigate.
+CMS PDF state tables — **May 2026 = 28,080,687** and **April 2026 = 28,235,643**, both
+**hard asserts** (`CHIP_CHILD_CONTROL_STRICT`). March 2026 derives to **28,357,494** on the
+workbook's revised-NH vintage, **636 below the PDF's 28,358,130**; per the "two acceptable
+vintages"/CSV-authoritative rule above this is expected, so the build emits a note rather than
+failing. Any *other* control mismatch — especially on the two strict months — means stop and
+investigate. When a new month lands, add it to `CHIP_CHILD_CONTROL` and to the strict set, and
+drop the oldest month out of the strict set once it starts drifting from resubmissions.
 
 **Arizona — the child peak is suppressed.** CMS states Arizona did not report the Medicaid
 adult/child breakout from **Feb 2020 through Apr 2024**, and national child totals before May
@@ -326,10 +387,14 @@ Handling:
   concerns the derived child series only.
 
 **Nevada — March 2026 child overstated.** CMS acknowledges a reporting error that overstated
-Nevada's March 2026 Medicaid *child* enrollment by roughly **12,000**, to be corrected upstream
-in a future release. **Do not adjust it** — CMS corrects it. Because the CHIP tab now shows the
-derived child series, the existing Nevada caveat is **extended to this tab** (added to
-`CHIP_CAVEATS`) and surfaces when Nevada is selected; its Total CHIP enrollment is unaffected.
+Nevada's March 2026 Medicaid *child* enrollment by roughly **12,000**, offset by an equal
+understatement of Medicaid adult (so its March **total** is unaffected — see the Medicaid-tab
+section). **Do not adjust it** — CMS corrects it upstream. Because the CHIP tab shows the
+derived child series, the Nevada caveat is **carried on this tab too** (`CHIP_CAVEATS`) and
+surfaces when Nevada is selected; its Total CHIP enrollment is unaffected. The March→April
+change in the derived child series is **overstated as a decline** (−12,482 against a ~−1,900
+trend). **The May 2026 CMS edition dropped this note without the data being corrected** — the
+caveat stays until a revised March actually lands (see the Medicaid-tab section).
 
 ## Medicare (its own tab)
 
