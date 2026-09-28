@@ -88,6 +88,11 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .peak-bar-fill{height:100%;background:linear-gradient(90deg,#2E6BB0,var(--mcaid));border-radius:3px 0 0 3px;transition:width .4s ease;}
 .peak-note{flex-shrink:0;width:158px;font-size:8.5px;line-height:1.3;color:#7A5A2A;font-style:italic;}
 .peak-note:empty{display:none;}
+/* Secondary "excl. Illinois, both endpoints" figure beside an as-reported value */
+.xil{font-size:8.5px;font-weight:600;color:#7A5A2A;text-transform:none;letter-spacing:0;font-family:inherit;}
+.xil:empty{display:none;}
+.peak-bartop .xil{margin-left:7px;}
+.cum-sub.xil{margin-top:2px;}
 .chip-panel .peak-strip{border-left-color:var(--chip);}
 .chip-panel .peak-hd{color:var(--chip);}
 .chip-panel .peak-bartop b{color:var(--chip);}
@@ -282,6 +287,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       <div class="col-stack">
       <div class="bars-panel" style="flex:1.75">
         <div class="bars-hd" id="mk-hd-outcomes" style="color:var(--mcaid)">Renewal Outcomes <span></span></div>
+        <div class="sub-note" id="mk-outcome-vintage" title="CMS publishes updated renewal outcomes quarterly (outcomes three months after the renewal was due, which resolve most pending renewals). Those updates are not reflected here.">Initial outcomes, as originally reported &middot; CMS&rsquo;s quarterly updated outcomes are not reflected</div>
         <div class="bar-row"><div class="bar-name">Renewed</div><div class="bar-track"><div class="bar-fill" id="mk-bar-renewed" style="width:0;background:linear-gradient(90deg,#0F6B35,#27AE60)"><span class="bar-count"></span></div></div><div class="bar-pct" id="mk-pct-renewed"></div></div>
         <div class="bar-row"><div class="bar-name">Disenrolled</div><div class="bar-track"><div class="bar-fill" id="mk-bar-disen" style="width:0;background:linear-gradient(90deg,#8B1A30,#C0392B)"><span class="bar-count"></span></div></div><div class="bar-pct" id="mk-pct-disen"></div></div>
         <div class="bar-row"><div class="bar-name">Pending</div><div class="bar-track"><div class="bar-fill" id="mk-bar-pend" style="width:0;background:linear-gradient(90deg,#3A4A62,#6B7EA8)"><span class="bar-count"></span></div></div><div class="bar-pct" id="mk-pct-pend"></div></div>
@@ -342,7 +348,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div><div class="peak-lbl">Change %</div><div class="peak-val" id="cp-peak-pct">&mdash;</div></div>
       </div>
       <div class="peak-barwrap">
-        <div class="peak-bartop"><span>Current as share of peak</span><b id="cp-peak-share">&mdash;</b></div>
+        <div class="peak-bartop"><span>Current as share of peak</span><span><b id="cp-peak-share">&mdash;</b><span class="xil" id="cp-peak-share-xil"></span></span></div>
         <div class="peak-bar-track"><div class="peak-bar-fill" id="cp-peak-bar" style="width:0"></div></div>
       </div>
       <div class="peak-note" id="cp-peak-note"></div>
@@ -369,13 +375,13 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div class="cum-strip">
           <div class="cum-cell"><div class="cum-lbl">Net Enrollment Change</div><div class="cum-val" id="cp-cum-net">&mdash;</div><div class="cum-sub" id="cp-cum-net-sub">&mdash;</div></div>
           <div class="cum-cell"><div class="cum-lbl">Average Monthly Change</div><div class="cum-val" id="cp-cum-avg">&mdash;</div><div class="cum-sub" id="cp-cum-avg-sub">&mdash;</div></div>
-          <div class="cum-cell"><div class="cum-lbl">vs. March 2023 Peak</div><div class="cum-val" id="cp-cum-peak">&mdash;</div><div class="cum-sub" id="cp-cum-peak-sub">&mdash;</div></div>
+          <div class="cum-cell"><div class="cum-lbl">vs. March 2023 Peak</div><div class="cum-val" id="cp-cum-peak">&mdash;</div><div class="cum-sub" id="cp-cum-peak-sub">&mdash;</div><div class="cum-sub xil" id="cp-cum-peak-xil"></div></div>
         </div>
       </div>
       <div>
         <div class="cum-hd" id="cp-cchild-hd" style="color:#0D1B3E;margin-top:0">Cumulative Impact &middot; Medicaid Child (derived) <span></span></div>
         <div class="cum-strip">
-          <div class="cum-cell"><div class="cum-lbl">Net Enrollment Change</div><div class="cum-val" id="cp-cchild-net">&mdash;</div><div class="cum-sub" id="cp-cchild-net-sub">&mdash;</div></div>
+          <div class="cum-cell"><div class="cum-lbl">Net Enrollment Change</div><div class="cum-val" id="cp-cchild-net">&mdash;</div><div class="cum-sub" id="cp-cchild-net-sub">&mdash;</div><div class="cum-sub xil" id="cp-cchild-net-xil"></div></div>
           <div class="cum-cell"><div class="cum-lbl">Average Monthly Change</div><div class="cum-val" id="cp-cchild-avg">&mdash;</div><div class="cum-sub" id="cp-cchild-avg-sub">&mdash;</div></div>
           <div class="cum-cell"><div class="cum-lbl">vs. March 2023 Peak</div><div class="cum-val" id="cp-cchild-peak">&mdash;</div><div class="cum-sub" id="cp-cchild-peak-sub">&mdash;</div></div>
         </div>
@@ -870,7 +876,7 @@ function renderMcaidTs(state){
 
 function renderMcaidRate(){
   document.getElementById('mk-chart-title').innerHTML='State Disenrollment <span>Rate at Renewal</span>';
-  document.getElementById('mk-chart-sub').textContent='Disenrolled \u00f7 renewals due \u00b7 top 12 states \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1];
+  document.getElementById('mk-chart-sub').textContent='Disenrolled \u00f7 renewals due \u00b7 top 12 states \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1]+' \u00b7 initial outcomes, as originally reported';
   makeChart('mcaidRateChart',{
     type:'bar',
     data:{labels:TOP12.labels,datasets:[{data:TOP12.rates,backgroundColor:'rgba(0,47,135,.65)',
@@ -886,7 +892,7 @@ function renderMcaidRate(){
 function renderMcaidCompare(state,d){
   const nat = MCAID_NAT[MCAID_LATEST];
   document.getElementById('mk-chart-title').innerHTML=state+' <span>vs. National Average</span>';
-  document.getElementById('mk-chart-sub').textContent='Key renewal metrics \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1];
+  document.getElementById('mk-chart-sub').textContent='Key renewal metrics \u00b7 '+MCAID_LABELS[MCAID_LABELS.length-1]+' \u00b7 initial outcomes, as originally reported';
   const sv=[+(d.disenrolled/d.due*100).toFixed(1),+(d.procedural/d.disenrolled*100).toFixed(1),+(d.due/d.enroll*100).toFixed(1)];
   const nv=[+(nat.disenrolled/nat.due*100).toFixed(1),+(nat.procedural/nat.disenrolled*100).toFixed(1),+(nat.due/nat.enroll*100).toFixed(1)];
   makeChart('mcaidRateChart',{
@@ -949,7 +955,7 @@ function selectMcaidState(state){
     pct(cP,cD)+' of all disenrollments', '#C2610C');
 
   document.getElementById('mk-hd-outcomes').innerHTML='Renewal Outcomes <span>of '+d.due.toLocaleString()+' renewals due \u00b7 '+lbl+'</span>';
-  document.getElementById('mk-hd-reason').innerHTML='Reason for Disenrollment <span>of '+d.disenrolled.toLocaleString()+' disenrolled</span>';
+  document.getElementById('mk-hd-reason').innerHTML='Reason for Disenrollment <span>of '+d.disenrolled.toLocaleString()+' disenrolled \u00b7 initial outcomes</span>';
   document.getElementById('mk-proc-note').innerHTML='\u21b3 Procedural disenrollments \u2014 coverage lost to paperwork failures, not ineligibility \u2014 account for <b>'+pct(d.procedural,d.disenrolled)+'</b> of all disenrollments';
 
   setBar('mk-bar-renewed',d.renewed/d.due*100,d.renewed.toLocaleString(),'mk-pct-renewed');
@@ -1049,10 +1055,10 @@ function renderMix(state){
   }
   if(state){
     t.innerHTML=state+' <span>\u00b7 Renewal Outcome Mix</span>';
-    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1];
+    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1]+' \u00b7 initial outcomes, as originally reported';
   } else {
     t.innerHTML='Renewal Outcome Mix <span>\u00b7 National Trend</span>';
-    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1];
+    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1]+' \u00b7 initial outcomes, as originally reported';
   }
   const short = labels.map(l=>l.replace(' 20',"\u2019"));
   makeChart('mcaidMixChart',{
@@ -1091,7 +1097,16 @@ const CHIP_CAVEATS={
 
 // National-view note (no state selected): Illinois' June 2026 reclassification
 // drives nearly all of the national June CHIP gain. Left as reported.
-const CHIP_NAT_NOTE='National <b style="color:#5A4A1A">June 2026</b> CHIP (+60,258) is driven almost entirely by an <b style="color:#5A4A1A">Illinois</b> reporting correction that moved an estimated ~58,000 Medicaid-expansion CHIP enrollees out of Medicaid child and into CHIP; excluding Illinois, CHIP rose 2,031. National CHIP’s June level against its Mar 2023 peak is inflated, and the June decline in derived Medicaid child is overstated, by that amount. Left as reported.';
+const CHIP_NAT_NOTE='National <b style="color:#5A4A1A">June 2026</b> CHIP (+60,258) is driven almost entirely by an <b style="color:#5A4A1A">Illinois</b> reporting correction that moved an estimated ~58,000 Medicaid-expansion CHIP enrollees out of Medicaid child and into CHIP; excluding Illinois, CHIP rose 2,031. Month-over-month changes spanning May→June are distorted by that amount; comparisons spanning the break are also shown excluding Illinois from both endpoints. Left as reported.';
+
+// Illinois reporting break (CMS Data Notes, Jun 2026 edition): Illinois had been
+// reporting Medicaid-expansion CHIP as Medicaid child and corrected it from June
+// 2026 without restating prior months. Any NATIONAL CHIP or derived-child
+// comparison whose endpoints straddle the break is therefore also shown excluding
+// Illinois from BOTH endpoints, as a labelled secondary figure beside the
+// as-reported (primary) one. Illinois stays in every as-reported figure.
+const IL_STATE='Illinois', IL_BREAK='2026-06', IL_XLBL='excl. Illinois (both endpoints)';
+const ilSpans=(fromKey,toKey)=>fromKey<IL_BREAK && toKey>=IL_BREAK;
 
 function chipVal(state,p){ return state ? ((CHIP_STATES[state]||{})[p] ?? null) : (CHIP_NAT[p] ?? null); }
 function chipSeries(state){ return CHIP_PERIODS.map(p=>chipVal(state,p)); }
@@ -1222,6 +1237,13 @@ function renderChipPeak(state,key){
   g('cp-peak-pct').style.color=chg<0?'var(--warn)':'var(--ok)';
   g('cp-peak-share').textContent=share.toFixed(1)+'% of peak';
   g('cp-peak-bar').style.width=Math.max(0,Math.min(100,share))+'%';
+  // National only: the same share with Illinois removed from both endpoints.
+  const xs=g('cp-peak-share-xil'), ilPk=CHIP_PEAK[IL_STATE], ilCur=chipVal(IL_STATE,key);
+  if(!state && ilSpans('2023-03',key) && ilPk!=null && ilCur!=null){
+    const xPk=peak-ilPk, xCur=cur-ilCur;
+    xs.textContent=(xCur/xPk*100).toFixed(1)+'% '+IL_XLBL;
+    xs.title='Excluding Illinois from both endpoints: '+xPk.toLocaleString()+' (Mar 2023) \u2192 '+xCur.toLocaleString()+' ('+CHIP_LABELS[CHIP_PERIODS.indexOf(key)]+'). Illinois reclassified Medicaid-expansion CHIP in June 2026 without restating prior months.';
+  } else { xs.textContent=''; xs.title=''; }
 }
 
 // Derived Medicaid-child peak strip — mimics renderChipPeak (the CHIP-total strip,
@@ -1277,7 +1299,7 @@ function fillCumStrip(hdId,prefix,label,valFn,state){
   const intervals=lastIdx-firstIdx, avg=intervals>0?Math.round(net/intervals):0;
   setCum(prefix+'avg',prefix+'avg-sub', sgn(avg)+Math.abs(avg).toLocaleString(),
     intervals>0?('per month · '+intervals+(intervals===1?' interval':' intervals')):'single month', avg<0?'var(--warn)':'var(--ok)');
-  return {lastIdx,lastVal};
+  return {firstIdx,firstVal,lastIdx,lastVal};
 }
 
 function selectChipState(state){
@@ -1335,7 +1357,16 @@ function selectChipState(state){
         sgn(pk)+Math.abs(pkPct).toFixed(1)+'% · '+sh.toFixed(1)+'% of peak', pk<0?'var(--warn)':'var(--ok)');
     } else setCum('cp-cum-peak','cp-cum-peak-sub','—','no peak baseline',null);
   }
+  const cumPkX=document.getElementById('cp-cum-peak-xil'); cumPkX.textContent='';
+  if(chipCum && !state && peak!=null){ const lk=CHIP_PERIODS[chipCum.lastIdx], ilPk=CHIP_PEAK[IL_STATE], ilCur=chipVal(IL_STATE,lk);
+    if(ilSpans('2023-03',lk) && ilPk!=null && ilCur!=null){ const xPk=peak-ilPk, xCur=chipCum.lastVal-ilCur, d=xCur-xPk;
+      cumPkX.textContent=IL_XLBL+': '+sgn(d)+Math.abs(d).toLocaleString()+' · '+(xCur/xPk*100).toFixed(1)+'% of peak'; } }
   const childCum=fillCumStrip('cp-cchild-hd','cp-cchild-','Cumulative Impact · Medicaid Child (derived)',chipChildVal,state);
+  const netX=document.getElementById('cp-cchild-net-xil'); netX.textContent='';
+  if(childCum && !state){ const fk=CHIP_PERIODS[childCum.firstIdx], lk=CHIP_PERIODS[childCum.lastIdx];
+    const ilF=chipChildVal(IL_STATE,fk), ilL=chipChildVal(IL_STATE,lk);
+    if(ilSpans(fk,lk) && ilF!=null && ilL!=null){ const xF=childCum.firstVal-ilF, xL=childCum.lastVal-ilL, d=xL-xF;
+      netX.textContent=IL_XLBL+': '+sgn(d)+Math.abs(d).toLocaleString()+' · '+sgn(d)+Math.abs(d/xF*100).toFixed(2)+'%'; } }
   if(childCum){
     const ep=childPeakEndpoints(state,CHIP_PERIODS[childCum.lastIdx]);
     if(ep.suppressed){ setCum('cp-cchild-peak','cp-cchild-peak-sub','—','suppressed for Arizona',null); }

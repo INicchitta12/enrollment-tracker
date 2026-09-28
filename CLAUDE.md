@@ -183,19 +183,31 @@ program as Medicaid child enrollment, instead of CHIP enrollment," corrected it 
 and Medicaid total falls −64,767 with adult *up* 3,456; combined Medicaid + CHIP falls only
 −6,540 (in family). An estimated **~58,000** enrollees moved program (Illinois' June CHIP gain
 against a flat prior trend — an estimate, not a CMS figure). Consequences: it accounts for
-essentially **all** of the national June CHIP gain (+60,258; ex-Illinois +2,031), lifts national
-CHIP to **100.5% of its Mar 2023 peak** (an artifact — 99.6% in May), and adds ~58,000 to the
-national June Medicaid decline (−419,141). **Not adjusted** (unlike California, CMS gives no
+essentially **all** of the national June CHIP gain (+60,258; ex-Illinois +2,031) and adds ~58,000
+to the national June Medicaid decline (−419,141). National CHIP reads **100.5% of its Mar 2023
+peak** as reported; excluding Illinois from both endpoints it is still **100.2%** (6,817,032 →
+6,831,623), so the national CHIP-above-peak reading is **not** an Illinois artifact — Illinois
+moves it only ~0.3pt. (Illinois' own Mar 2023 CHIP baseline, 346,416, is *above* its Dec–May
+levels, so the May as-reported 99.6% was, if anything, depressed by the misreporting.) **Not adjusted** (unlike California, CMS gives no
 magnitude and the move is between two programs the dashboard shows side by side). Surfaced on
 the Medicaid and CHIP tabs both when Illinois is selected (`MCAID_CAVEATS`, `CHIP_CAVEATS`) and on
 the **national** view (`MCAID_NAT_NOTE`, `CHIP_NAT_NOTE`). Any Illinois or national CHIP /
-Medicaid-child comparison spanning May→June 2026 is not like-for-like.
+Medicaid-child comparison spanning May→June 2026 is not like-for-like, so on the CHIP tab's
+**national** view every comparison whose endpoints straddle the break also shows, as a labelled
+secondary figure beside the as-reported (primary) value, the same figure **excluding Illinois from
+both endpoints** (`IL_BREAK`, `ilSpans()` in `template.html`): the CHIP peak strip's share of peak
+(100.5% as reported / 100.2% excl. IL), the CHIP Cumulative Impact "vs. Mar 2023 peak" cell, and
+the derived Medicaid-child net change since Dec 2025 (−950,189 / −3.30% as reported; −868,349 /
+−3.13% excl. IL). They appear only while the window spans June 2026 and never on a state view.
 
 **Quarterly updated renewal outcomes are not in the workbook.** Quarter-end editions (Mar, Jun)
 publish *Updated* renewal outcomes for the cohort three months back (June edition: Dec 2025–Feb
 2026 — e.g. Dec renewed 68% original → 74% updated, pending 11% → 4%). The workbook carries the
 **original** monthly figures only, and the dashboard's outcome mix is the original-report series
 throughout; don't splice updated values into it (they are a different, later-vintage measure).
+Every renewal-outcome display on the Medicaid tab is labelled **"initial outcomes, as originally
+reported"** (a note under the Renewal Outcomes header plus the Reason-for-Disenrollment header and
+the outcome-mix, state-rate and state-vs-national chart subtitles) — keep those labels.
 
 **Watch items (not CMS-flagged, left as reported).** States showing month-over-month movement
 implausible enough to suggest a reporting artifact rather than a real shift; documented here
