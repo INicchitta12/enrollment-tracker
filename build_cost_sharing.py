@@ -97,7 +97,7 @@ def load_base_plans(plan_attr_csv):
     Returns (rows, filter_report). Each row carries the join key (PlanId),
     state, folded metal tier, and coalesced individual deductible / OOP max.
     """
-    counts = dict(start=0, f1_dental=0, f2_exchange=0, f3_year=0, f4_csr=0, f5_metal=0)
+    counts = dict(start=0, f1_dental=0, f2_exchange=0, f2b_market=0, f3_year=0, f4_csr=0, f5_metal=0)
     folded = 0
     rows = []
     with open(plan_attr_csv, newline="", encoding="utf-8-sig", errors="replace") as f:
@@ -108,6 +108,12 @@ def load_base_plans(plan_attr_csv):
                 continue
             if r["QHPNonQHPTypeId"] not in ("Both", "On the Exchange"):  # on-exchange only
                 counts["f2_exchange"] += 1
+                continue
+            # Individual market only. The card describes individual-market cost
+            # sharing; SHOP (small-group) plans sit on the exchange too (158 base
+            # plans in AL, MT, NH, WI for 2026) and would otherwise leak in.
+            if r["MarketCoverage"] != "Individual":
+                counts["f2b_market"] += 1
                 continue
             if r["BusinessYear"] != BENEFIT_YEAR:                 # current benefit year
                 counts["f3_year"] += 1
@@ -204,6 +210,7 @@ def main():
         print(f"  start                         {counts['start']:6d}")
         print(f"  - dental-only excluded        {counts['f1_dental']:6d}")
         print(f"  - non-on-exchange excluded     {counts['f2_exchange']:6d}")
+        print(f"  - SHOP (small-group) excluded  {counts['f2b_market']:6d}")
         print(f"  - wrong benefit year excluded  {counts['f3_year']:6d}")
         print(f"  - CSR/off-exchange excluded   {counts['f4_csr']:6d}")
         print(f"  - metal level excluded         {counts['f5_metal']:6d}")
