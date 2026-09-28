@@ -61,7 +61,7 @@ ACA cost-sharing section below). The monthly rebuild leaves it untouched.
 |---|---|
 | `Mcaid` | One row per state per month, plus a `United States` row |
 | `Mcaid Peak Baseline` | **Different layout** — 3 columns (`State`, `Reporting Period`, `Total Medicaid Enrollment`), one row per state + `United States`, all dated Mar 2023. Total enrollment only: no adult, no renewal fields. Reference point for the peak strip; never a series. |
-| `CHIP` | 5 columns (`State`, `Reporting Period`, `Total CHIP Enrollment`, `Medicaid Child Enrollment`, `Medicaid and CHIP Child Enrollment`), one row per state per month + a `United States` row. Currently Dec 2025–May 2026, 51 states + US. **CHIP is a separate population, not a Medicaid subset** (see below). The dashboard **derives** Medicaid child from `Medicaid and CHIP Child` − `Total CHIP`; the sheet's own `Medicaid Child Enrollment` column is a cross-check only (see the Medicaid-child section). No adult or renewal fields. |
+| `CHIP` | 5 columns (`State`, `Reporting Period`, `Total CHIP Enrollment`, `Medicaid Child Enrollment`, `Medicaid and CHIP Child Enrollment`), one row per state per month + a `United States` row. Currently Dec 2025–Jun 2026, 51 states + US. **CHIP is a separate population, not a Medicaid subset** (see below). The dashboard **derives** Medicaid child from `Medicaid and CHIP Child` − `Total CHIP`; the sheet's own `Medicaid Child Enrollment` column is a cross-check only (see the Medicaid-child section). No adult or renewal fields. |
 | `CHIP Peak Baseline` | Same 5-column layout as `CHIP`, one row per state + `United States`, all dated Mar 2023. Reference point for the CHIP and Medicaid-child peak strips; never a series. In this sheet Arizona's `Medicaid and CHIP Child` is `0` (breakout not reported in its Feb 2020–Apr 2024 window), so its derived child peak is negative and suppressed (see below). |
 | `BHP` | Only DC, MN, NY, OR participate |
 | `Marketplace` | **Superseded — do not read.** Kept for reference only |
@@ -130,6 +130,11 @@ exclusion would not. May's −71,676 is the *smallest* monthly decline in the se
 drop. The May 2026 edition also repeats the California data note **verbatim**, still stating the
 state has not revised prior months — so no restatement has occurred and the adjustment stays.
 
+*Re-confirmed by the June 2026 data.* June moves **−109,209 total / −71,160 adult** — no second
+cliff. The Apr–Jun post-revision average is **−106,359 / −74,416**, within **0.6% / 4.8%** of the
+−106,996 / −78,132 pre-revision trend. The June 2026 edition repeats the California note verbatim
+(prior months still not revised). Constants unchanged.
+
 *Why March, not November?* CMS's Dec 2025–Feb 2026 editions dated this revision to November 2025,
 then the Mar–May editions restated it to March 2026 (see `data/cms_data_notes.md`). The workbook
 data settle it: California runs a smooth trend Dec→Feb (−103,503, −110,489) and then a single
@@ -166,13 +171,64 @@ column), and every Dec 2025–Apr 2026 cell in the workbook is unchanged from th
 the March spike and its April reversal are both still present. The register's usual "a caveat
 that stops being repeated is resolved" heuristic is therefore **overridden here by direct
 inspection**: the caveat stays on both tabs until a March revision actually lands in the data.
-Re-check on the next drop.
+*June 2026 re-check:* the June edition again carries no Nevada note, and every Nevada Dec–May
+cell is unchanged in the June workbook (March child +11,447 / adult −13,183 still present) — still
+uncorrected; the caveat stays. Re-check on the next drop.
+
+**Illinois reclassified Medicaid-expansion CHIP out of Medicaid child in June 2026.** New CMS
+data note (June 2026 edition): Illinois "had been incorrectly reporting its Medicaid expansion
+program as Medicaid child enrollment, instead of CHIP enrollment," corrected it for June 2026, and
+**did not revise prior months**. In the workbook, Illinois June CHIP rises **308,158 → 366,385
+(+58,227, +18.9%)** while derived Medicaid child falls **1,019,868 → 951,645 (−68,223, −6.7%)**
+and Medicaid total falls −64,767 with adult *up* 3,456; combined Medicaid + CHIP falls only
+−6,540 (in family). An estimated **~58,000** enrollees moved program (Illinois' June CHIP gain
+against a flat prior trend — an estimate, not a CMS figure). Consequences: it accounts for
+essentially **all** of the national June CHIP gain (+60,258; ex-Illinois +2,031) and adds ~58,000
+to the national June Medicaid decline (−419,141). National CHIP reads **100.5% of its Mar 2023
+peak** as reported; excluding Illinois from both endpoints it is still **100.2%** (6,817,032 →
+6,831,623), so the national CHIP-above-peak reading is **not** an Illinois artifact — Illinois
+moves it only ~0.3pt. (Illinois' own Mar 2023 CHIP baseline, 346,416, is *above* its Dec–May
+levels, so the May as-reported 99.6% was, if anything, depressed by the misreporting.) **Not adjusted** (unlike California, CMS gives no
+magnitude and the move is between two programs the dashboard shows side by side). Surfaced on
+the Medicaid and CHIP tabs both when Illinois is selected (`MCAID_CAVEATS`, `CHIP_CAVEATS`) and on
+the **national** view (`MCAID_NAT_NOTE`, `CHIP_NAT_NOTE`). Any Illinois or national CHIP /
+Medicaid-child comparison spanning May→June 2026 is not like-for-like, so on the CHIP tab's
+**national** view every comparison whose endpoints straddle the break also shows, as a labelled
+secondary figure beside the as-reported (primary) value, the same figure **excluding Illinois from
+both endpoints** (`IL_BREAK`, `ilSpans()` in `template.html`): the CHIP peak strip's share of peak
+(100.5% as reported / 100.2% excl. IL), the CHIP Cumulative Impact "vs. Mar 2023 peak" cell, and
+the derived Medicaid-child net change since Dec 2025 (−950,189 / −3.30% as reported; −868,349 /
+−3.13% excl. IL). They appear only while the window spans June 2026 and never on a state view.
+The **Medicaid-child peak** comparison (strip and Cumulative Impact cell) already excludes Arizona
+from both endpoints; its secondary figure removes **Arizona and Illinois** from both endpoints
+(`childPeakExAzIl()`, label "excl. Arizona & Illinois (both endpoints)"): 35,171,296 → 27,252,479
+(−22.5%, 77.5% of peak) as shown vs 33,943,449 → 26,300,834 (−22.5%, 77.5%) excl. AZ & IL —
+Illinois' own child decline from peak (1,227,847 → 951,645, −22.5%) matches the national rate, so
+the headline is unaffected. Illinois reported Medicaid-expansion CHIP as Medicaid child enrollment through May 2026 and
+corrected this in June 2026 without restating prior months. The CMS Performance Indicator CSV
+(Aug 2026 vintage, 202303–202604) shows a continuous Illinois CHIP share of 19.8–23.9% with no
+step change and no footnotes. That is consistent with the misreporting covering the March 2023
+baseline, but not directly confirmed. Excl.-Illinois figures are the like-for-like comparison for
+any Illinois-sensitive metric (national CHIP vs. peak, Medicaid child vs. peak, June
+month-over-month changes).
+
+**Quarterly updated renewal outcomes are not in the workbook.** Quarter-end editions (Mar, Jun)
+publish *Updated* renewal outcomes for the cohort three months back (June edition: Dec 2025–Feb
+2026 — e.g. Dec renewed 68% original → 74% updated, pending 11% → 4%). The workbook carries the
+**original** monthly figures only, and the dashboard's outcome mix is the original-report series
+throughout; don't splice updated values into it (they are a different, later-vintage measure).
+Every renewal-outcome display on the Medicaid tab is labelled **"initial outcomes, as originally
+reported"** (a note under the Renewal Outcomes header plus the Reason-for-Disenrollment header and
+the outcome-mix, state-rate and state-vs-national chart subtitles) — keep those labels.
 
 **Watch items (not CMS-flagged, left as reported).** States showing month-over-month movement
 implausible enough to suggest a reporting artifact rather than a real shift; documented here
 rather than silently presented. Nothing is adjusted.
 
-*Idaho — resolved as a recurring artifact, still watch.* The April reading (renewed 97.5%,
+*Idaho — isolated artifacts, not a cycle (June 2026).* June is **normal** (renewed 72.5%,
+procedural 4,207 of 19,476 = 21.6%, ex parte 50.7%), so the Feb/Apr alternation predicted an
+anomalous June and **did not hold**. Treat February and April as isolated reporting artifacts;
+keep the near-zero-procedural rule below. *Earlier note:* The April reading (renewed 97.5%,
 procedural 13 of 24,149 due = 0.1%) **fully reverted in May**: renewed 65.3%, procedural 6,039
 (25.3%), ex parte 46.3% — back in family with Dec/Jan/Mar (66.4/69.7/73.5% renewed, 25.6/21.6/
 19.6% procedural). Note the shape: **February and April are both anomalous in the same
@@ -187,20 +243,32 @@ initiation. May reverts to 101,259 (= March's initiation), as predicted. But the
 **not** fully reverted: procedural disenrollment ran 9.2 / 7.6 / 6.1 / 5.6% Dec–Mar, then
 **12.7%** in April and **17.2%** in May — roughly triple the pre-April level and the highest in
 the series — while ex parte (36.4%) is still below its 41.7–42.9% Dec–Mar band. The cohort-size
-story does not explain that. Re-check on the next drop.
+story does not explain that. **June 2026: persisted.** Procedural 14.8% (15,723 of 105,959 due —
+off May's 17.2% peak but ~2.5× the Dec–Mar level), ex parte 35.7% (still below band), procedural
+55.1% of disenrollments (vs 26–33% pre-April). Re-check on the next drop.
 
 *Alaska — new in May 2026.* Renewals due jump **17,318→30,712 (+77%)** and completion
 deteriorates sharply: renewed **44.5%→27.4%** (the lowest of any state in May), form-based
 renewals 17.2%→9.5%, procedural 24.5%→31.3%, and pending 20.6%→**33.7%** — a third of the
 cohort unresolved at month end. Alaska is one of the states whose `due` does **not** track a
 lagged `initiated`, so this is not a clean cohort effect. Consistent with a state overwhelmed by
-an enlarged cohort, but a reporting change cannot be ruled out. **Highest-priority re-check.**
+an enlarged cohort, but a reporting change cannot be ruled out. **June 2026: reverted.** Due fell
+to 15,924 (−48%); renewed 45.0%, procedural 20.6%, pending 23.0% — back in its Dec–Apr band. May
+reads as a one-month cohort spike; downgraded from top priority to routine watch.
+
+*New in June 2026.* **Rhode Island** — adult +3,936 / derived child −4,997 (−6.1%) with total only
+−1,061: an offsetting adult/child shift of the Nevada shape, no CMS note (RI's series is volatile —
+Feb −13,947). **Arkansas** — total −14,425 (−2.0%), adult −13,249 (−3.4%), procedural up to 15.1%:
+largest move in its series. **New Mexico** — due +77% is mechanical (= its April `initiated`, lag
+2), but ex parte also jumped 46.5% → 67.5% and procedural fell 24.2% → 14.0%. All watch only.
 
 *Benign cohort swings (no action).* Montana (due −62%), Hawaii (+50%) and Kentucky (−41%) all
 moved sharply in May, but each tracks its own lagged `initiated` cohort and their outcome mixes
 stayed stable — mechanical, not a reporting change.
 
-*Structural note — `due` is a lagged `initiated`.* In **19 states** the `Beneficiaries with a
+*Structural note — `due` is a lagged `initiated`.* In **18 states** (re-counted June 2026: AL, CO,
+CT, IL, IA, KS, LA, MI, MS, NV, NH, NM, OH, PA, SC, SD, VA, WV; Kentucky matches every month
+except April, where due is one below March's initiated — it was counted in an earlier "19") the `Beneficiaries with a
 Renewal Due` figure equals that state's `Beneficiaries with a Renewal Initiated` from a fixed
 number of months earlier (1, 2 or 3, state-specific) in **every** month of the series — Alabama
 and Kentucky lag 2 and 1 respectively. This is consistent with CMS's cohort reporting (outcomes
@@ -211,7 +279,14 @@ spike.
 **BHP reporting coverage is uneven** — states report through different months. Charts plot
 only each state's reported range. NY's figure is Essential Plan Expansion under a 1332
 waiver, reported in the BHP series. National total uses January, the one month all four
-states report.
+states report (still true through Sep 2026: DC reports January only).
+
+**New York's EP → BHP transition (June 2026).** NY's §1332 waiver terminated 1 July 2026 and its
+Essential Plan is transitioning back to a BHP; CMS attributes the June BHP decline to transition
+activities. NY falls **1,663,063 (May) → 1,319,514 (June), −343,549**, then rebuilds (Jul
+1,340,874; Aug 1,361,018; Sep 1,371,273). This is a **program redefinition, not coverage loss**.
+The NY chart carries an in-chart dashed marker between May and June with that label
+(`BHP_MARKS` / `bhpMarkPlugin` in `template.html`), plus a matching tooltip line on June.
 
 **Ex parte** = renewal completed from data the state already holds, no beneficiary action.
 It is the key operational metric: nationally it fell from 56% to 48% over 13 months while
@@ -265,7 +340,7 @@ tab than Medicaid. Layout:
 - **Two "vs. Pre-Unwinding Peak" strips**, each headed with its program so it is unambiguous:
   *CHIP · vs. Pre-Unwinding Peak* (violet) and *Medicaid Child · vs. Pre-Unwinding Peak* (navy,
   which mimics the CHIP strip — same metrics and proportional bar).
-- **Two "Cumulative Impact · Dec 2025 – Apr 2026" strips**, one labelled *Total CHIP* and one
+- **Two "Cumulative Impact · <first> – <latest month>" strips**, one labelled *Total CHIP* and one
   *Medicaid Child (derived)*, side by side (net change, average monthly change, and vs. the Mar
   2023 peak). The child strip's peak cell shares the Arizona-aware `childPeakEndpoints()` logic
   with the child peak strip (national excludes Arizona from both endpoints; Arizona itself shows
@@ -278,12 +353,13 @@ Every chart routes through `makeChart`; value axes use `axisFmt`.
 
 **CHIP is a separate population, not a Medicaid subset.** It covers Medicaid-expansion CHIP,
 separate CHIP, and pregnant adults in separate CHIP. Medicaid and CHIP enrollment therefore
-add together rather than overlap: for May 2026, Medicaid (66,388,522, the raw workbook US
-total) + CHIP (7,137,750) = 73,526,272 — matching the combined total CMS publishes. `load_chip()` verifies the `United States` row equals
+add together rather than overlap: for June 2026, Medicaid (65,969,381, the raw workbook US
+total) + CHIP (7,198,008) = 73,167,389 — matching the combined total CMS publishes. `load_chip()` verifies the `United States` row equals
 the exact sum of states in every period; if that identity fails, a state is missing or
 something is double-counted — stop and investigate rather than building. National CHIP control
 totals (summed across states): Dec 2025 7,243,961; Jan 2026 7,241,058; Feb 2026 7,227,658;
-Mar 2026 7,213,381; Apr 2026 7,145,807; May 2026 7,137,750.
+Mar 2026 7,213,381; Apr 2026 7,145,807; May 2026 7,137,750; Jun 2026 7,198,008 (the June
+jump is Illinois's reclassification — see the Illinois section).
 
 **The March total has two acceptable vintages.** The CMS PDF published 7,213,496, but New
 Hampshire was subsequently revised from 19,058 to 18,943, giving 7,213,381. The current
@@ -359,8 +435,8 @@ baseline (below).
 
 **National control totals (derived Medicaid child), validated in `load_chip_child()`:** the
 national row must equal the exact sum of reported states each month, and is checked against the
-CMS PDF state tables — **May 2026 = 28,080,687** and **April 2026 = 28,235,643**, both
-**hard asserts** (`CHIP_CHILD_CONTROL_STRICT`). March 2026 derives to **28,357,494** on the
+CMS PDF state tables — **June 2026 = 27,845,626**, **May 2026 = 28,080,687** and **April 2026 =
+28,235,643**, all **hard asserts** (`CHIP_CHILD_CONTROL_STRICT`). March 2026 derives to **28,357,494** on the
 workbook's revised-NH vintage, **636 below the PDF's 28,358,130**; per the "two acceptable
 vintages"/CSV-authoritative rule above this is expected, so the build emits a note rather than
 failing. Any *other* control mismatch — especially on the two strict months — means stop and
@@ -409,7 +485,7 @@ sharing). The two sources:
 - `source-data/Medicare_Monthly_Data.zip` — the archived **full history** (Jan 2023 onward).
   Large, so tracked compressed; the extracted CSV is gitignored.
 - `source-data/Medicare_Monthly_Data.csv` — the **latest monthly drop**, uncompressed. CMS's
-  download carries only the most recent months (currently Jan–May 2026) and **revises** those
+  download carries only the most recent months (currently Jan–Jun 2026) and **revises** those
   months relative to the archived history, so where the two overlap the CSV **wins** (CMS
   revisions are authoritative — see the "revised over time" rule below); months the CSV does
   not cover come from the zip unchanged. This is optional: if the CSV is absent the build
@@ -425,8 +501,12 @@ CSV overlays. The console summary prints which months came from the CSV drop.
 "MA & other health plans", since it also covers cost plans/PACE) as a share of beneficiaries
 with **both Part A and Part B** (`A_B_TOT_BENES`), **not** total Medicare — you must carry both
 parts to enrol in MA, so A&B is the eligible denominator (the standard CMS penetration basis).
-It runs ~4 points above the total-Medicare basis: nationally it rose **52.3% → 55.6%** (Jan 2023
-→ Apr 2026); across states Apr 2026 spans **3.2% (Alaska) → 67.6% (Michigan)**. The KPI, hero
+It runs ~4 points above the total-Medicare basis: nationally it rose **52.3% → 55.5%** (Jan 2023
+→ Jun 2026); across states Jun 2026 spans **3.2% (Alaska) → 67.5% (Michigan)**. *KFF comparison:*
+KFF's 2026 figure is 55% (35.2M ÷ 64.2M A&B) and **excludes** other health plans; ours (Mar 2026
+55.5%, 50+DC) **includes** them and excludes territories. The two definitional differences roughly
+offset in the numerator (both ~35.2M); the ~0.7pt gap is mostly KFF's territory-inclusive
+denominator. Do not present the two as the same measure. The KPI, hero
 trend, ranking, and lookback bar all use this A&B denominator; `mcPen()` is the single source.
 
 Data traps handled in `build_medicare.py` (all verified against the file):

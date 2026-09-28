@@ -9,7 +9,7 @@ the raw source — it reads only data/medicare.json.
   * source-data/Medicare_Monthly_Data.zip — the archived full history (Jan 2023
     onward). Large, so tracked compressed; the extracted CSV is gitignored.
   * source-data/Medicare_Monthly_Data.csv — the latest monthly drop CMS
-    publishes. It carries only the most recent months (currently Jan–May 2026),
+    publishes. It carries only the most recent months (currently Jan–Jun 2026),
     and CMS REVISES those recent months relative to the archived history, so
     where the two overlap the CSV wins (CMS revisions are authoritative; see the
     "revised over time" note in CLAUDE.md). Months the CSV does not cover come
