@@ -173,6 +173,48 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .panel.mcaid-panel{overflow-y:auto;}
 .mcaid-panel>*{flex-shrink:0;}
 .mcaid-panel>.lower{flex-shrink:1;min-height:min-content;}
+/* Make the overflow scroll discoverable (macOS/overlay scrollbars otherwise hide it) */
+.panel.mcaid-panel{scrollbar-width:thin;scrollbar-color:#9FB2CE transparent;}
+.panel.mcaid-panel::-webkit-scrollbar{width:8px;}
+.panel.mcaid-panel::-webkit-scrollbar-thumb{background:#9FB2CE;border-radius:4px;}
+/* Short viewports (typical laptops at 100% zoom, e.g. 1366x768 or 1080p at 150%
+   scaling): tighten the Medicaid tab so the Cumulative Impact strip stays on
+   screen without scrolling at ~800px of browser height and above. Scoped to the
+   Medicaid panel; other tabs and tall screens are unchanged. */
+@media (max-height:960px){
+  .mcaid-panel{padding:7px 14px;gap:6px;}
+  .mcaid-panel .kpi{padding:6px 11px;}
+  .mcaid-panel .kpi-label{margin-bottom:3px;}
+  .mcaid-panel .kpi-value{font-size:17px;}
+  .mcaid-panel .kpi-value.big{font-size:20px;}
+  .mcaid-panel .kpi-sub{margin-top:2px;}
+  .mcaid-panel .data-note.compact{margin:0;padding:3px 9px;line-height:1.25;}
+  .mcaid-panel .state-bar{padding:3px 8px;gap:3px;max-height:56px;}
+  .mcaid-panel .state-pill{padding:1px 7px;font-size:9.5px;}
+  .mcaid-panel .peak-strip{padding:4px 14px;}
+  .mcaid-panel .peak-hd{width:150px;}
+  .mcaid-panel .lower{gap:7px;}
+  .mcaid-panel .col-stack{gap:7px;}
+  .mcaid-panel .bars-panel{padding:7px 13px;}
+  .mcaid-panel .bars-hd{margin-bottom:3px;}
+  .mcaid-panel .sub-note{margin-bottom:3px;}
+  .mcaid-panel .bar-row{margin-bottom:3px;}
+  .mcaid-panel .bar-track{height:18px;}
+  .mcaid-panel .bars-divider{margin:4px 0;}
+  .mcaid-panel .cum-strip{margin-top:4px;}
+  .mcaid-panel .cum-cell{padding:4px 9px;}
+  .mcaid-panel .cum-lbl{margin-bottom:2px;}
+  .mcaid-panel .cum-val{font-size:15px;}
+  .mcaid-panel .cum-sub{margin-top:2px;}
+  .mcaid-panel .chart-card{padding:7px 12px;}
+  .mcaid-panel .chart-sub{margin-bottom:4px;}
+  .mcaid-panel .col-stack>.bars-panel+.chart-card{min-height:130px;}
+}
+@media (max-height:700px){
+  .mcaid-panel{gap:4px;padding-top:5px;}
+  .mcaid-panel .state-bar{max-height:44px;}
+  .mcaid-panel .bar-track{height:16px;}
+}
 .duo{flex:1;display:flex;gap:8px;min-height:0;}
 .duo-half{flex:1;display:flex;flex-direction:column;min-height:0;}
 .duo-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:center;margin-bottom:2px;flex-shrink:0;}
