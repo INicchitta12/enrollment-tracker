@@ -465,7 +465,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div><div class="peak-lbl">Change %</div><div class="peak-val" id="cp-pc-pct">&mdash;</div></div>
       </div>
       <div class="peak-barwrap">
-        <div class="peak-bartop"><span>Current as share of peak</span><b id="cp-pc-share">&mdash;</b></div>
+        <div class="peak-bartop"><span>Current as share of peak</span><span><b id="cp-pc-share">&mdash;</b><span class="xil" id="cp-pc-share-xil"></span></span></div>
         <div class="peak-bar-track"><div class="peak-bar-fill" id="cp-pc-bar" style="width:0"></div></div>
       </div>
       <div class="peak-note" id="cp-pc-note"></div>
@@ -485,7 +485,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div class="cum-strip">
           <div class="cum-cell"><div class="cum-lbl">Net Enrollment Change</div><div class="cum-val" id="cp-cchild-net">&mdash;</div><div class="cum-sub" id="cp-cchild-net-sub">&mdash;</div><div class="cum-sub xil" id="cp-cchild-net-xil"></div></div>
           <div class="cum-cell"><div class="cum-lbl">Average Monthly Change</div><div class="cum-val" id="cp-cchild-avg">&mdash;</div><div class="cum-sub" id="cp-cchild-avg-sub">&mdash;</div></div>
-          <div class="cum-cell"><div class="cum-lbl">vs. March 2023 Peak</div><div class="cum-val" id="cp-cchild-peak">&mdash;</div><div class="cum-sub" id="cp-cchild-peak-sub">&mdash;</div></div>
+          <div class="cum-cell"><div class="cum-lbl">vs. March 2023 Peak</div><div class="cum-val" id="cp-cchild-peak">&mdash;</div><div class="cum-sub" id="cp-cchild-peak-sub">&mdash;</div><div class="cum-sub xil" id="cp-cchild-peak-xil"></div></div>
         </div>
       </div>
     </div>
@@ -1382,6 +1382,18 @@ function childPeakEndpoints(state,key){
   if(!state){ const az=chipChildVal('Arizona',key); if(cur!=null&&az!=null){ cur-=az; azExcluded=true; } }
   return {suppressed:false,peak,cur,azExcluded};
 }
+// National child peak comparison with Illinois ALSO removed from both endpoints
+// (on top of Arizona), for a window straddling Illinois's June 2026 correction:
+// its Mar 2023 child figure is on the pre-correction basis (expansion CHIP most
+// likely counted as Medicaid child), its current figure on the corrected one.
+// Returns null when not applicable (state view, or no straddle).
+function childPeakExAzIl(ep,key){
+  if(!ep||ep.suppressed||!ep.azExcluded||ep.peak==null||ep.cur==null||!ilSpans('2023-03',key)) return null;
+  const ilPk=CHIP_CHILD_PEAK[IL_STATE], ilCur=chipChildVal(IL_STATE,key);
+  if(ilPk==null||ilCur==null) return null;
+  return {peak:ep.peak-ilPk, cur:ep.cur-ilCur};
+}
+const AZIL_XLBL='excl. Arizona & Illinois (both endpoints)';
 
 function renderChipTs(state){
   document.getElementById('cp-ts-title').innerHTML=(state||'National')+' Enrollment <span>Trend</span>';
@@ -1534,6 +1546,11 @@ function renderChipChildPeak(state,key){
   g('cp-pc-pct').style.color=chg<0?'var(--warn)':'var(--ok)';
   g('cp-pc-share').textContent=share.toFixed(1)+'% of peak';
   g('cp-pc-bar').style.width=Math.max(0,Math.min(100,share))+'%';
+  const xs=g('cp-pc-share-xil'), x=childPeakExAzIl(ep,key);
+  if(x){ const d=x.cur-x.peak;
+    xs.textContent=(x.cur/x.peak*100).toFixed(1)+'% '+AZIL_XLBL;
+    xs.title='Excluding Arizona and Illinois from both endpoints: '+x.peak.toLocaleString()+' (Mar 2023) \u2192 '+x.cur.toLocaleString()+' ('+CHIP_LABELS[CHIP_PERIODS.indexOf(key)]+'), '+(d<0?'\u2212':'+')+Math.abs(d).toLocaleString()+' ('+(d<0?'\u2212':'+')+Math.abs(d/x.peak*100).toFixed(1)+'%). Illinois reclassified Medicaid-expansion CHIP out of Medicaid child in June 2026 without restating prior months.';
+  } else { xs.textContent=''; xs.title=''; }
 }
 
 // Fill one Cumulative Impact strip (net change + average monthly change) from a
@@ -1630,6 +1647,10 @@ function selectChipState(state){
         sgn(pk)+Math.abs(pkPct).toFixed(1)+'% · '+sh.toFixed(1)+'% of peak'+(ep.azExcluded?' · excl. AZ':''),
         pk<0?'var(--warn)':'var(--ok)');
     } else setCum('cp-cchild-peak','cp-cchild-peak-sub','—','no peak baseline',null);
+    const pkX=document.getElementById('cp-cchild-peak-xil'), x=childPeakExAzIl(ep,CHIP_PERIODS[childCum.lastIdx]);
+    if(x){ const d=x.cur-x.peak;
+      pkX.textContent=AZIL_XLBL+': '+sgn(d)+Math.abs(d).toLocaleString()+' · '+sgn(d)+Math.abs(d/x.peak*100).toFixed(1)+'% · '+(x.cur/x.peak*100).toFixed(1)+'% of peak';
+    } else pkX.textContent='';
   }
 
   renderChipPeak(state,key);

@@ -199,6 +199,17 @@ both endpoints** (`IL_BREAK`, `ilSpans()` in `template.html`): the CHIP peak str
 (100.5% as reported / 100.2% excl. IL), the CHIP Cumulative Impact "vs. Mar 2023 peak" cell, and
 the derived Medicaid-child net change since Dec 2025 (−950,189 / −3.30% as reported; −868,349 /
 −3.13% excl. IL). They appear only while the window spans June 2026 and never on a state view.
+The **Medicaid-child peak** comparison (strip and Cumulative Impact cell) already excludes Arizona
+from both endpoints; its secondary figure removes **Arizona and Illinois** from both endpoints
+(`childPeakExAzIl()`, label "excl. Arizona & Illinois (both endpoints)"): 35,171,296 → 27,252,479
+(−22.5%, 77.5% of peak) as shown vs 33,943,449 → 26,300,834 (−22.5%, 77.5%) excl. AZ & IL —
+Illinois' own child decline from peak (1,227,847 → 951,645, −22.5%) matches the national rate, so
+the headline is unaffected. *Did Illinois' Mar 2023 child figure include the expansion CHIP?*
+Not confirmable from the sources in the repo — CMS's note gives no start date and the CMS
+Performance Indicator history was unreachable. Indirect evidence says **probably yes**: CHIP was
+22.0% of Illinois' combined child + CHIP in Mar 2023, in line with the pre-correction Dec 2025–May
+2026 months (22.8–23.9%) and well below the corrected June 2026 share (27.8%). Treat it as likely,
+not established; re-check against the Performance Indicator CSV when available.
 
 **Quarterly updated renewal outcomes are not in the workbook.** Quarter-end editions (Mar, Jun)
 publish *Updated* renewal outcomes for the cohort three months back (June edition: Dec 2025–Feb
