@@ -141,7 +141,12 @@ MKT_COLS = {
     'new': 'New Consumers', 'reenroll': 'Total Re-enrollees',
     'active': 'Active Re-enrollees', 'auto': 'Automatic Re-enrollees',
     'aptc': 'Consumers with APTC', 'avgPrem': 'Average Premium  ',
-    'avgNet': 'Average Premium after APTC  ', 'cat': 'Catastrophic',
+    'avgNet': 'Average Premium after APTC  ',
+    # Recipient-only averages (among consumers receiving APTC). The workbook has no
+    # recipient-only GROSS premium column, so none is shown or invented.
+    'aptcRecip': 'Average APTC among Consumers Receiving APTC',
+    'netRecip': 'Average Premium after APTC among Consumers Receiving APTC  ',
+    'cat': 'Catastrophic',
     'bronze': 'Bronze', 'silver': 'Silver ', 'gold': 'Gold', 'platinum': 'Platinum',
 }
 
@@ -151,7 +156,8 @@ MKT_COLS = {
 # (19,200,000) is a rounded placeholder, not a reported count. Publishing them
 # would render a misleading isolated dot on the national trend line, so we
 # explicitly exclude March 2026 onward for the United States series only. State
-# series are unaffected — 12 states report genuine March, April, and May figures.
+# series are unaffected — states report genuine post-February figures: 12 in March,
+# 11 in April, 6 in May (and New York alone for June–August).
 NATIONAL_POST_OEP_EXCLUDE_FROM = pd.Timestamp('2026-03-01')
 
 
@@ -477,6 +483,13 @@ def load_marketplace(xl):
     oep, national_oep = {}, None
     for _, row in oep_rows.iterrows():
         rec = {k: (0 if pd.isna(row[c]) else int(row[c])) for k, c in MKT_COLS.items()}
+        # Metal tiers: the workbook marks suppressed cells "-" (coerced to NaN
+        # above). They are NOT zero — the US row exceeds the sum of reporting
+        # states — so keep them null and never plot them as 0. Same for the
+        # recipient-only averages if a state ever lacks them.
+        for k in ('cat', 'platinum', 'aptcRecip', 'netRecip'):
+            if pd.isna(row[MKT_COLS[k]]):
+                rec[k] = None
         rec['plat'] = rec.pop('platinum')
         if row['State'] == 'United States':
             national_oep = rec
@@ -909,6 +922,10 @@ def main():
         '__BHP_TOP_STATE__': bhp_kpi['top']['name'],
         '__BHP_TOP_PCT__': f"{bhp_kpi['top']['pct']:.1f}",
         '__MEDICARE__': compact(medicare),
+        # Dual-eligible share of total Medicare, latest month, 50 states + DC —
+        # computed here so the tab's note never goes stale (was hard-coded 17.0%).
+        '__MCARE_DUAL_SHARE__': f"{medicare['national'][medicare['latest']]['dual'] / medicare['national'][medicare['latest']]['tot'] * 100:.1f}",
+        '__MCARE_LATEST_LABEL__': medicare['labels'][-1],
         'ESI_PILLS': state_pills('esi', 'selectEsiState', esi_acs_states),
         '__ESI_ACS__': compact(esi_acs),
         '__ESI_ACS_YEAR__': compact(esi_acs_year),

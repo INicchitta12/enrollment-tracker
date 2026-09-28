@@ -82,7 +82,24 @@ effectuated totals. The workbook has no March figure, and its April value (19,20
 a rounded placeholder, not a reported count, so both are excluded to avoid a misleading
 isolated dot on the national trend line. The exclusion is an explicit, documented cutoff in
 `load_marketplace()` (`NATIONAL_POST_OEP_EXCLUDE_FROM`), applied to the national series only.
-State series are untouched — 12 states report genuine March, April, and May figures.
+State series are untouched — states report genuine post-February figures: **12 in March, 11 in
+April, 6 in May** (and New York alone for June–August).
+
+**The premium card keeps two bases apart.** *All enrollees:* `Average Premium` (gross) and
+`Average Premium after APTC` (the $178 national figure memos cite) — both labelled "all
+enrollees". *APTC recipients only:* `Average APTC among Consumers Receiving APTC` ($650) and
+`Average Premium after APTC among Consumers Receiving APTC` ($96). There is **no recipient-only
+gross premium column**, so the recipients section's gross row is the all-enrollee figure, labelled
+as such — never invented. The "APTC covers X%" ratio is computed wholly on the recipient basis,
+credit ÷ (credit + premium after APTC) (87.1% nationally), since for one population average gross
+= average credit + average net. (Before Sep 2026 the recipients section showed all-enrollee
+averages — $563 credit / $178 net — under a recipients label.)
+
+**Suppressed metal-tier cells are not zero.** `Marketplace (2)` marks withheld Catastrophic (16
+states) and Platinum (32 states) cells `-`; the US row exceeds the sum of reporting states, so the
+cells hide real enrollment. `load_marketplace()` keeps them `null`, the metal-tier donut omits them
+and names them in a "Suppressed cells not shown" note, and tier shares are of total plan
+selections. Never plot a suppressed cell as 0.
 
 **Renewal denominators.** Renewed / disenrolled / pending are shares of *renewals due* that
 month, not of total enrollment. Procedural and ineligible are shares of *total disenrolled*.
@@ -92,8 +109,9 @@ Mar–Nov 2025 comes from `pdf_history.json` (CMS snapshot slides 17–18), wher
 derived as the residual. The two agree within 0.4pt on overlapping months. State-level
 outcome mix is workbook-only and covers the workbook's months.
 
-**Outcome-mix components are rescaled to sum to exactly 100** so stacked bars render
-cleanly. Adjustments are under ~0.25pt.
+**Outcome-mix components are rescaled to sum to 100** so stacked bars render cleanly
+(adjustments under ~0.25pt). Each component is then rounded to one decimal, so a stack can total
+99.9–100.2; that is left as is and the chart subtitle says totals may not sum to 100.
 
 **California enrollment carries a continuity restatement of its pre-March-2026 months.**
 California revised its Medicaid reporting in March 2026 to exclude limited-benefit enrollees and
@@ -543,8 +561,9 @@ Disabled — and a state MA-penetration ranking (top-12 nationally; selected-sta
 is chosen). The lookback month is derived as three years before the latest month, so it tracks
 forward as new data lands.
 
-**Dual-eligibles are the bridge to the Medicaid tab.** `DUAL_TOT_BENES` (17.0% of Medicare,
-~11.7M nationally) counts beneficiaries jointly enrolled in Medicaid — the same people appear
+**Dual-eligibles are the bridge to the Medicaid tab.** `DUAL_TOT_BENES` (17.1% of Medicare,
+~11.8M nationally, Jun 2026; the tab's note takes the share from `__MCARE_DUAL_SHARE__`, computed at
+build time) counts beneficiaries jointly enrolled in Medicaid — the same people appear
 on the Medicaid tab. Only `DUAL_TOT` is surfaced: the full/partial dual split
 (`FULL_DUAL`/`PART_DUAL`) is suppressed in ~26–28 small-state cells, so it is not shown.
 
@@ -589,7 +608,8 @@ GitHub Pages and are gitignored. `build_cost_sharing.py` reads them and writes
 - **Benefits & Cost-Sharing PUF** (`Benefits_Cost_Sharing_PUF.csv`) → primary care copay.
   - Benefit row `BenefitName == "Primary Care Visit to Treat an Injury or Illness"`, field
     `CopayInnTier1`, joined to the base plans by 17-char `PlanId` (100% match). Copay parsing:
-    `No Charge*` → 0; `$X Copay*` (any "after/with deductible", "per Day/Stay" suffix) → X;
+    `No Charge*` → 0; `$X Copay*` or a plain `$X` (most plans use the plain form; any
+    "after/with deductible", "per Day/Stay" suffix) → X;
     `Not Applicable` / blank → **excluded** (these plans express primary care as coinsurance
     in `CoinsInnTier1`; excluded from the copay mean rather than coerced to 0, ~9% of plans).
 
@@ -599,6 +619,12 @@ plan:
 2. `QHPNonQHPTypeId in {"Both", "On the Exchange"}` — on-exchange only. (Dictionary lists the
    allowable values as "On/Off Exchange"; the data actually uses "Both"/"On the Exchange"/
    "Off the Exchange" — trust the data.)
+2b. `MarketCoverage == "Individual"` — **individual market only**. The card describes
+   individual-market cost sharing; SHOP (small-group) plans are on the exchange too (158 base
+   plans in AL, MT, NH, WI for 2026) and were included before Sep 2026. Excluding them moved 41
+   cells by more than $1 (e.g. national Platinum deductible $185 → $119, Wisconsin Platinum $562 →
+   $250) and removed **Alabama and New Hampshire Platinum** entirely — those tiers were offered
+   only through SHOP, so the card now shows no Platinum row for them.
 3. `BusinessYear == CS_BENEFIT_YEAR` — current benefit year.
 4. `CSRVariationType` matches `^Standard .* On Exchange Plan$` — **base variant only**. This is
    the critical filter: it drops every CSR variant (Zero/Limited Cost Sharing, 73/87/94% AV
@@ -622,8 +648,29 @@ care as `No Charge after deductible` (→ $0) or coinsurance (→ blank). The fo
 deductible ≈ OOP max; Silver deductible ≫ Gold (no CSR leak); no missing/zero cell outside the
 documented Platinum/Catastrophic cases.
 
+## Employer coverage (ESI) labelling rules
+
+- **MEPS-IC vs KFF is not a blanket "runs below".** In 2025 MEPS is lower on premiums (single
+  $9,025 vs $9,325) but higher on worker contribution (single +26%, family +7%) and single
+  deductible (+15%). The KFF card note is computed from the embedded figures (`esiMepsVsKff()`),
+  so it tracks new vintages.
+- **KFF worker shares are shown from KFF's own dollars** (15.4% / 25.4%, contribution ÷ premium —
+  the same method as the MEPS state cards); the note cites KFF's published 16% / 26%, which KFF
+  calculates per worker.
+- **Deductibles are among workers with a deductible** (MEPS II.F.2/II.F.3; KFF likewise) — every
+  deductible label says so.
+- **CPS ASEC 2020 break.** From 2020 the series uses 2020 Census-based population controls (Census
+  footnote); the national coverage subtitle discloses that 2019→2020 is not strictly comparable.
+
 ## Conventions
 
+- **`fmt()` rounds on scaled integers** (half up), not `toFixed` on the binary quotient — so
+  2,715,000 shows as 2.72M, not 2.71M.
+- **Medicare MA-penetration rates always show one decimal** (`mcPct1`: 57.0%, not 57%); rankings
+  and point changes use **unrounded** shares (`mcPenRaw`), so ties and deltas are not artifacts of
+  rounding.
+- **Renewal-mix stacks are left as rounded** (may total 99.9–100.2%); the chart subtitle says they
+  may not sum to 100.
 - **Axis labels carry no decimals.** `axisFmt` picks its unit from tick spacing so narrow
   ranges don't collapse into repeated labels. Percent axes use `pctFmt`.
 - **All charts route through `makeChart(id, config)`**, which destroys any prior instance

@@ -190,12 +190,15 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .st-pct{width:38px;flex-shrink:0;font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:600;text-align:right;}
 .data-note{flex-shrink:0;border-radius:5px;padding:6px 11px;background:#FFFBEA;border:1px solid #E8D080;border-left:3px solid var(--brand-amber);font-size:10px;color:#5A4A1A;display:flex;align-items:flex-start;gap:7px;}
 .data-note.compact{padding:4px 9px;font-size:9px;gap:6px;margin:2px 0 4px;}
-.prem-row{display:flex;align-items:center;gap:9px;margin-bottom:5px;}
+.prem-row{display:flex;align-items:center;gap:9px;margin-bottom:4px;}
 .prem-lbl{width:100px;flex-shrink:0;text-align:right;}
 .prem-name{font-size:10.5px;font-weight:600;color:var(--text);}
 .prem-desc{font-size:9px;color:var(--muted);margin-top:1px;}
-.prem-track{flex:1;height:27px;background:var(--surface-2);border-radius:4px;overflow:hidden;border:1px solid var(--border);}
-.prem-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding:0 9px;transition:width .4s ease;}
+.prem-track{flex:1;height:22px;background:var(--surface-2);border-radius:4px;border:1px solid var(--border);}
+.prem-fill{position:relative;height:100%;border-radius:3px;display:flex;align-items:center;padding:0 9px;transition:width .4s ease;}
+/* A bar too narrow for its label carries the label just outside, never clipped */
+.prem-fill.narrow{padding:0;}
+.prem-fill.narrow .prem-count{position:absolute;left:calc(100% + 6px);color:var(--text) !important;}
 .prem-count{font-family:var(--mono);font-size:11px;font-weight:700;white-space:nowrap;}
 .prem-divider{border:none;border-top:1px dashed var(--border);margin:5px 0;}
 .prem-sec-hd{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px;}
@@ -208,12 +211,12 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .cs-na{color:var(--muted);font-weight:400;}
 .cs-note{font-size:9px;line-height:1.35;color:var(--muted);margin-top:auto;padding-top:8px;}
 .cs-empty{text-align:center;color:var(--muted);padding:22px 8px;font-size:11px;line-height:1.5;}
-.aptc-box{display:flex;align-items:center;justify-content:space-between;background:var(--ok-light);border:1px solid #A8D9BC;border-radius:5px;padding:8px 12px;margin-top:auto;}
+.aptc-box{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--ok-light);border:1px solid #A8D9BC;border-radius:5px;padding:6px 10px;margin-top:auto;}
 .aptc-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#2A7A4A;}
-.aptc-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ok);}
-.aptc-sub{font-size:9.5px;color:var(--muted);}
-.aptc-rlbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:1px;}
-.aptc-rval{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ok);}
+.aptc-val{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--ok);}
+.aptc-sub{font-size:8.5px;color:var(--muted);line-height:1.25;}
+.aptc-rlbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:1px;white-space:nowrap;}
+.aptc-rval{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ok);line-height:1.1;}
 .yoy-strip{display:flex;gap:8px;flex-shrink:0;margin-bottom:7px;}
 .yoy-cell{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:6px 9px;}
 .yoy-cell-lbl{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px;}
@@ -492,22 +495,24 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">Avg Monthly Premium <span>Before &amp; After APTC</span></div></div>
         <div style="flex:1;display:flex;flex-direction:column;padding-top:4px;">
           <div class="prem-sec-hd">All Enrollees</div>
-          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Gross Premium</div></div><div class="prem-track"><div class="prem-fill" id="mp-pg1" style="width:100%;background:linear-gradient(90deg,#6B1020,#8B1A30)"><span class="prem-count" style="color:#fff"></span></div></div></div>
-          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Net Premium</div><div class="prem-desc">after APTC</div></div><div class="prem-track"><div class="prem-fill" id="mp-pn1" style="width:24%;background:linear-gradient(90deg,#9A6800,#C09020)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Gross Premium</div><div class="prem-desc">avg, all enrollees</div></div><div class="prem-track"><div class="prem-fill" id="mp-pg1" style="width:100%;background:linear-gradient(90deg,#6B1020,#8B1A30)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Premium after APTC</div><div class="prem-desc">avg, all enrollees</div></div><div class="prem-track"><div class="prem-fill" id="mp-pn1" style="width:24%;background:linear-gradient(90deg,#9A6800,#C09020)"><span class="prem-count" style="color:#fff"></span></div></div></div>
           <hr class="prem-divider">
           <div class="prem-sec-hd">APTC Recipients Only &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)" id="mp-aptc-count"></span></div>
-          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Gross Premium</div></div><div class="prem-track"><div class="prem-fill" id="mp-pg2" style="width:100%;background:linear-gradient(90deg,#6B1020,#8B1A30)"><span class="prem-count" style="color:#fff"></span></div></div></div>
-          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">APTC Subsidy</div><div class="prem-desc">avg credit applied</div></div><div class="prem-track"><div class="prem-fill" id="mp-aptc-bar" style="width:87%;background:linear-gradient(90deg,#0F5A30,#1A7A4A)"><span class="prem-count" style="color:#fff"></span></div></div></div>
-          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Net Premium</div><div class="prem-desc">after APTC applied</div></div><div class="prem-track"><div class="prem-fill" id="mp-pn2" style="width:13%;background:linear-gradient(90deg,#0A3070,#1A4FA8)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Gross Premium</div><div class="prem-desc">all enrollees (no recipient figure)</div></div><div class="prem-track"><div class="prem-fill" id="mp-pg2" style="width:100%;background:linear-gradient(90deg,#6B1020,#8B1A30)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">APTC Subsidy</div><div class="prem-desc">avg credit, recipients</div></div><div class="prem-track"><div class="prem-fill" id="mp-aptc-bar" style="width:87%;background:linear-gradient(90deg,#0F5A30,#1A7A4A)"><span class="prem-count" style="color:#fff"></span></div></div></div>
+          <div class="prem-row"><div class="prem-lbl"><div class="prem-name">Premium after APTC</div><div class="prem-desc">avg, recipients</div></div><div class="prem-track"><div class="prem-fill" id="mp-pn2" style="width:13%;background:linear-gradient(90deg,#0A3070,#1A4FA8)"><span class="prem-count" style="color:#fff"></span></div></div></div>
           <div class="aptc-box" style="margin-top:auto;">
             <div style="display:flex;flex-direction:column;gap:2px;">
-              <div class="aptc-lbl">APTC reduces gross premium by</div>
+              <div class="aptc-lbl">APTC covers, for recipients,</div>
               <div class="aptc-val" id="mp-aptc-pct"></div>
               <div class="aptc-sub" id="mp-aptc-sub"></div>
             </div>
-            <div style="text-align:right;">
-              <div class="aptc-rlbl">Avg Net (APTC recip.)</div>
-              <div class="aptc-rval" id="mp-net-val"></div>
+            <div style="text-align:right;display:flex;flex-direction:column;gap:3px;">
+              <div><div class="aptc-rlbl">Avg after APTC &middot; recipients</div>
+              <div class="aptc-rval" id="mp-net-val"></div></div>
+              <div><div class="aptc-rlbl">Avg after APTC &middot; all enrollees</div>
+              <div class="aptc-rval" id="mp-net-all"></div></div>
             </div>
           </div>
         </div>
@@ -526,7 +531,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       <div class="chart-card">
         <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">Plan Composition <span>&middot; OEP 2026</span></div></div>
         <div class="duo" style="margin-top:6px;">
-          <div class="duo-half"><div class="duo-lbl">Metal Tier</div><div class="chart-wrap"><canvas id="metalDonut"></canvas></div></div>
+          <div class="duo-half"><div class="duo-lbl">Metal Tier</div><div class="chart-wrap"><canvas id="metalDonut"></canvas></div><div class="sub-note" id="mp-metal-note" style="font-size:8.5px;text-align:center;margin-top:2px"></div></div>
           <div class="duo-half"><div class="duo-lbl">Enrollment Type</div><div class="chart-wrap"><canvas id="enrollDonut"></canvas></div></div>
         </div>
       </div>
@@ -555,7 +560,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
     <div class="data-note compact">
       <span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">&#9888;</span>
-      <span>National figures here sum the <b style="color:#5A4A1A">50 states + DC</b>. CMS&rsquo;s published national total also includes Puerto Rico and other territories (~1.4M), so it runs higher. Nationally, <b style="color:#5A4A1A">dual-eligibles</b> (17.0% of Medicare) are jointly enrolled in Medicaid and also appear on the Medicaid tab.</span>
+      <span>National figures here sum the <b style="color:#5A4A1A">50 states + DC</b>. CMS&rsquo;s published national total also includes Puerto Rico and other territories (~1.4M), so it runs higher. Nationally, <b style="color:#5A4A1A">dual-eligibles</b> (__MCARE_DUAL_SHARE__% of Medicare, __MCARE_LATEST_LABEL__) are jointly enrolled in Medicaid and also appear on the Medicaid tab.</span>
     </div>
 
     <div class="data-note compact" id="mc-state-note" style="display:none"></div>
@@ -788,7 +793,9 @@ function makeChart(id, cfg){ if(charts[id]){charts[id].destroy(); delete charts[
   const el = document.getElementById(id); if(!el) return null;
   charts[id] = new Chart(el, cfg); return charts[id]; }
 
-const fmt = n => n==null ? '\u2014' : n>=1e6 ? (n/1e6).toFixed(2)+'M' : n>=1e3 ? (n/1e3).toFixed(0)+'K' : n.toLocaleString();
+// Rounds on scaled integers (half up): (n/1e6).toFixed(2) rounds the binary value,
+// so 2,715,000 -> 2.715 -> "2.71M"; Math.round(271.5)/100 gives the correct "2.72M".
+const fmt = n => n==null ? '\u2014' : n>=1e6 ? (Math.round(n/1e4)/100).toFixed(2)+'M' : n>=1e3 ? Math.round(n/1e3)+'K' : n.toLocaleString();
 const pct = (a,b) => b ? (a/b*100).toFixed(1)+'%' : '\u2014';
 const T = {backgroundColor:'#fff',titleColor:'#0D1B3E',bodyColor:'#5A6A84',borderColor:'#D0DBE8',borderWidth:1,padding:8};
 // Axis tick formatters -- always whole numbers, never decimals
@@ -841,7 +848,7 @@ function setBar(id,w,label,pctId){ const el=document.getElementById(id); if(!el)
   const c=el.querySelector('.bar-count'); if(c) c.textContent=label;
   if(pctId){const p=document.getElementById(pctId); if(p) p.textContent=w.toFixed(1)+'%';} }
 function setPrem(id,w,label){ const el=document.getElementById(id); if(!el) return;
-  el.style.width=Math.max(w,3).toFixed(1)+'%';
+  el.style.width=Math.max(w,3).toFixed(1)+'%'; el.classList.toggle('narrow',w<14);
   const c=el.querySelector('.prem-count'); if(c) c.textContent=label; }
 
 // ══ MEDICAID ══
@@ -1055,10 +1062,10 @@ function renderMix(state){
   }
   if(state){
     t.innerHTML=state+' <span>\u00b7 Renewal Outcome Mix</span>';
-    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1]+' \u00b7 initial outcomes, as originally reported';
+    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1]+' \u00b7 initial outcomes, as originally reported \u00b7 may not sum to 100 due to rounding';
   } else {
     t.innerHTML='Renewal Outcome Mix <span>\u00b7 National Trend</span>';
-    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1]+' \u00b7 initial outcomes, as originally reported';
+    sub.textContent='Share of renewals due, by outcome \u00b7 '+labels[0]+' \u2013 '+labels[labels.length-1]+' \u00b7 initial outcomes, as originally reported \u00b7 may not sum to 100 due to rounding';
   }
   const short = labels.map(l=>l.replace(' 20',"\u2019"));
   makeChart('mcaidMixChart',{
@@ -1499,16 +1506,25 @@ function renderMktStates(state){
 }
 
 function renderDonuts(d){
-  const mt=d.silver+d.bronze+d.gold+d.plat+d.cat;
+  // Suppressed tier cells ("-" in the workbook) arrive as null. They are not zero
+  // (the US row exceeds the sum of reporting states), so they are left out of the
+  // chart entirely and named in a note — never plotted as 0. Shares are of total
+  // plan selections, so they need not sum to 100% when a tier is suppressed.
+  const tiers=[['Silver',d.silver,'#A8ADB4'],['Bronze',d.bronze,'#A9662F'],['Gold',d.gold,'#C9A227'],
+               ['Platinum',d.plat,'#C3D2E0'],['Catastrophic',d.cat,'#4A5568']];
+  const shown=tiers.filter(t=>t[1]!=null), supp=tiers.filter(t=>t[1]==null).map(t=>t[0]);
+  const mt=d.total;
+  document.getElementById('mp-metal-note').textContent=supp.length
+    ? 'Suppressed cells not shown: '+supp.join(', ')+' (withheld by CMS, not zero)' : '';
   makeChart('metalDonut',{
     type:'doughnut',
-    data:{labels:['Silver','Bronze','Gold','Platinum','Catastrophic'],
-      datasets:[{data:[d.silver,d.bronze,d.gold,d.plat,d.cat],
-        backgroundColor:['#A8ADB4','#A9662F','#C9A227','#C3D2E0','#4A5568'],
+    data:{labels:shown.map(t=>t[0]),
+      datasets:[{data:shown.map(t=>t[1]),
+        backgroundColor:shown.map(t=>t[2]),
         borderColor:'#fff',borderWidth:2,spacing:1,hoverOffset:4}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
       plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:4,font:{size:9},color:'#5A6A84'}},
-        tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()+' ('+(c.raw/mt*100).toFixed(1)+'%)'}}}}
+        tooltip:{...T,callbacks:{label:c=>' '+c.raw.toLocaleString()+' ('+(c.raw/mt*100).toFixed(1)+'% of plan selections)'}}}}
   });
   const et=d.active+d.auto+d.new;
   makeChart('enrollDonut',{
@@ -1523,17 +1539,31 @@ function renderDonuts(d){
   });
 }
 
+// Two bases, never mixed. All enrollees: avgPrem (gross) and avgNet (after APTC).
+// APTC recipients: aptcRecip (avg credit) and netRecip (avg premium after APTC),
+// from the workbook's recipient-only columns. There is no recipient-only GROSS
+// premium column, so the recipients section's gross row is the all-enrollee
+// figure, labelled as such. The "APTC covers X%" ratio is computed wholly on the
+// recipient basis: credit / (credit + net premium) — for a common population the
+// average gross premium equals average credit + average net premium.
 function updatePrem(d){
-  const gp=d.avgPrem, np=d.avgNet, amt=gp-np;
-  setPrem('mp-pg1',100,'$'+gp+' / mo');
-  setPrem('mp-pn1',Math.round(np/gp*100),'$'+np);
+  const gp=d.avgPrem, np=d.avgNet, ar=d.aptcRecip, nr=d.netRecip;
+  const rg=(ar!=null&&nr!=null)?ar+nr:null;              // recipients' implied avg gross
+  const scale=Math.max(gp, rg||0);                      // one bar scale for the card
+  const w=v=>Math.round(v/scale*100);
+  const mo='<span style="font-size:12px;color:var(--muted)">/mo</span>';
+  setPrem('mp-pg1',w(gp),'$'+gp+' / mo');
+  setPrem('mp-pn1',w(np),'$'+np);
   document.getElementById('mp-aptc-count').textContent='('+fmt(d.aptc)+' consumers)';
-  setPrem('mp-pg2',100,'$'+gp+' / mo');
-  setPrem('mp-aptc-bar',Math.round(amt/gp*100),'\u2212$'+amt+' / mo');
-  setPrem('mp-pn2',Math.round(np/gp*100),'$'+np);
-  document.getElementById('mp-aptc-pct').textContent=Math.round(amt/gp*100)+'%';
-  document.getElementById('mp-aptc-sub').textContent='for the '+pct(d.aptc,d.total)+' of enrollees receiving the credit';
-  document.getElementById('mp-net-val').innerHTML='$'+np+'<span style="font-size:12px;color:var(--muted)">/mo</span>';
+  setPrem('mp-pg2',w(gp),'$'+gp+' / mo');
+  setPrem('mp-aptc-bar',ar!=null?w(ar):0,ar!=null?'\u2212$'+ar+' / mo':'not reported');
+  setPrem('mp-pn2',nr!=null?w(nr):0,nr!=null?'$'+nr:'not reported');
+  document.getElementById('mp-aptc-pct').textContent=rg?(ar/rg*100).toFixed(1)+'% of premium':'\u2014';
+  document.getElementById('mp-aptc-sub').textContent=rg
+    ? 'avg credit \u00f7 (credit + premium after APTC) \u00b7 the '+pct(d.aptc,d.total)+' of plan selections with APTC'
+    : 'recipient-only figures not reported';
+  document.getElementById('mp-net-val').innerHTML=(nr!=null?'$'+nr:'\u2014')+mo;
+  document.getElementById('mp-net-all').innerHTML='$'+np+mo;
 }
 
 // Metal-tier colors, matching the Plan Composition donut.
@@ -1662,6 +1692,8 @@ function mcRec(state,p){ return state ? ((MEDICARE.states[state]||{})[p]||null) 
 // enrol in MA, so A&B is the eligible denominator. Runs ~4pt above the
 // total-Medicare basis (e.g. national 55.6% vs 51.2% for Apr 2026).
 function mcPen(rec){ return rec ? +(rec.ma/rec.abtot*100).toFixed(1) : null; }
+function mcPenRaw(rec){ return rec ? rec.ma/rec.abtot*100 : null; }   // unrounded: ranking & deltas
+const mcPct1 = v => v==null ? '\u2014' : v.toFixed(1)+'%';             // always one decimal
 const mcValAxis=()=>({grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}});
 // `grace` pads the auto-scaled range by ~70% of the data span on each side, so a
 // few points of MA-penetration movement don't stretch across the full plot
@@ -1686,7 +1718,7 @@ function renderMcarePen(state){
   document.getElementById('mc-pen-sub').textContent='Medicare Advantage & other health plans as a share of beneficiaries with both Part A & B · '+MC_L[0]+' – '+MC_L[MC_L.length-1];
   const o=mcTrendOpts(mcPctAxis());
   o.plugins.legend.display=false;
-  o.plugins.tooltip.callbacks.label=c=>c.raw==null?'':' MA penetration: '+c.raw+'%';
+  o.plugins.tooltip.callbacks.label=c=>c.raw==null?'':' MA penetration: '+mcPct1(c.raw);
   makeChart('mcarePenChart',{type:'line',
     data:{labels:MC_SHORT,datasets:[{label:'MA penetration',data:MC_P.map(p=>mcPen(mcRec(state,p))),
       borderColor:'#B45309',backgroundColor:'rgba(180,83,9,.10)',borderWidth:2.5,
@@ -1734,14 +1766,14 @@ function renderMcareBasis(state){
 
 function mcPenByState(){
   return Object.keys(MEDICARE.states).map(s=>{const r=(MEDICARE.states[s]||{})[MC_LATEST];
-    return r?{s:s,v:+(r.ma/r.abtot*100).toFixed(1),ma:r.ma,abtot:r.abtot,tot:r.tot}:null;}).filter(Boolean);
+    return r?{s:s,v:+(r.ma/r.abtot*100).toFixed(1),raw:r.ma/r.abtot*100,ma:r.ma,abtot:r.abtot,tot:r.tot}:null;}).filter(Boolean);
 }
 function renderMcareRank(state){
   const title=document.getElementById('mc-rank-title'), sub=document.getElementById('mc-rank-sub');
   const latestLbl=MC_L[MC_P.indexOf(MC_LATEST)];
   const xax={grid:{color:'#E8EFF7'},ticks:{callback:pctFmt,color:'#5A6A84',font:{size:10}},border:{display:false},max:70,beginAtZero:true};
   if(!state){
-    const top=mcPenByState().sort((a,b)=>b.v-a.v).slice(0,12);
+    const top=mcPenByState().sort((a,b)=>b.raw-a.raw).slice(0,12);   // rank on unrounded shares (ties)
     title.innerHTML='Highest MA Penetration <span>· States</span>';
     sub.textContent='MA share of Part A & B beneficiaries · '+latestLbl;
     makeChart('mcareRankChart',{type:'bar',
@@ -1749,7 +1781,7 @@ function renderMcareRank(state){
         hoverBackgroundColor:'rgba(180,83,9,.92)',borderRadius:3,borderSkipped:false}]},
       options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{...T,callbacks:{
-          label:c=>' '+c.raw+'% MA · '+top[c.dataIndex].ma.toLocaleString()+' of '+top[c.dataIndex].abtot.toLocaleString()+' A&B'}}},
+          label:c=>' '+mcPct1(c.raw)+' MA · '+top[c.dataIndex].ma.toLocaleString()+' of '+top[c.dataIndex].abtot.toLocaleString()+' A&B'}}},
         scales:{x:xax,y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9.5}},border:{display:false}}}}});
   } else {
     const all=mcPenByState(), byName=Object.fromEntries(all.map(o=>[o.s,o]));
@@ -1763,7 +1795,7 @@ function renderMcareRank(state){
         hoverBackgroundColor:names.map(s=>s===state?'rgba(180,83,9,1)':'rgba(180,83,9,.5)'),
         borderRadius:3,borderSkipped:false}]},
       options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+c.raw+'% MA penetration'}}},
+        plugins:{legend:{display:false},tooltip:{...T,callbacks:{label:c=>' '+mcPct1(c.raw)+' MA penetration'}}},
         scales:{x:xax,y:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:10}},border:{display:false}}}}});
   }
 }
@@ -1793,9 +1825,10 @@ function renderMcareLook(state){
   // Bar: light segment = penetration 3 years ago (0 -> then); darker segment on
   // top = the gain up to now (then -> now), so the current rate is the dark
   // region and its right edge is today. Both values are labelled.
-  const penNow=mcPen(now), penThen=mcPen(then), dpt=+(penNow-penThen).toFixed(1);
+  // Displayed rates are one decimal; the change is taken from unrounded shares.
+  const penNow=mcPen(now), penThen=mcPen(then), dpt=+(mcPenRaw(now)-mcPenRaw(then)).toFixed(1);
   const clamp=v=>Math.max(0,Math.min(100,v));
-  g('mc-look-share').textContent=penThen+'% → '+penNow+'%';
+  g('mc-look-share').textContent=mcPct1(penThen)+' → '+mcPct1(penNow);
   const past=g('mc-look-bar-past'), gain=g('mc-look-bar-gain');
   if(penNow>=penThen){                     // growth: light base, dark gain on top
     past.style.width=clamp(penThen)+'%';
@@ -1820,7 +1853,7 @@ function selectMcareState(state){
   setDelta('mc-total-d', d.tot, prev?prev.tot:null, 'up');
 
   const pen=mcPen(d);
-  setKpi('mc-pen', pen+'%', '<b>'+fmt(d.ma)+'</b> MA of '+fmt(d.abtot)+' with Parts A & B', '#B45309');
+  setKpi('mc-pen', mcPct1(pen), '<b>'+fmt(d.ma)+'</b> MA of '+fmt(d.abtot)+' with Parts A & B', '#B45309');
   // Penetration MoM shown in points, styled neutral (flat) — a rise in MA share
   // is not editorialised as good or bad; the arrow carries the direction only.
   (function(){ const el=document.getElementById('mc-pen-d'); const pp=prev?mcPen(prev):null;
@@ -1829,7 +1862,7 @@ function selectMcareState(state){
     // ~0.005pt move into a spurious ±0.1pt (e.g. 55.554% → 55.549%).
     const dpt=+((d.ma/d.abtot-prev.ma/prev.abtot)*100).toFixed(1);
     el.textContent=(dpt>0?'▲ ':dpt<0?'▼ ':'– ')+Math.abs(dpt).toFixed(1)+'pt';
-    el.className='kpi-delta flat'; el.title='vs. prior month: '+pp+'% → '+pen+'%'; })();
+    el.className='kpi-delta flat'; el.title='vs. prior month: '+mcPct1(pp)+' → '+mcPct1(pen); })();
 
   setKpi('mc-orig', fmt(d.org), '<b>'+pct(d.org,d.tot)+'</b> of total Medicare', '#6B7280');
   setDelta('mc-orig-d', d.org, prev?prev.org:null, 'none');
@@ -1889,7 +1922,8 @@ function renderEsiCov(state){
     vtag.textContent='CPS ASEC + ACS';
     title.innerHTML='National ESI <span>Coverage Trend</span>';
     sub.textContent='Covered persons · CPS ASEC '+ESI_CPS[0][0]+'–'+ESI_CPS[ESI_CPS.length-1][0]
-      +' (prior-calendar-year) · with the ACS '+ESI_ACS_YEAR+' point-in-time estimate (different measure, not connected)';
+      +' (prior-calendar-year) · with the ACS '+ESI_ACS_YEAR+' point-in-time estimate (different measure, not connected)'
+      +' · 2020 onward uses 2020 Census-based population controls (Census footnote), so 2019→2020 is not strictly comparable';
     const labels=ESI_CPS.map(r=>String(r[0]));
     const acsIdx=ESI_CPS.findIndex(r=>r[0]===ESI_ACS_YEAR);
     const acsPts=ESI_CPS.map((r,i)=>i===acsIdx?ESI_ACS['United States']:null);
@@ -1959,7 +1993,7 @@ function renderEsiCost(state){
   const spec=ESI_COST[esiCostKey], field=spec[esiCovKey], covLbl=esiCovKey==='single'?'Single':'Family';
   document.getElementById('esi-cost-title').innerHTML=spec.lbl+' <span>· '+covLbl+(state?' · vs largest':' · by state')+'</span>';
   document.getElementById('esi-cost-sub').textContent='MEPS-IC '+ESI_MEPS_YEAR+' · private-sector, per enrolled employee'
-    +(state?'':' · top 12 states');
+    +(esiCostKey==='ded'?' with a deductible':'')+(state?'':' · top 12 states');
   esiRankBars('esiCostChart',state,field,false,covLbl+' '+spec.lbl.toLowerCase());
 }
 function renderEsiAccess(state){
@@ -1968,6 +2002,20 @@ function renderEsiAccess(state){
   document.getElementById('esi-access-sub').textContent='MEPS-IC '+ESI_MEPS_YEAR+' · '+ESI_ACC[esiAccKey]
     +(state?'':' · top 12 states');
   esiRankBars('esiAccessChart',state,esiAccKey,true,ESI_ACC[esiAccKey]);
+}
+
+// KFF worker share from KFF's own average dollars (one decimal).
+const kffShare=(c,p)=>(c!=null&&p)?(c/p*100).toFixed(1)+'%':'—';
+// The actual MEPS-IC vs KFF comparison, computed from the embedded national
+// figures (MEPS is lower on premiums but higher on worker contribution and on the
+// single deductible in 2025) — never a blanket "runs below KFF".
+function esiMepsVsKff(){
+  const m=ESI_MEPS['United States']; if(!m) return '';
+  const d=(a,b)=>(a>=b?'+':'\u2212')+Math.abs((a/b-1)*100).toFixed(0)+'%';
+  const cmp=(lbl,a,b)=>lbl+' '+esiUsd(a)+' vs '+esiUsd(b)+' ('+d(a,b)+')';
+  return 'MEPS-IC '+ESI_MEPS_YEAR+' vs KFF: premiums \u2014 '+cmp('single',m.ps,ESI_KFF.premSingle)+', '+cmp('family',m.pf,ESI_KFF.premFamily)
+    +'; worker contribution \u2014 '+cmp('single',m.cs,ESI_KFF.wcSingle)+', '+cmp('family',m.cf,ESI_KFF.wcFamily)
+    +'; single deductible \u2014 '+esiUsd(m.ds)+' vs '+esiUsd(ESI_KFF.dedSingle)+' ('+d(m.ds,ESI_KFF.dedSingle)+').';
 }
 
 // Benchmark card. National: the KFF EHBS survey benchmark (never the national
@@ -1984,22 +2032,24 @@ function renderEsiBench(state){
     body.innerHTML='<table class="kff-table"><thead><tr><th>Metric</th><th>Single</th><th>Family</th></tr></thead><tbody>'
       +row('Average annual premium',esiUsd(ESI_KFF.premSingle),esiUsd(ESI_KFF.premFamily))
       +row('Worker contribution',esiUsd(ESI_KFF.wcSingle),esiUsd(ESI_KFF.wcFamily))
-      +row('Worker share of premium',ESI_KFF.shareSingle+'%',ESI_KFF.shareFamily+'%')
-      +row('General annual deductible',esiUsd(ESI_KFF.dedSingle),'<span class="cs-na">n/a</span>')
+      +row('Worker share of premium',kffShare(ESI_KFF.wcSingle,ESI_KFF.premSingle),kffShare(ESI_KFF.wcFamily,ESI_KFF.premFamily))
+      +row('General annual deductible <span class="cs-na">among workers with a deductible</span>',esiUsd(ESI_KFF.dedSingle),'<span class="cs-na">n/a</span>')
       +'</tbody></table>'
       +'<div class="kff-note">KFF Employer Health Benefits Survey ('+ESI_KFF.year+'). A national, survey-based benchmark shown for comparison only. '
-      +'MEPS-IC ('+ESI_MEPS_YEAR+') runs a few points below KFF (different plan mix); the two are separate sources — this benchmark is national-only and never populates a state view.</div>';
+      +'Worker shares are computed from KFF&rsquo;s average dollars (contribution &divide; premium, as on the MEPS state cards); KFF publishes '
+      +ESI_KFF.shareSingle+'% / '+ESI_KFF.shareFamily+'%, which it calculates per worker rather than from the averages, so the two differ slightly. '
+      +esiMepsVsKff()+' The two are separate surveys with different samples and plan mix — this benchmark is national-only and never populates a state view.</div>';
   } else {
     const d=esiMeps(state);
     vtag.textContent='MEPS-IC '+ESI_MEPS_YEAR;
     title.innerHTML=state+' <span>· Cost Detail</span>';
     sub.textContent='MEPS-IC '+ESI_MEPS_YEAR+' · private-sector, per enrolled employee (state benchmark unavailable from KFF — national only)';
-    const share=(c,p)=>(d&&d[p])?(d[c]/d[p]*100).toFixed(0)+'%':'—';
+    const share=(c,p)=>(d&&d[p])?(d[c]/d[p]*100).toFixed(0)+'%':'—';  // MEPS: contribution ÷ premium
     body.innerHTML='<table class="kff-table"><thead><tr><th>Metric</th><th>Single</th><th>Family</th></tr></thead><tbody>'
       +row('Average premium',esiUsd(d&&d.ps),esiUsd(d&&d.pf))
       +row('Worker contribution',esiUsd(d&&d.cs),esiUsd(d&&d.cf))
       +row('Worker share of premium',share('cs','ps'),share('cf','pf'))
-      +row('Deductible',esiUsd(d&&d.ds),esiUsd(d&&d.df))
+      +row('Deductible <span class="cs-na">among workers with a deductible</span>',esiUsd(d&&d.ds),esiUsd(d&&d.df))
       +'</tbody></table>'
       +'<div class="kff-note">MEPS-IC '+ESI_MEPS_YEAR+' private-sector averages for '+state+'. KFF EHBS is national-only, so no state benchmark is shown here.</div>';
   }
@@ -2033,7 +2083,7 @@ function selectEsiState(state){
   setKpi('esi-family', d?esiUsd(d.pf):'—',
     d?'worker pays <b>'+esiUsd(d.cf)+'</b> ('+shF+'%) · MEPS '+ESI_MEPS_YEAR:'—', '#2F6F8F');
   setKpi('esi-ded', d?esiUsd(d.ds):'—',
-    d?'family <b>'+esiUsd(d.df)+'</b> · MEPS '+ESI_MEPS_YEAR:'—', '#2F6F8F');
+    d?'among workers with a deductible · family <b>'+esiUsd(d.df)+'</b> · MEPS '+ESI_MEPS_YEAR:'—', '#2F6F8F');
 
   const sn=document.getElementById('esi-state-note');
   if(state && ESI_CAVEATS[state]){ sn.style.display='flex';
