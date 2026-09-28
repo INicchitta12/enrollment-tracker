@@ -73,12 +73,12 @@ CHIP_MCCHILD_BOTH_COL = "Medicaid and CHIP Child Enrollment"
 # workbook is the authoritative later vintage — e.g. New Hampshire's March CHIP
 # resubmission), so a small delta from the point-in-time PDF is expected, not an
 # error.
-CHIP_CHILD_CONTROL = {"2026-05": 28_080_687, "2026-04": 28_235_643,
-                      "2026-03": 28_358_130}
+CHIP_CHILD_CONTROL = {"2026-06": 27_845_626, "2026-05": 28_080_687,
+                      "2026-04": 28_235_643, "2026-03": 28_358_130}
 # Months checked as hard failures: those whose workbook vintage still matches the
 # CMS PDF exactly. Older months drift as states resubmit (March carries New
 # Hampshire's CHIP revision), so they only emit a note.
-CHIP_CHILD_CONTROL_STRICT = {"2026-05", "2026-04"}
+CHIP_CHILD_CONTROL_STRICT = {"2026-06", "2026-05", "2026-04"}
 # Arizona did not report the Medicaid adult/child breakout from Feb 2020 through
 # Apr 2024, so its Mar 2023 peak child figure is unreal (Total CHIP > combined
 # child ⇒ negative). Its per-state child peak comparison is suppressed, and the

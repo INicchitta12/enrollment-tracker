@@ -416,7 +416,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     </div>
     <div class="lower l-bhp">
       <div class="chart-card">
-        <div class="chart-card-header"><div class="card-accent-bar" style="background:#4F46C8"></div><div class="chart-title">New York <span>&middot; EP Expansion</span></div></div>
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:#4F46C8"></div><div class="chart-title">New York <span>&middot; EP Expansion &rarr; BHP</span></div></div>
         <div class="chart-sub">__BHP_NY_RANGE__</div>
         <div class="chart-wrap"><canvas id="bhpNY"></canvas></div>
       </div>
@@ -709,8 +709,13 @@ const PEAK_LABEL    = __PEAK_LABEL__;
 const MCAID_CAVEATS = {
   'Nevada':'<b style="color:#5A4A1A">Nevada</b>’s <b style="color:#5A4A1A">March 2026</b> adult/child split is distorted — a CMS reporting error overstated child enrollment by roughly <b style="color:#5A4A1A">12,000</b>, understating <b style="color:#5A4A1A">adult</b> enrollment by about the same amount. Its <b style="color:#5A4A1A">total</b> Medicaid enrollment is unaffected (CMS published a −0.3% March change, in line with neighbouring months); only the March adult figure and its March→April adult change are affected. To be corrected in a future CMS release.',
   'Georgia':'<b style="color:#5A4A1A">Georgia</b> reports beneficiaries granted a new 12-month eligibility period after a change in circumstances <b style="color:#5A4A1A">together with</b> those due for renewal, which inflates its renewals-due count — so Georgia’s renewal-outcome mix is not directly comparable to other states’. (CMS Data Notes; ongoing.)',
+  'Illinois':'<b style="color:#5A4A1A">Illinois</b> corrected its reporting in <b style="color:#5A4A1A">June 2026</b>: it had been counting its Medicaid-expansion CHIP enrollees as Medicaid child enrollment rather than CHIP, and did not revise earlier months (CMS Data Notes). Its June Medicaid total (−64,767) and child enrollment are therefore not comparable to prior months — an estimated <b style="color:#5A4A1A">~58,000</b> children moved from Medicaid to CHIP (Illinois’ June CHIP gain of 58,227 against a flat prior trend), while its combined Medicaid + CHIP enrollment fell only 6,540. Adult enrollment is unaffected. Left as reported.',
   'North Carolina':'<b style="color:#5A4A1A">North Carolina</b> reports renewal outcomes only for renewals it initiated and scheduled to complete in the report month, excluding renewals due it could not initiate in time — so its renewals-due count runs low relative to other states. (CMS Data Notes; ongoing.)',
 };
+// National-view note (no state selected): a state reporting correction large
+// enough to move the national figure. Illinois' June 2026 Medicaid→CHIP
+// reclassification (see MCAID_CAVEATS / CHIP_NAT_NOTE); left as reported.
+const MCAID_NAT_NOTE = 'The national <b style="color:#5A4A1A">June 2026</b> Medicaid decline (−419,141) includes an estimated <b style="color:#5A4A1A">~58,000</b> Illinois children reclassified from Medicaid to CHIP — a CMS-noted reporting correction, not coverage loss. Combined Medicaid + CHIP fell about 359,000. Figures left as reported.';
 // Work-requirement WATCH LIST — a policy-monitoring flag, NOT a CMS data-quality
 // caveat. The federal Medicaid work requirements let states grant enrollees who
 // attest they are too sick or disabled to work a grace period on coverage through
@@ -964,6 +969,8 @@ function selectMcaidState(state){
   const notes=[];
   if(state && MCAID_CAVEATS[state])
     notes.push(['⚠','var(--brand-amber)',MCAID_CAVEATS[state]]);
+  if(!state && MCAID_NAT_NOTE)
+    notes.push(['⚠','var(--brand-amber)',MCAID_NAT_NOTE]);
   if(state && MCAID_WORKREQ_WATCH.has(state))
     notes.push(['⚑','#1B3A6B','<b style="color:#1B3A6B">'+state+'</b>'+WORKREQ_WATCH_NOTE]);
   if(notes.length){
@@ -1076,8 +1083,15 @@ const CHIP_CAVEATS={
   // Nevada's caveat is about the DERIVED Medicaid child series now shown here, not
   // CHIP itself (extends the Nevada note on the Medicaid tab). Left as reported —
   // CMS corrects it upstream.
+  // Illinois reclassified Medicaid-expansion CHIP from Medicaid child to CHIP in
+  // June 2026 without revising prior months (CMS Data Notes, Jun 2026 edition).
+  'Illinois':'corrected its reporting in <b style="color:#5A4A1A">June 2026</b>: it had been counting its Medicaid-expansion CHIP enrollees as Medicaid child enrollment rather than CHIP, and did not revise earlier months (CMS Data Notes). Its June CHIP (+58,227, +18.9%) and derived Medicaid child (−68,223, −6.7%) figures are therefore not comparable to prior months; its combined Medicaid & CHIP child enrollment moved only −9,996. Left as reported.',
   'Nevada':'has its <b style="color:#5A4A1A">March 2026</b> Medicaid child enrollment (the derived series) overstated by roughly <b style="color:#5A4A1A">12,000</b> — a CMS reporting error, offset by an equal understatement of Medicaid adult, so its <b style="color:#5A4A1A">total</b> Medicaid enrollment is unaffected. Its total CHIP enrollment is unaffected too, and its March→April change in the derived series is overstated as a decline. CMS dropped this note from the May 2026 edition, but the correction has not yet reached the data — left as reported.'
 };
+
+// National-view note (no state selected): Illinois' June 2026 reclassification
+// drives nearly all of the national June CHIP gain. Left as reported.
+const CHIP_NAT_NOTE='National <b style="color:#5A4A1A">June 2026</b> CHIP (+60,258) is driven almost entirely by an <b style="color:#5A4A1A">Illinois</b> reporting correction that moved an estimated ~58,000 Medicaid-expansion CHIP enrollees out of Medicaid child and into CHIP; excluding Illinois, CHIP rose 2,031. National CHIP’s June level against its Mar 2023 peak is inflated, and the June decline in derived Medicaid child is overstated, by that amount. Left as reported.';
 
 function chipVal(state,p){ return state ? ((CHIP_STATES[state]||{})[p] ?? null) : (CHIP_NAT[p] ?? null); }
 function chipSeries(state){ return CHIP_PERIODS.map(p=>chipVal(state,p)); }
@@ -1301,13 +1315,14 @@ function selectChipState(state){
   setDelta('cp-both-d', both, bothPrev, 'up');
 
   const sn=document.getElementById('cp-state-note');
-  if(state && CHIP_CAVEATS[state]){
+  const chipNote = state ? (CHIP_CAVEATS[state] ? '<b style="color:#5A4A1A">'+state+'</b> '+CHIP_CAVEATS[state] : null) : CHIP_NAT_NOTE;
+  if(chipNote){
     sn.style.display='flex';
     sn.innerHTML='<span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">⚠</span>'
-      +'<span><b style="color:#5A4A1A">'+state+'</b> '+CHIP_CAVEATS[state]+'</span>';
+      +'<span>'+chipNote+'</span>';
   } else { sn.style.display='none'; sn.innerHTML=''; }
 
-  // Two Cumulative Impact strips (Dec 2025 – Apr 2026) — Total CHIP and derived
+  // Two Cumulative Impact strips (first – latest reported month) — Total CHIP and derived
   // Medicaid child — each labelled so it is clear which is which. Net change and
   // average monthly change come from each series directly; the "vs. Mar 2023
   // Peak" cell uses the series' own peak rule (the child cell shares the
@@ -1526,6 +1541,25 @@ function selectMktState(state){
 }
 
 // ══ BHP ══
+// Vertical marker on a BHP mini-chart at a program-definition break (drawn
+// between the prior month and `at`), so a step reads as a redefinition rather
+// than coverage loss. Inline Chart.js plugin; no extra CDN dependency.
+const BHP_MARKS = {
+  'New York': {at:'Jun', label:['EP \u2192 BHP','redefinition,','not coverage loss']},
+};
+function bhpMarkPlugin(mark){
+  return {id:'bhpMark', afterDatasetsDraw(chart){
+    const x=chart.scales.x, a=chart.chartArea, i=chart.data.labels.indexOf(mark.at);
+    if(i<1) return;
+    const px=(x.getPixelForValue(i-1)+x.getPixelForValue(i))/2, c=chart.ctx;
+    c.save();
+    c.strokeStyle='#8A6D1F'; c.lineWidth=1; c.setLineDash([3,3]);
+    c.beginPath(); c.moveTo(px,a.top); c.lineTo(px,a.bottom); c.stroke(); c.setLineDash([]);
+    c.fillStyle='#5A4A1A'; c.font='600 9px sans-serif'; c.textAlign='left'; c.textBaseline='top';
+    mark.label.forEach((t,k)=>c.fillText(t,px+4,a.top+2+k*11));
+    c.restore();
+  }};
+}
 function bhpMini(canvasId, state, color){
   const v = BHP_SERIES[state] || [];
   const idx = v.map((x,i)=>x==null?-1:i).filter(i=>i>=0);
@@ -1540,9 +1574,11 @@ function bhpMini(canvasId, state, color){
       borderWidth:2.5,pointRadius:data.map(x=>x==null?0:(single?7:4)),
       pointBackgroundColor:color,pointBorderColor:'#fff',pointBorderWidth:2,
       tension:.25,spanGaps:false,fill:true}]},
+    plugins: BHP_MARKS[state] ? [bhpMarkPlugin(BHP_MARKS[state])] : [],
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},
-        tooltip:{...T,callbacks:{label:c=>c.raw==null?' not reported':' '+c.raw.toLocaleString()}}},
+        tooltip:{...T,callbacks:{label:c=>c.raw==null?' not reported':' '+c.raw.toLocaleString(),
+          afterLabel:c=>{const m=BHP_MARKS[state]; return m && c.label===m.at ? ' EP \u2192 BHP transition (Jul 1 2026 \u00a71332 waiver end): program redefinition, not coverage loss' : '';}}}},
       scales:{
         x:{grid:{display:false},ticks:{color:'#0D1B3E',font:{size:9.5}},border:{display:false}},
         y:{grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:9.5},maxTicksLimit:5},border:{display:false}}}}
@@ -1737,7 +1773,9 @@ function selectMcareState(state){
   // is not editorialised as good or bad; the arrow carries the direction only.
   (function(){ const el=document.getElementById('mc-pen-d'); const pp=prev?mcPen(prev):null;
     if(pp==null){ el.textContent=''; el.className='kpi-delta flat'; return; }
-    const dpt=+(pen-pp).toFixed(1);
+    // From unrounded shares: differencing the 1-dp display values can turn a
+    // ~0.005pt move into a spurious ±0.1pt (e.g. 55.554% → 55.549%).
+    const dpt=+((d.ma/d.abtot-prev.ma/prev.abtot)*100).toFixed(1);
     el.textContent=(dpt>0?'▲ ':dpt<0?'▼ ':'– ')+Math.abs(dpt).toFixed(1)+'pt';
     el.className='kpi-delta flat'; el.title='vs. prior month: '+pp+'% → '+pen+'%'; })();
 
