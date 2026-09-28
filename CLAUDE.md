@@ -204,12 +204,13 @@ from both endpoints; its secondary figure removes **Arizona and Illinois** from 
 (`childPeakExAzIl()`, label "excl. Arizona & Illinois (both endpoints)"): 35,171,296 → 27,252,479
 (−22.5%, 77.5% of peak) as shown vs 33,943,449 → 26,300,834 (−22.5%, 77.5%) excl. AZ & IL —
 Illinois' own child decline from peak (1,227,847 → 951,645, −22.5%) matches the national rate, so
-the headline is unaffected. *Did Illinois' Mar 2023 child figure include the expansion CHIP?*
-Not confirmable from the sources in the repo — CMS's note gives no start date and the CMS
-Performance Indicator history was unreachable. Indirect evidence says **probably yes**: CHIP was
-22.0% of Illinois' combined child + CHIP in Mar 2023, in line with the pre-correction Dec 2025–May
-2026 months (22.8–23.9%) and well below the corrected June 2026 share (27.8%). Treat it as likely,
-not established; re-check against the Performance Indicator CSV when available.
+the headline is unaffected. Illinois reported Medicaid-expansion CHIP as Medicaid child enrollment through May 2026 and
+corrected this in June 2026 without restating prior months. The CMS Performance Indicator CSV
+(Aug 2026 vintage, 202303–202604) shows a continuous Illinois CHIP share of 19.8–23.9% with no
+step change and no footnotes. That is consistent with the misreporting covering the March 2023
+baseline, but not directly confirmed. Excl.-Illinois figures are the like-for-like comparison for
+any Illinois-sensitive metric (national CHIP vs. peak, Medicaid child vs. peak, June
+month-over-month changes).
 
 **Quarterly updated renewal outcomes are not in the workbook.** Quarter-end editions (Mar, Jun)
 publish *Updated* renewal outcomes for the cohort three months back (June edition: Dec 2025–Feb
