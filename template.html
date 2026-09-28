@@ -167,6 +167,12 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .chart-wrap canvas{position:absolute;inset:0;}
 .col-stack{display:flex;flex-direction:column;gap:9px;min-height:0;}
 .col-stack>.chart-card{flex:1;}
+.col-stack>.bars-panel{min-height:min-content;}  /* never clip the Cumulative Impact strip; the chart below absorbs the squeeze */
+.col-stack>.bars-panel+.chart-card{min-height:170px;}
+/* short viewports: let the Medicaid panel scroll rather than crush the outcome-mix chart */
+.panel.mcaid-panel{overflow-y:auto;}
+.mcaid-panel>*{flex-shrink:0;}
+.mcaid-panel>.lower{flex-shrink:1;min-height:min-content;}
 .duo{flex:1;display:flex;gap:8px;min-height:0;}
 .duo-half{flex:1;display:flex;flex-direction:column;min-height:0;}
 .duo-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:center;margin-bottom:2px;flex-shrink:0;}
