@@ -722,6 +722,11 @@ def load_esi_cps():
     calendar year — a different reference period from ACS, so the two national
     totals differ for the same nominal year (expected, not an error). This is the
     only real ESI time series; state data is single-year and cross-sectional.
+
+    Staged from Census HHI-01 (All Races, Both Sexes, Number, Employment-based;
+    thousands x 1,000). The whole series comes from ONE release (currently the
+    2025 release, source-data/asec_2025.xlsx) — never splice vintages: that
+    release restated 2024 (Vintage 2025 population controls).
     """
     import csv as _csv
     if not ESI_CPS_CSV.exists():
@@ -731,6 +736,10 @@ def load_esi_cps():
         for row in _csv.DictReader(f):
             rows.append([int(row["Year"]), int(row["CoveredPersons"])])
     rows.sort()
+    # Annual series with no gaps — a missing year would draw a straight line across it.
+    years = [y for y, _ in rows]
+    if years != list(range(years[0], years[-1] + 1)):
+        sys.exit(f"ERROR: ESI CPS years not contiguous: {years}")
     return rows
 
 
@@ -930,6 +939,7 @@ def main():
         '__ESI_ACS__': compact(esi_acs),
         '__ESI_ACS_YEAR__': compact(esi_acs_year),
         '__ESI_CPS__': compact(esi_cps),
+        '__ESI_CPS_YEAR__': compact(esi_cps[-1][0]),
         '__ESI_MEPS__': compact(esi_meps),
         '__ESI_MEPS_YEAR__': compact(esi_meps_year),
         '__ESI_KFF__': compact(esi_kff),
@@ -968,7 +978,7 @@ def main():
         ("ACA cost sharing", "CMS Exchange PUFs (Plan Attributes; Benefits &amp; Cost-Sharing)",
          f"{CS_BENEFIT_YEAR} benefit year"),
         ("Employer coverage (ESI)", "Census ACS/CPS · AHRQ MEPS-IC · KFF EHBS",
-         f"ACS {esi_acs_year} · MEPS-IC {esi_meps_year}"),
+         f"CPS ASEC {esi_cps[0][0]}–{esi_cps[-1][0]} · ACS {esi_acs_year} · MEPS-IC {esi_meps_year}"),
     ])
 
     print(f"Built {OUTPUT.name}  ({len(html) // 1024} KB)")
@@ -995,9 +1005,14 @@ def main():
     print(f"  Cost sharing {CS_BENEFIT_YEAR} plan-level avg  ({len(cs_states)} states + US)")
     print(f"  ESI ACS     {esi_acs_year} covered persons  ({len(esi_acs_states)} states + US)  "
           f"US {esi_acs['United States']:,}")
-    print(f"  ESI CPS     {esi_cps[0][0]}–{esi_cps[-1][0]} national covered persons  "
-          f"({esi_cps[-1][0]} {esi_cps[-1][1]:,}; ACS–CPS {esi_acs_year} gap "
-          f"{esi_acs['United States']-dict(esi_cps).get(esi_acs_year,0):+,})")
+    (_py, _pv), (_cy, _cv) = esi_cps[-2], esi_cps[-1]
+    print(f"  ESI CPS     {esi_cps[0][0]}–{_cy} national covered persons  "
+          f"({_cy} {_cv:,}; {_py}→{_cy} {_cv-_pv:+,} ({(_cv/_pv-1)*100:+.2f}%), CPS both years)")
+    # ACS–CPS gap only for the SAME year — never across vintages.
+    _cps_acs = dict(esi_cps).get(esi_acs_year)
+    print(f"  ESI ACS–CPS {esi_acs_year} gap "
+          + (f"{esi_acs['United States']-_cps_acs:+,} (ACS {esi_acs['United States']:,} vs CPS {_cps_acs:,})"
+             if _cps_acs is not None else "n/a (no CPS year matches ACS)"))
     print(f"  ESI MEPS    {esi_meps_year} private-sector rates+dollars  ({len(esi_acs_states)} states + US)  "
           f"US single prem ${esi_meps['United States']['ps']:,}")
     print(f"  ESI KFF     {esi_kff['year']} national benchmark (survey; not the national series)")

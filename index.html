@@ -880,7 +880,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
     <div class="data-note compact">
       <span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">&#9888;</span>
-      <span><b style="color:#5A4A1A">Employer coverage is annual survey data and lags the other tabs.</b> Coverage counts are <b style="color:#5A4A1A">ACS 2024</b> (persons, point-in-time) and <b style="color:#5A4A1A">CPS ASEC</b> (persons, prior calendar year); cost &amp; access are <b style="color:#5A4A1A">MEPS-IC 2025</b> (private-sector enrolled employees, excludes state/local government); the benchmark is <b style="color:#5A4A1A">KFF EHBS</b>. Person counts (ACS/CPS) and employee-based rates (MEPS) are <b style="color:#5A4A1A">different units</b> &mdash; never summed or combined.</span>
+      <span><b style="color:#5A4A1A">Employer coverage is annual survey data and lags the other tabs.</b> Coverage counts are <b style="color:#5A4A1A">CPS ASEC 2025</b> (national persons, covered at any time during the calendar year) and <b style="color:#5A4A1A">ACS 2024</b> (state persons, point-in-time &mdash; one year behind CPS, so ACS and CPS are compared for 2024 only); cost &amp; access are <b style="color:#5A4A1A">MEPS-IC 2025</b> (private-sector enrolled employees, excludes state/local government); the benchmark is <b style="color:#5A4A1A">KFF EHBS</b>. CPS 2025 is the same year as MEPS-IC 2025 and KFF; ACS is the one source a year behind. Person counts (ACS/CPS) and employee-based rates (MEPS) are <b style="color:#5A4A1A">different units</b> &mdash; never summed or combined.</span>
     </div>
 
     <div class="data-note compact" id="esi-state-note" style="display:none"></div>
@@ -1083,7 +1083,20 @@ const MEDICARE      = {"periods":["2023-01","2023-02","2023-03","2023-04","2023-
 // every state view is cross-sectional — no state trend lines anywhere.
 const ESI_ACS       = {"Alabama":2715000,"Alaska":384000,"Arizona":3931000,"Arkansas":1445000,"California":20480000,"Colorado":3319000,"Connecticut":2115000,"Delaware":592000,"District of Columbia":420000,"Florida":10550000,"Georgia":5902000,"Hawaii":847000,"Idaho":1071000,"Illinois":7423000,"Indiana":3862000,"Iowa":1840000,"Kansas":1711000,"Kentucky":2386000,"Louisiana":2138000,"Maine":757000,"Maryland":3804000,"Massachusetts":4362000,"Michigan":5961000,"Minnesota":3446000,"Mississippi":1366000,"Missouri":3439000,"Montana":546000,"Nebraska":1135000,"Nevada":1702000,"New Hampshire":873000,"New Jersey":5706000,"New Mexico":884000,"New York":10690000,"North Carolina":5690000,"North Dakota":473000,"Ohio":6697000,"Oklahoma":1997000,"Oregon":2289000,"Pennsylvania":7490000,"Rhode Island":613000,"South Carolina":2795000,"South Dakota":494000,"Tennessee":3782000,"Texas":15870000,"Utah":2207000,"Vermont":356000,"Virginia":5037000,"Washington":4609000,"West Virginia":945000,"Wisconsin":3518000,"Wyoming":321000,"United States":183000000};
 const ESI_ACS_YEAR  = 2024;
-const ESI_CPS       = [[2017,178800000],[2018,178400000],[2019,183000000],[2020,178700000],[2021,178300000],[2022,179800000],[2023,178200000],[2024,181300000]];
+const ESI_CPS       = [[2017,178800000],[2018,178400000],[2019,183000000],[2020,178700000],[2021,178300000],[2022,179800000],[2023,178200000],[2024,180500000],[2025,180700000]];
+const ESI_CPS_YEAR  = 2025;
+// Census trend breaks in the CPS series (HHI-01 footnotes), drawn ON the chart
+// as dashed markers between the prior year and `at`. Update with each release.
+const ESI_CPS_BREAKS = [
+  {at:2018, label:['Processing change','(2017 = bridge file)'],
+   tip:'2017 is from the CPS ASEC 2018 bridge file, reprocessed on the updated system Census introduced with the 2019 ASEC; 2018 onward is production data. Census bridged this change, but 2017 comes from a different file.'},
+  {at:2020, label:['2020 Census','pop. controls'],
+   tip:'2020 onward uses 2020 Census-based population controls, so 2019→2020 is not strictly comparable.'},
+  {at:2024, label:['V2025 pop. controls','(2024 restated)'],
+   tip:'The 2025 release re-weighted 2024 to Vintage 2025 population controls (181.3M → 180.5M), so 2024–2025 are comparable but 2023→2024 is not strictly comparable.'}];
+// HHI-01 90% margins of error (persons) for the latest two CPS years — used only
+// to say whether the latest year-over-year change is outside sampling error.
+const ESI_CPS_MOE = {2024:1295000, 2025:1432000};
 const ESI_MEPS      = {"Alabama":{"ofe":52.6,"ofm":86.6,"elig":87,"take":69.4,"enr":60.4,"ps":8169,"cs":2048,"pf":23554,"cf":7540,"ds":1826,"df":3258},"Alaska":{"ofe":36.2,"ofm":66.5,"elig":78.3,"take":69.4,"enr":54.3,"ps":10630,"cs":1931,"pf":30132,"cf":6171,"ds":1905,"df":3357},"Arizona":{"ofe":45.2,"ofm":87.8,"elig":76.2,"take":62.6,"enr":47.7,"ps":7734,"cs":1837,"pf":23143,"cf":8493,"ds":2571,"df":5039},"Arkansas":{"ofe":51.5,"ofm":83.3,"elig":83.8,"take":62,"enr":52,"ps":7804,"cs":1795,"pf":22956,"cf":7824,"ds":2335,"df":4279},"California":{"ofe":47.8,"ofm":83.6,"elig":77.7,"take":72,"enr":55.9,"ps":9162,"cs":1515,"pf":27057,"cf":7847,"ds":1801,"df":3768},"Colorado":{"ofe":48.3,"ofm":82.3,"elig":78.1,"take":66.9,"enr":52.3,"ps":8816,"cs":1618,"pf":25055,"cf":6733,"ds":2490,"df":4522},"Connecticut":{"ofe":56,"ofm":86.8,"elig":78,"take":66.9,"enr":52.2,"ps":9987,"cs":1771,"pf":28700,"cf":4979,"ds":2454,"df":4308},"Delaware":{"ofe":54.4,"ofm":82.9,"elig":74.8,"take":69.8,"enr":52.3,"ps":9459,"cs":2120,"pf":25600,"cf":6993,"ds":2014,"df":3579},"District of Columbia":{"ofe":72.4,"ofm":95.7,"elig":85.8,"take":70.6,"enr":60.6,"ps":9762,"cs":1863,"pf":29371,"cf":8028,"ds":1613,"df":3498},"Florida":{"ofe":39,"ofm":81.8,"elig":74.8,"take":66.1,"enr":49.5,"ps":8919,"cs":1913,"pf":25396,"cf":7976,"ds":2121,"df":3973},"Georgia":{"ofe":47.7,"ofm":85.6,"elig":84.4,"take":67.8,"enr":57.2,"ps":8907,"cs":1748,"pf":26439,"cf":7224,"ds":2192,"df":4193},"Hawaii":{"ofe":75.5,"ofm":94.9,"elig":76.7,"take":76.6,"enr":58.7,"ps":8285,"cs":857,"pf":23603,"cf":5531,"ds":1124,"df":2563},"Idaho":{"ofe":41.9,"ofm":76.6,"elig":83.5,"take":77.5,"enr":64.7,"ps":8770,"cs":1686,"pf":25957,"cf":6439,"ds":2258,"df":3753},"Illinois":{"ofe":51.5,"ofm":87.3,"elig":79.2,"take":69.3,"enr":54.9,"ps":9724,"cs":1858,"pf":28248,"cf":7838,"ds":1990,"df":3662},"Indiana":{"ofe":43.1,"ofm":80.9,"elig":78.4,"take":66.8,"enr":52.3,"ps":8355,"cs":2137,"pf":23497,"cf":6650,"ds":2422,"df":4275},"Iowa":{"ofe":49.3,"ofm":83.5,"elig":85.9,"take":66.6,"enr":57.2,"ps":8620,"cs":2025,"pf":25181,"cf":7533,"ds":2254,"df":4232},"Kansas":{"ofe":52.6,"ofm":87.1,"elig":79.8,"take":70.5,"enr":56.3,"ps":8657,"cs":1784,"pf":25493,"cf":8222,"ds":2363,"df":4312},"Kentucky":{"ofe":52.5,"ofm":85.1,"elig":81.6,"take":69,"enr":56.3,"ps":8936,"cs":1947,"pf":24520,"cf":5982,"ds":2211,"df":3520},"Louisiana":{"ofe":58.9,"ofm":86.1,"elig":82.3,"take":65.1,"enr":53.6,"ps":8806,"cs":2259,"pf":25647,"cf":7808,"ds":2121,"df":3638},"Maine":{"ofe":42.8,"ofm":78.7,"elig":83,"take":71.9,"enr":59.7,"ps":9803,"cs":1869,"pf":26106,"cf":7079,"ds":2665,"df":4278},"Maryland":{"ofe":53.4,"ofm":88.4,"elig":82.9,"take":68.1,"enr":56.5,"ps":8760,"cs":2065,"pf":24717,"cf":6502,"ds":2308,"df":3015},"Massachusetts":{"ofe":62.7,"ofm":88,"elig":77.4,"take":67.1,"enr":51.9,"ps":10436,"cs":2038,"pf":29619,"cf":7501,"ds":1809,"df":3370},"Michigan":{"ofe":48.4,"ofm":82.6,"elig":78.3,"take":68.2,"enr":53.4,"ps":8230,"cs":1970,"pf":23800,"cf":6437,"ds":1905,"df":3368},"Minnesota":{"ofe":47.4,"ofm":88.2,"elig":69.5,"take":57.8,"enr":40.2,"ps":8586,"cs":1939,"pf":25947,"cf":7013,"ds":2498,"df":4639},"Mississippi":{"ofe":52.4,"ofm":85.6,"elig":79.8,"take":70.4,"enr":56.2,"ps":7612,"cs":1716,"pf":21932,"cf":6228,"ds":2285,"df":3776},"Missouri":{"ofe":51.4,"ofm":86.8,"elig":77.8,"take":73,"enr":56.8,"ps":8084,"cs":1649,"pf":25520,"cf":6797,"ds":2247,"df":4352},"Montana":{"ofe":44.1,"ofm":78.8,"elig":78.9,"take":71.3,"enr":56.2,"ps":8899,"cs":1493,"pf":21989,"cf":4967,"ds":2851,"df":4825},"Nebraska":{"ofe":43.7,"ofm":83,"elig":78.7,"take":63.4,"enr":49.9,"ps":8907,"cs":1722,"pf":26830,"cf":6369,"ds":2676,"df":4901},"Nevada":{"ofe":56.7,"ofm":88.4,"elig":75.7,"take":72.9,"enr":55.2,"ps":8215,"cs":1563,"pf":23075,"cf":7902,"ds":2099,"df":4205},"New Hampshire":{"ofe":55.7,"ofm":76.6,"elig":75.8,"take":66.1,"enr":50.1,"ps":9502,"cs":2350,"pf":28161,"cf":7434,"ds":2635,"df":4797},"New Jersey":{"ofe":56.8,"ofm":84.8,"elig":80.3,"take":68.4,"enr":55,"ps":9743,"cs":2223,"pf":29666,"cf":7053,"ds":1825,"df":3280},"New Mexico":{"ofe":47.4,"ofm":78.9,"elig":78.7,"take":63.1,"enr":49.7,"ps":9447,"cs":1767,"pf":26482,"cf":6761,"ds":2005,"df":4245},"New York":{"ofe":51,"ofm":87.2,"elig":79.6,"take":66.3,"enr":52.8,"ps":10913,"cs":2231,"pf":29752,"cf":7075,"ds":1912,"df":3624},"North Carolina":{"ofe":46.9,"ofm":79.7,"elig":83.8,"take":69.1,"enr":57.9,"ps":8612,"cs":2012,"pf":25311,"cf":8073,"ds":2258,"df":3881},"North Dakota":{"ofe":47.1,"ofm":82.7,"elig":75.6,"take":73.4,"enr":55.5,"ps":9318,"cs":1579,"pf":24903,"cf":5586,"ds":2250,"df":4943},"Ohio":{"ofe":54,"ofm":85.6,"elig":80.7,"take":66.8,"enr":53.9,"ps":8804,"cs":2016,"pf":24661,"cf":6453,"ds":2397,"df":4532},"Oklahoma":{"ofe":55.8,"ofm":87,"elig":83.1,"take":59.8,"enr":49.7,"ps":8124,"cs":1558,"pf":24483,"cf":6955,"ds":2045,"df":4245},"Oregon":{"ofe":46,"ofm":83.1,"elig":86.4,"take":71.2,"enr":61.5,"ps":9225,"cs":1499,"pf":27182,"cf":9374,"ds":2464,"df":3604},"Pennsylvania":{"ofe":47,"ofm":86.6,"elig":77,"take":67.3,"enr":51.9,"ps":9421,"cs":1669,"pf":26623,"cf":6720,"ds":2139,"df":4153},"Rhode Island":{"ofe":54.8,"ofm":86.3,"elig":81.9,"take":63.9,"enr":52.4,"ps":9388,"cs":2046,"pf":27361,"cf":7028,"ds":1975,"df":3941},"South Carolina":{"ofe":41.5,"ofm":72.6,"elig":81,"take":60.5,"enr":49,"ps":8552,"cs":1814,"pf":25046,"cf":8269,"ds":2426,"df":4037},"South Dakota":{"ofe":49.3,"ofm":81.1,"elig":79.2,"take":71.4,"enr":56.6,"ps":8985,"cs":1730,"pf":26110,"cf":6892,"ds":2660,"df":4364},"Tennessee":{"ofe":53.5,"ofm":87.1,"elig":85.6,"take":71.9,"enr":61.5,"ps":8667,"cs":1645,"pf":25123,"cf":5972,"ds":2102,"df":3921},"Texas":{"ofe":49,"ofm":82,"elig":83.2,"take":67.1,"enr":55.8,"ps":8543,"cs":1638,"pf":25053,"cf":7913,"ds":2464,"df":4106},"Utah":{"ofe":35.4,"ofm":75.9,"elig":79.9,"take":71,"enr":56.7,"ps":8448,"cs":1591,"pf":25122,"cf":5567,"ds":2000,"df":4164},"Vermont":{"ofe":42.2,"ofm":79.8,"elig":80,"take":71,"enr":56.8,"ps":10004,"cs":2187,"pf":25450,"cf":7870,"ds":2677,"df":5220},"Virginia":{"ofe":57.7,"ofm":86.1,"elig":80.4,"take":69.2,"enr":55.6,"ps":8970,"cs":2054,"pf":27257,"cf":8692,"ds":2248,"df":4452},"Washington":{"ofe":49.7,"ofm":82,"elig":84.7,"take":78.6,"enr":66.6,"ps":8712,"cs":1381,"pf":27618,"cf":8222,"ds":2072,"df":4769},"West Virginia":{"ofe":47.9,"ofm":79.1,"elig":79.3,"take":66.9,"enr":53,"ps":8878,"cs":2012,"pf":26094,"cf":5129,"ds":2035,"df":3275},"Wisconsin":{"ofe":50.8,"ofm":83.1,"elig":73.3,"take":68.4,"enr":50.2,"ps":9557,"cs":2052,"pf":27309,"cf":6148,"ds":2631,"df":4914},"Wyoming":{"ofe":43.2,"ofm":69.8,"elig":82.9,"take":74.6,"enr":61.9,"ps":8997,"cs":1497,"pf":27084,"cf":6830,"ds":2045,"df":3864},"United States":{"ofe":49.2,"ofm":84.2,"elig":79.6,"take":68.2,"enr":54.3,"ps":9025,"cs":1817,"pf":26281,"cf":7314,"ds":2169,"df":3997}};
 const ESI_MEPS_YEAR = 2025;
 const ESI_KFF       = {"year":2025,"premSingle":9325,"premFamily":26993,"wcSingle":1440,"wcFamily":6850,"shareSingle":16,"shareFamily":26,"dedSingle":1886};
@@ -2214,35 +2227,78 @@ function renderEsiFunnel(state){
   g('esi-f-take',d?d.take:null); g('esi-f-enr',d?d.enr:null);
 }
 
-// Coverage card. National: the CPS national trend (2017–2024, the only real ESI
-// time series) with the ACS point overlaid — two DIFFERENT measures of covered
-// persons on one axis (CPS is prior-calendar-year, ACS point-in-time), shown as
-// distinct marks, never connected. State: ACS cross-sectional ranking (no trend).
+// Coverage card. National: the CPS national trend (the only real ESI time series)
+// with Census trend breaks drawn on the chart, and the ACS point overlaid ONLY at
+// the ACS year — two DIFFERENT measures of covered persons (CPS = any time during
+// the calendar year, ACS = point-in-time), shown as distinct marks, never connected,
+// and never compared across different years. State: ACS cross-sectional ranking.
+function esiBreakPlugin(breaks){
+  return {id:'esiBreaks', afterDatasetsDraw(chart){
+    const x=chart.scales.x, a=chart.chartArea, c=chart.ctx;
+    let prevRight=-Infinity, prevBottom=a.top;   // stagger a label that would collide with the last one
+    breaks.forEach(b=>{
+      const i=chart.data.labels.indexOf(String(b.at)); if(i<1) return;
+      const px=(x.getPixelForValue(i-1)+x.getPixelForValue(i))/2;
+      c.save();
+      c.strokeStyle='#8A6D1F'; c.lineWidth=1; c.setLineDash([3,3]);
+      c.beginPath(); c.moveTo(px,a.top); c.lineTo(px,a.bottom); c.stroke(); c.setLineDash([]);
+      c.fillStyle='#5A4A1A'; c.font='600 9px sans-serif'; c.textBaseline='top';
+      const w=Math.max(...b.label.map(t=>c.measureText(t).width));
+      const right=px+4+w>a.right;             // flip to the left of the line near the edge
+      const left=right?px-4-w:px+4, top=left<prevRight+4?prevBottom+4:a.top+2;
+      c.textAlign=right?'right':'left';
+      b.label.forEach((t,k)=>c.fillText(t,right?px-4:px+4,top+k*11));
+      prevRight=left+w; prevBottom=top+b.label.length*11;
+      c.restore();
+    });
+  }};
+}
+// Latest CPS year-over-year change — CPS on BOTH ends, never ACS vs CPS.
+function esiCpsYoy(){
+  const n=ESI_CPS.length; if(n<2) return null;
+  const [py,pv]=ESI_CPS[n-2], [cy,cv]=ESI_CPS[n-1], d=cv-pv;
+  const m1=ESI_CPS_MOE[py], m2=ESI_CPS_MOE[cy];
+  // Conservative screen: |change| below the larger single-year 90% MOE is not
+  // distinguishable from sampling error (no covariance term needed at that margin).
+  const sig=(m1&&m2)?(Math.abs(d)>=Math.max(m1,m2)?null:false):null;
+  return {py,cy,d,p:d/pv*100,sig};
+}
 function renderEsiCov(state){
   const title=document.getElementById('esi-cov-title'), sub=document.getElementById('esi-cov-sub'),
         vtag=document.getElementById('esi-cov-vtag');
   if(!state){
-    vtag.textContent='CPS ASEC + ACS';
+    vtag.textContent='CPS ASEC + ACS '+ESI_ACS_YEAR;
     title.innerHTML='National ESI <span>Coverage Trend</span>';
-    sub.textContent='Covered persons · CPS ASEC '+ESI_CPS[0][0]+'–'+ESI_CPS[ESI_CPS.length-1][0]
-      +' (prior-calendar-year) · with the ACS '+ESI_ACS_YEAR+' point-in-time estimate (different measure, not connected)'
-      +' · 2020 onward uses 2020 Census-based population controls (Census footnote), so 2019→2020 is not strictly comparable';
+    const cpsAcs=(ESI_CPS.find(r=>r[0]===ESI_ACS_YEAR)||[])[1], acsUS=ESI_ACS['United States'];
+    sub.textContent='CPS ASEC \u00b7 coverage at any time during calendar year \u00b7 '
+      +ESI_CPS[0][0]+'\u2013'+ESI_CPS[ESI_CPS.length-1][0]+' \u00b7 dashed lines = Census trend breaks (hover for detail)'
+      +(cpsAcs!=null?' \u00b7 '+ESI_ACS_YEAR+' only: ACS '+fmt(acsUS)+' vs CPS '+fmt(cpsAcs)
+        +' ('+(acsUS>=cpsAcs?'+':'\u2212')+fmt(Math.abs(acsUS-cpsAcs))+'; different measures)':'');
     const labels=ESI_CPS.map(r=>String(r[0]));
     const acsIdx=ESI_CPS.findIndex(r=>r[0]===ESI_ACS_YEAR);
-    const acsPts=ESI_CPS.map((r,i)=>i===acsIdx?ESI_ACS['United States']:null);
+    const acsPts=ESI_CPS.map((r,i)=>i===acsIdx?acsUS:null);
+    const brk=y=>ESI_CPS_BREAKS.find(b=>String(b.at)===y);
     makeChart('esiCovChart',{type:'line',
       data:{labels:labels,datasets:[
-        {label:'CPS ASEC (calendar-year)',data:ESI_CPS.map(r=>r[1]),borderColor:'#2F6F8F',
+        {label:'CPS ASEC \u00b7 coverage at any time during calendar year',data:ESI_CPS.map(r=>r[1]),borderColor:'#2F6F8F',
           backgroundColor:'rgba(47,111,143,.10)',borderWidth:2.5,pointRadius:3,pointHoverRadius:5,
           pointBackgroundColor:'#2F6F8F',tension:.2,fill:true},
-        {label:'ACS '+ESI_ACS_YEAR+' (point-in-time)',data:acsPts,borderColor:'#B06A16',
+        {label:'ACS '+ESI_ACS_YEAR+' (point-in-time; compare to CPS '+ESI_ACS_YEAR+' only)',data:acsPts,borderColor:'#B06A16',
           backgroundColor:'#B06A16',pointRadius:6,pointHoverRadius:7,pointStyle:'rectRot',
           showLine:false}]},
+      plugins:[esiBreakPlugin(ESI_CPS_BREAKS)],
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:10,boxHeight:10,font:{size:9.5},color:'#5A6A84',usePointStyle:true}},
-          tooltip:{...T,callbacks:{label:c=>c.raw==null?'':' '+c.dataset.label+': '+c.raw.toLocaleString()+' persons'}}},
-        // Auto-scaled with generous grace so the genuine ~3% drift over 8 years sits
-        // in a middle band rather than stretching full-height and overstating a trend.
+          tooltip:{...T,callbacks:{label:c=>c.raw==null?'':' '+c.dataset.label+': '+c.raw.toLocaleString()+' persons',
+            afterBody:items=>{const y=items[0].label, out=[], b=brk(y);
+              // Chart.js tooltips don't wrap — break long notes into ~56-char lines.
+              if(b) ('Trend break: '+b.tip).split(' ').forEach(w=>{const l=out.length-1;
+                if(l>=0&&(out[l]+' '+w).length<=56) out[l]+=' '+w; else out.push(w);});
+              if(+y===ESI_ACS_YEAR && cpsAcs!=null) out.push(ESI_ACS_YEAR+' ACS \u2212 CPS: '+(acsUS-cpsAcs>=0?'+':'\u2212')+Math.abs(acsUS-cpsAcs).toLocaleString()+' (different reference periods)');
+              return out;}}}},
+        // Auto-scaled with generous grace so the genuine ~3% drift over the series sits
+        // in a middle band rather than stretching full-height and overstating a trend;
+        // the headroom also holds the break labels clear of the line.
         scales:{x:{grid:{color:'#E8EFF7'},ticks:{color:'#5A6A84',font:{size:10}},border:{display:false}},
           y:{grace:'120%',grid:{color:'#E8EFF7'},ticks:{callback:axisFmt,color:'#5A6A84',font:{size:10}},border:{display:false}}}}});
   } else {
@@ -2377,7 +2433,14 @@ function selectEsiState(state){
   const b=document.getElementById(id); if(b) b.classList.add('active');
 
   const loc=state||'National', d=esiMeps(state), cov=ESI_ACS[loc==='National'?'United States':state];
-  setKpi('esi-cov', fmt(cov), loc+' · ACS '+ESI_ACS_YEAR+' · covered persons', 'var(--esi)');
+  if(state){
+    setKpi('esi-cov', fmt(cov), loc+' · ACS '+ESI_ACS_YEAR+' · covered persons (point-in-time)', 'var(--esi)');
+  } else {
+    const y=esiCpsYoy(), cps=ESI_CPS[ESI_CPS.length-1][1];
+    setKpi('esi-cov', fmt(cps), 'National · CPS ASEC '+ESI_CPS_YEAR+' · any time in year'
+      +(y?' · <b>'+(y.d>=0?'+':'\u2212')+fmt(Math.abs(y.d))+' ('+(y.p>=0?'+':'\u2212')+Math.abs(y.p).toFixed(1)+'%)</b> vs CPS '+y.py
+        +(y.sig===false?' · within sampling error':''):''), 'var(--esi)');
+  }
   setKpi('esi-offer', d?esiPct(d.ofm):'—',
     d?'<b>'+esiPct(d.ofe)+'</b> of establishments · MEPS '+ESI_MEPS_YEAR:'—', '#3E7FA0');
   const shS=(d&&d.ps)?Math.round(d.cs/d.ps*100):null, shF=(d&&d.pf)?Math.round(d.cf/d.pf*100):null;
@@ -2408,7 +2471,7 @@ const META={
   bhp:{p:'BHP \u00b7 Jan\u2013'+BHP_LABELS[BHP_LABELS.length-1],s:'CMS Basic Health Program Enrollment Data \u00b7 2026'},
   mkt:{p:'ACA Marketplace \u00b7 OEP + Effectuated 2026',s:'CMS Marketplace OEP Snapshot &amp; Effectuated Enrollment \u00b7 2026'},
   mcare:{p:'Medicare \u00b7 '+MC_L[MC_L.length-1],s:'CMS Medicare Monthly Enrollment \u00b7 50 states + DC \u00b7 '+MC_L[MC_L.length-1]},
-  esi:{p:'Employer Coverage \u00b7 ACS '+ESI_ACS_YEAR+' \u00b7 MEPS-IC '+ESI_MEPS_YEAR,s:'Census ACS &amp; CPS ASEC \u00b7 AHRQ MEPS-IC \u00b7 KFF EHBS \u00b7 annual survey data'}
+  esi:{p:'Employer Coverage \u00b7 CPS ASEC '+ESI_CPS_YEAR+' \u00b7 ACS '+ESI_ACS_YEAR+' \u00b7 MEPS-IC '+ESI_MEPS_YEAR,s:'Census ACS &amp; CPS ASEC \u00b7 AHRQ MEPS-IC \u00b7 KFF EHBS \u00b7 annual survey data'}
 };
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(t=>{t.className='tab';if(t.dataset.tab===tab)t.classList.add('active-'+tab);});
