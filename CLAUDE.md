@@ -661,7 +661,7 @@ Raw files (`source-data/asec_2025.xlsx`, `asec_2024.xlsx`, `acs_2024.xlsx`, `mep
 | Source | Measure | Geography | Vintage on the tab |
 |---|---|---|---|
 | CPS ASEC, Census Table HHI-01 | ESI covered persons, **any time during the calendar year** | national only (the only ESI trend) | **2017–2025** (2025 release, fielded Mar 2026) |
-| ACS 1-year, Census HI05 | ESI covered persons, **point-in-time** | 50 states + DC + US | **2024** |
+| ACS 1-year, Census HI05 | ESI covered persons, **point-in-time** | 50 states + DC + US | **2024** (latest available — see ACS delay below) |
 | AHRQ MEPS-IC Table II | private-sector enrolled-employee rates + dollars | 50 states + DC + US | **2025** |
 | KFF EHBS | national survey benchmark | national only | **2025** |
 
@@ -671,7 +671,20 @@ behind** (2024). So the ACS–CPS comparison is made for **2024 only** (ACS 183.
 national KPI shows CPS 2025 (180.7M) with its year-over-year change computed **CPS 2024 → CPS
 2025** (+200K, +0.1%) — never ACS→CPS. That change is well inside sampling error (HHI-01 90% MOEs
 ±1.30M for 2024, ±1.43M for 2025; `ESI_CPS_MOE` in `template.html`), so the KPI says "within
-sampling error" — don't describe it as growth. State KPIs remain ACS 2024.
+sampling error" — don't describe it as growth. The KPI source label reads **"CPS ASEC 2025 (calendar
+year)"**. State KPIs remain ACS 2024.
+
+**State-vs-US figures use ACS only (audited Sep 2026).** No ESI figure divides a state by a US
+total: state views show the ACS state count, the state coverage chart ranks the state against the
+five largest ACS states (no US bar), and the MEPS cards are rates. CPS appears only in the national
+trend and the national KPI. If a share, ranking or "% of US" is ever added, its denominator must be
+the **ACS** US total (`ESI_ACS['United States']`), never CPS.
+
+**ACS 2025 1-year release delayed by Census (disclosure-avoidance review); 2024 is the latest
+available.** The same note is on the tab's source note. Census postponed the release (normally
+mid-September) after a Department of Commerce administrative order on disclosure avoidance for
+statistical products (issued 4 Jun 2026) barred confidentiality techniques the ACS relied on; no new
+date was set as of Sep 2026.
 
 **Staging CPS (`data/esi_coverage_cps.csv`).** From HHI-01: block *All Races -- Both Sexes*, sub-block
 *Number*, column *Employment-based*; values are thousands × 1,000 = persons. Year labels carry
@@ -688,22 +701,51 @@ re-weighting.
 
 **Trend breaks — drawn on the chart** (`ESI_CPS_BREAKS` / `esiBreakPlugin` in `template.html`,
 dashed markers + labels + tooltip detail), not only in a footnote:
-- **2017 | 2018 — processing system.** Census introduced an updated processing system with the
-  **2019 ASEC** (CY 2018). 2017 comes from the **2018 ASEC bridge file**, reprocessed on the new
-  system, so Census treats 2017→2018 as bridged; the marker discloses the file change rather than
-  asserting non-comparability.
 - **2019 | 2020 — 2020 Census-based population controls** (HHI-01 footnote 3).
 - **2023 | 2024 — Vintage 2025 population controls** (HHI-01 footnote 2; 2024 restated).
 
-Not flagged in HHI-01 but known: the 2020 ASEC (CY 2019) had pandemic-era nonresponse; Census's
-footnotes do not mark it, so it is not drawn — cite with care if leaning on 2019's peak (183.0M).
+**Hover-only point notes** (`ESI_CPS_NOTES`) — caveats that are *not* comparability breaks, so no
+dashed line:
+- **2017** — "2017 reprocessed on the updated system (2018 bridge file); comparable to 2018." Census
+  introduced the updated processing system with the 2019 ASEC; the bridge file puts 2017 on it.
+- **2019** (drawn as a **hollow point**) — "Collected in the 2020 CPS ASEC during the pandemic; Census
+  has documented nonresponse bias in this year's estimates. Use caution citing 2019 as a peak."
+  2019 (183.0M) is the series high; don't lead with it.
 
-**Next expected release: ACS 2025 1-year** (Census publishes 1-year ACS each September — check whether it has already posted before assuming ACS 2024 is current). When it lands,
+**Phone width.** The tab has an ESI-scoped `@media (max-width:760px)` block: cards stack
+full-width with fixed chart heights and the panel scrolls. Verified at 390 / 1100 / 1440px (the
+coverage chart fills the card: 334 / 372 / 501px wide). Other tabs have no width breakpoints yet,
+and the header and tab bar still overflow at 390px.
+
+**Next expected release: ACS 2025 1-year** — delayed (above); no date set. When it lands,
 restage `data/esi_coverage_acs.csv` and the ACS–CPS comparison moves to 2025 automatically (the
-chart places the ACS point only at the matching CPS year). Then update the vintage-alignment text
-in the tab's source note ("ACS is the one source a year behind") and this section. Next CPS:
-the 2026 ASEC release (Sep 2027) — re-run the restatement check against every overlapping year,
-and refresh `ESI_CPS_MOE` and `ESI_CPS_BREAKS`.
+chart places the ACS point only at the matching CPS year). Then remove the delay note from the
+tab's source note, update the vintage-alignment text ("ACS is the one source a year behind"), and
+update this section.
+
+### Annual ESI update checklist
+
+Run for each new Census CPS ASEC release (HHI-01, September) and each ACS 1-year release:
+
+1. Drop the raw file in `source-data/` (`asec_YYYY.xlsx` / `acs_YYYY.xlsx`); keep prior vintages.
+2. **Restatement check (CPS):** compare every overlapping year in the new HHI-01 against
+   `data/esi_coverage_cps.csv`. If any year differs, restage the **whole** series from the new
+   release (never splice vintages), record a before/after table here, and cite Census's reason.
+   *Source for the 2024 revision:* U.S. Census Bureau working paper SEHSD-WP2026-16, Fox & Jensen,
+   "Effect of Vintage 2025 Population Controls on 2024 Income, Poverty, and Health Insurance in the
+   United States Estimates" (Aug 2026) — Census reweighted 2024 to Vintage 2025 controls so
+   2024→2025 changes are consistently weighted; differences were statistically significant but
+   substantively minor.
+3. **`ESI_CPS_MOE`** (`template.html`): replace with the HHI-01 90% MOEs (Employment-based, All
+   Races / Both Sexes, × 1,000) for the **latest two years** of the new release — the KPI's
+   "within sampling error" test reads them.
+4. **`ESI_CPS_BREAKS`** (`template.html`): add a dashed marker for any new HHI-01 footnote on
+   population controls or methodology (the footnoted year is where the new basis starts, so the
+   marker sits before it); keep the existing ones.
+5. **`ESI_CPS_NOTES`**: add or retire hover-only point notes (non-break caveats).
+6. Update the tab source note (vintages, "one year behind", any delay notice) and this section's
+   vintage table; rebuild, check the console's CPS YoY and same-year ACS–CPS gap, render at
+   390 / 1100 / 1440px, and confirm non-ESI constants are byte-identical to the previous build.
 
 ## Employer coverage (ESI) labelling rules
 

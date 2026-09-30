@@ -130,6 +130,24 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .l-esi{grid-template-columns:38fr 31fr 31fr;grid-template-rows:1fr 1fr;}
 .esi-wide{grid-column:span 2;}
 .span-rows{grid-row:span 2;}
+/* ESI at phone width: the desktop 3-column grid leaves ~100px per chart at 390px.
+   Stack every card full-width with a fixed chart height and let the panel scroll. */
+@media (max-width:760px){
+  .panel.esi-panel{overflow-y:auto;}
+  .esi-panel>*{flex-shrink:0;}
+  .esi-panel .kpi-row{flex-wrap:wrap;}
+  .esi-panel .kpi-row>.kpi{flex:1 1 calc(50% - 8px);min-width:0;}
+  .esi-panel .funnel-strip{flex-direction:column;}
+  .esi-panel .funnel-hd{width:auto;}
+  .esi-panel .funnel-cells{flex-wrap:wrap;}
+  .esi-panel .funnel-cell{flex:1 1 calc(50% - 7px);}
+  .esi-panel .funnel-arrow{display:none;}
+  .esi-panel>.lower.l-esi{flex:none;min-height:auto;grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:auto;}
+  .l-esi>.span-rows,.l-esi>.esi-wide{grid-row:auto;grid-column:auto;}
+  .l-esi>.chart-card>.chart-wrap{flex:none;height:280px;}
+  .l-esi>.span-rows>.chart-wrap{height:340px;}
+  .l-esi .chart-card-header{flex-wrap:wrap;}
+}
 /* ESI accent on the shared strip/pill/peak primitives */
 .esi-panel .peak-strip{border-left-color:var(--esi);}
 .esi-panel .peak-hd{color:var(--esi);}
@@ -880,7 +898,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
     <div class="data-note compact">
       <span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">&#9888;</span>
-      <span><b style="color:#5A4A1A">Employer coverage is annual survey data and lags the other tabs.</b> Coverage counts are <b style="color:#5A4A1A">CPS ASEC 2025</b> (national persons, covered at any time during the calendar year) and <b style="color:#5A4A1A">ACS 2024</b> (state persons, point-in-time &mdash; one year behind CPS, so ACS and CPS are compared for 2024 only); cost &amp; access are <b style="color:#5A4A1A">MEPS-IC 2025</b> (private-sector enrolled employees, excludes state/local government); the benchmark is <b style="color:#5A4A1A">KFF EHBS</b>. CPS 2025 is the same year as MEPS-IC 2025 and KFF; ACS is the one source a year behind. Person counts (ACS/CPS) and employee-based rates (MEPS) are <b style="color:#5A4A1A">different units</b> &mdash; never summed or combined.</span>
+      <span><b style="color:#5A4A1A">Employer coverage is annual survey data and lags the other tabs.</b> Coverage counts are <b style="color:#5A4A1A">CPS ASEC 2025</b> (national persons, covered at any time during the calendar year) and <b style="color:#5A4A1A">ACS 2024</b> (state persons, point-in-time &mdash; one year behind CPS, so ACS and CPS are compared for 2024 only; ACS 2025 1-year release delayed by Census (disclosure-avoidance review); 2024 is the latest available); cost &amp; access are <b style="color:#5A4A1A">MEPS-IC 2025</b> (private-sector enrolled employees, excludes state/local government); the benchmark is <b style="color:#5A4A1A">KFF EHBS</b>. CPS 2025 is the same year as MEPS-IC 2025 and KFF; ACS is the one source a year behind. Person counts (ACS/CPS) and employee-based rates (MEPS) are <b style="color:#5A4A1A">different units</b> &mdash; never summed or combined.</span>
     </div>
 
     <div class="data-note compact" id="esi-state-note" style="display:none"></div>
@@ -1088,12 +1106,15 @@ const ESI_CPS_YEAR  = 2025;
 // Census trend breaks in the CPS series (HHI-01 footnotes), drawn ON the chart
 // as dashed markers between the prior year and `at`. Update with each release.
 const ESI_CPS_BREAKS = [
-  {at:2018, label:['Processing change','(2017 = bridge file)'],
-   tip:'2017 is from the CPS ASEC 2018 bridge file, reprocessed on the updated system Census introduced with the 2019 ASEC; 2018 onward is production data. Census bridged this change, but 2017 comes from a different file.'},
   {at:2020, label:['2020 Census','pop. controls'],
    tip:'2020 onward uses 2020 Census-based population controls, so 2019→2020 is not strictly comparable.'},
   {at:2024, label:['V2025 pop. controls','(2024 restated)'],
    tip:'The 2025 release re-weighted 2024 to Vintage 2025 population controls (181.3M → 180.5M), so 2024–2025 are comparable but 2023→2024 is not strictly comparable.'}];
+// Hover-only notes on individual CPS points — caveats that are NOT comparability
+// breaks, so they get no dashed line. `hollow` marks the point so the note is findable.
+const ESI_CPS_NOTES = {
+  2017:{tip:'2017 reprocessed on the updated system (2018 bridge file); comparable to 2018.'},
+  2019:{tip:'Collected in the 2020 CPS ASEC during the pandemic; Census has documented nonresponse bias in this year\u2019s estimates. Use caution citing 2019 as a peak.', hollow:true}};
 // HHI-01 90% margins of error (persons) for the latest two CPS years — used only
 // to say whether the latest year-over-year change is outside sampling error.
 const ESI_CPS_MOE = {2024:1295000, 2025:1432000};
@@ -2271,7 +2292,7 @@ function renderEsiCov(state){
     title.innerHTML='National ESI <span>Coverage Trend</span>';
     const cpsAcs=(ESI_CPS.find(r=>r[0]===ESI_ACS_YEAR)||[])[1], acsUS=ESI_ACS['United States'];
     sub.textContent='CPS ASEC \u00b7 coverage at any time during calendar year \u00b7 '
-      +ESI_CPS[0][0]+'\u2013'+ESI_CPS[ESI_CPS.length-1][0]+' \u00b7 dashed lines = Census trend breaks (hover for detail)'
+      +ESI_CPS[0][0]+'\u2013'+ESI_CPS[ESI_CPS.length-1][0]+' \u00b7 dashed lines = Census trend breaks; hollow point (2019) = pandemic-year caution (hover for detail)'
       +(cpsAcs!=null?' \u00b7 '+ESI_ACS_YEAR+' only: ACS '+fmt(acsUS)+' vs CPS '+fmt(cpsAcs)
         +' ('+(acsUS>=cpsAcs?'+':'\u2212')+fmt(Math.abs(acsUS-cpsAcs))+'; different measures)':'');
     const labels=ESI_CPS.map(r=>String(r[0]));
@@ -2281,8 +2302,11 @@ function renderEsiCov(state){
     makeChart('esiCovChart',{type:'line',
       data:{labels:labels,datasets:[
         {label:'CPS ASEC \u00b7 coverage at any time during calendar year',data:ESI_CPS.map(r=>r[1]),borderColor:'#2F6F8F',
-          backgroundColor:'rgba(47,111,143,.10)',borderWidth:2.5,pointRadius:3,pointHoverRadius:5,
-          pointBackgroundColor:'#2F6F8F',tension:.2,fill:true},
+          backgroundColor:'rgba(47,111,143,.10)',borderWidth:2.5,
+          pointRadius:ESI_CPS.map(r=>ESI_CPS_NOTES[r[0]]&&ESI_CPS_NOTES[r[0]].hollow?4.5:3),pointHoverRadius:5,
+          pointBackgroundColor:ESI_CPS.map(r=>ESI_CPS_NOTES[r[0]]&&ESI_CPS_NOTES[r[0]].hollow?'#fff':'#2F6F8F'),
+          pointBorderColor:'#2F6F8F',pointBorderWidth:ESI_CPS.map(r=>ESI_CPS_NOTES[r[0]]&&ESI_CPS_NOTES[r[0]].hollow?2:1),
+          tension:.2,fill:true},
         {label:'ACS '+ESI_ACS_YEAR+' (point-in-time; compare to CPS '+ESI_ACS_YEAR+' only)',data:acsPts,borderColor:'#B06A16',
           backgroundColor:'#B06A16',pointRadius:6,pointHoverRadius:7,pointStyle:'rectRot',
           showLine:false}]},
@@ -2292,8 +2316,10 @@ function renderEsiCov(state){
           tooltip:{...T,callbacks:{label:c=>c.raw==null?'':' '+c.dataset.label+': '+c.raw.toLocaleString()+' persons',
             afterBody:items=>{const y=items[0].label, out=[], b=brk(y);
               // Chart.js tooltips don't wrap — break long notes into ~56-char lines.
-              if(b) ('Trend break: '+b.tip).split(' ').forEach(w=>{const l=out.length-1;
-                if(l>=0&&(out[l]+' '+w).length<=56) out[l]+=' '+w; else out.push(w);});
+              const wrap=t=>{const start=out.length; t.split(' ').forEach(w=>{const l=out.length-1;
+                if(l>=start&&(out[l]+' '+w).length<=56) out[l]+=' '+w; else out.push(w);});};
+              if(b) wrap('Trend break: '+b.tip);
+              if(ESI_CPS_NOTES[y]) wrap('Note: '+ESI_CPS_NOTES[y].tip);
               if(+y===ESI_ACS_YEAR && cpsAcs!=null) out.push(ESI_ACS_YEAR+' ACS \u2212 CPS: '+(acsUS-cpsAcs>=0?'+':'\u2212')+Math.abs(acsUS-cpsAcs).toLocaleString()+' (different reference periods)');
               return out;}}}},
         // Auto-scaled with generous grace so the genuine ~3% drift over the series sits
@@ -2437,7 +2463,7 @@ function selectEsiState(state){
     setKpi('esi-cov', fmt(cov), loc+' · ACS '+ESI_ACS_YEAR+' · covered persons (point-in-time)', 'var(--esi)');
   } else {
     const y=esiCpsYoy(), cps=ESI_CPS[ESI_CPS.length-1][1];
-    setKpi('esi-cov', fmt(cps), 'National · CPS ASEC '+ESI_CPS_YEAR+' · any time in year'
+    setKpi('esi-cov', fmt(cps), 'National · CPS ASEC '+ESI_CPS_YEAR+' (calendar year)'
       +(y?' · <b>'+(y.d>=0?'+':'\u2212')+fmt(Math.abs(y.d))+' ('+(y.p>=0?'+':'\u2212')+Math.abs(y.p).toFixed(1)+'%)</b> vs CPS '+y.py
         +(y.sig===false?' · within sampling error':''):''), 'var(--esi)');
   }
