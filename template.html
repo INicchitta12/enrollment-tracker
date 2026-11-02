@@ -626,7 +626,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
     <div class="data-note compact">
       <span style="color:var(--brand-amber);flex-shrink:0;font-size:12px">&#9888;</span>
-      <span>National figures here sum the <b style="color:#5A4A1A">50 states + DC</b>. CMS&rsquo;s published national total also includes Puerto Rico and other territories (~1.4M), so it runs higher. Nationally, <b style="color:#5A4A1A">dual-eligibles</b> (__MCARE_DUAL_SHARE__% of Medicare, __MCARE_LATEST_LABEL__) are jointly enrolled in Medicaid and also appear on the Medicaid tab.</span>
+      <span>National figures here sum the <b style="color:#5A4A1A">50 states + DC</b>. CMS&rsquo;s published national total also includes Puerto Rico and other territories (~1.4M), so it runs higher. Nationally, <b style="color:#5A4A1A">dual-eligibles</b> (__MCARE_DUAL_SHARE__% of Medicare, __MCARE_LATEST_LABEL__) are jointly enrolled in Medicaid and also appear on the Medicaid tab. From April 2026 this understates the dual share by about 0.1 point because of a <b style="color:#5A4A1A">New Mexico</b> data artifact (see New Mexico).</span>
     </div>
 
     <div class="data-note compact" id="mc-state-note" style="display:none"></div>
@@ -1769,7 +1769,12 @@ function renderBhp(){
 const MC_P = MEDICARE.periods, MC_L = MEDICARE.labels, MC_LATEST = MEDICARE.latest;
 const MC_SHORT = MC_L.map(l=>l.replace(' 20',"’"));       // "Jan 2023" -> "Jan '23"
 const MC_LOOKBACK = (parseInt(MC_LATEST.slice(0,4))-3)+MC_LATEST.slice(4);  // same month, 3 years earlier
-const MCARE_CAVEATS = {};  // none flagged in the CMS Medicare file at present; wired like the other tabs
+// Per-state Medicare caveats. CMS flags none in the Medicare file; New Mexico is
+// a data artifact found on inspection (Nov 2026 review) — see CLAUDE.md Medicare
+// section. Left as reported, disclosed here.
+const MCARE_CAVEATS = {
+  'New Mexico':'dual-eligible count fell <b style="color:#5A4A1A">61% in April 2026</b> (105,377 → 41,101) across every dual category, while its Medicaid enrollment <b style="color:#5A4A1A">rose</b> that month and its Medicare beneficiaries deemed eligible for full Part D LIS (a status that follows Medicaid/MSP enrollment) also rose. This is a data artifact in the CMS dual-status counts, not coverage loss: New Mexico’s dual figure and share from April 2026 onward (~9.5%, vs ~22% before) understate true dual enrollment. Other New Mexico Medicare figures are unaffected. Not flagged by CMS; left as reported.',
+};
 
 function mcRec(state,p){ return state ? ((MEDICARE.states[state]||{})[p]||null) : (MEDICARE.national[p]||null); }
 // MA penetration = MA & other health plans as a share of beneficiaries with BOTH

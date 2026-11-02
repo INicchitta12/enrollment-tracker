@@ -559,7 +559,7 @@ sharing). The two sources:
 - `source-data/Medicare_Monthly_Data.zip` — the archived **full history** (Jan 2023 onward).
   Large, so tracked compressed; the extracted CSV is gitignored.
 - `source-data/Medicare_Monthly_Data.csv` — the **latest monthly drop**, uncompressed. CMS's
-  download carries only the most recent months (currently Jan–Jun 2026) and **revises** those
+  download carries only the most recent months (currently Jan–Jul 2026) and **revises** those
   months relative to the archived history, so where the two overlap the CSV **wins** (CMS
   revisions are authoritative — see the "revised over time" rule below); months the CSV does
   not cover come from the zip unchanged. This is optional: if the CSV is absent the build
@@ -575,8 +575,10 @@ CSV overlays. The console summary prints which months came from the CSV drop.
 "MA & other health plans", since it also covers cost plans/PACE) as a share of beneficiaries
 with **both Part A and Part B** (`A_B_TOT_BENES`), **not** total Medicare — you must carry both
 parts to enrol in MA, so A&B is the eligible denominator (the standard CMS penetration basis).
-It runs ~4 points above the total-Medicare basis: nationally it rose **52.3% → 55.5%** (Jan 2023
-→ Jun 2026); across states Jun 2026 spans **3.2% (Alaska) → 67.5% (Michigan)**. *KFF comparison:*
+It runs ~4 points above the total-Medicare basis: nationally it rose **52.3% → 55.6%** (Jan 2023
+→ Jul 2026); across states Jul 2026 spans **3.2% (Alaska) → 67.4% (Michigan)**. It has been flat
+since spring (55.57% May, 55.57% Jun, 55.56% Jul) — MA gains come at the January AEP, so a
+mid-year plateau is expected; don't describe it as MA growth stalling. *KFF comparison:*
 KFF's 2026 figure is 55% (35.2M ÷ 64.2M A&B) and **excludes** other health plans; ours (Mar 2026
 55.5%, 50+DC) **includes** them and excludes territories. The two definitional differences roughly
 offset in the numerator (both ~35.2M); the ~0.7pt gap is mostly KFF's territory-inclusive
@@ -617,8 +619,8 @@ Disabled — and a state MA-penetration ranking (top-12 nationally; selected-sta
 is chosen). The lookback month is derived as three years before the latest month, so it tracks
 forward as new data lands.
 
-**Dual-eligibles are the bridge to the Medicaid tab.** `DUAL_TOT_BENES` (17.1% of Medicare,
-~11.8M nationally, Jun 2026; the tab's note takes the share from `__MCARE_DUAL_SHARE__`, computed at
+**Dual-eligibles are the bridge to the Medicaid tab.** `DUAL_TOT_BENES` (17.3% of Medicare,
+~12.0M nationally, Jul 2026; the tab's note takes the share from `__MCARE_DUAL_SHARE__`, computed at
 build time) counts beneficiaries jointly enrolled in Medicaid — the same people appear
 on the Medicaid tab. Only `DUAL_TOT` is surfaced: the full/partial dual split
 (`FULL_DUAL`/`PART_DUAL`) is suppressed in ~26–28 small-state cells, so it is not shown.
@@ -637,9 +639,31 @@ exceptions coded on purpose:
   `beginAtZero`: they are compositions of a whole, and a non-zero baseline would exaggerate the
   smaller band (e.g. make ~6M disabled look comparable to ~62M aged).
 
-No per-state Medicare caveats are flagged in the current CMS file; `MCARE_CAVEATS` is wired
-(like the Medicaid/CHIP caveat maps) so one can be surfaced under the selector if a future
-edition adds one.
+**July 2026 drop (Nov 2026 review).** The new CSV covers Jan–Jul 2026 and, unlike the Jun drop
+(state + national rows only), carries **county rows too** (22,946) — handled by the inferred-level
+logic. CMS revised every Jan–Jun 2026 state cell: national totals up 23K–47K a month, MA
+penetration up ~0.02pt, dual share up 0.03–0.07pt (Jun 17.11% → 17.18%); pre-2026 months
+unchanged. Suppressed `*` cells in July state rows are all in territories and an "Unknown" row,
+none in 50+DC. Rebuilt national July = 69,331,113, **1,405,511 below** CMS's territory-inclusive
+70,736,624 (in line with the ~1.4M note). July: total +79,434, MA +68,635, penetration −0.005pt.
+
+**New Mexico duals — data artifact, surfaced (`MCARE_CAVEATS`).** Not flagged by CMS. New
+Mexico's `DUAL_TOT_BENES` fell **105,377 → 41,101 (−61%) in April 2026** (already present in the
+Jun drop, missed then), partly recovering to 45,953 in June; total Medicare was flat. Evidence it is
+an artifact, not coverage loss: (1) every dual category falls about two-thirds at once (full 58,560
+→ 26,259, partial 46,817 → 14,842, QMB/SLMB alike) and `NODUAL_TOT_BENES` rises by the same amount;
+(2) New Mexico **Medicaid** enrollment *rose* in April (+1,638, workbook `Mcaid`); (3) Part D
+**deemed full-LIS** beneficiaries, which follow Medicaid/MSP status, *rose* 111,668 → 117,590 —
+by July 118,416 deemed vs 45,517 counted duals, which cannot both be right. New Mexico drives 70% of
+the national April dual decline (−64,276 of −91,360); holding NM at its March level, the national
+July dual share would be ~17.37% vs 17.28% shown, so the national tab note now says the share is
+understated by ~0.1pt from April 2026. Left as reported; re-check each drop and remove the caveat
+once the April–onward counts are restated.
+
+**Watch (not surfaced):** **Utah** partial duals 2,086 → 7,168 in May 2026 (full duals and deemed
+LIS smooth) — plausibly genuine MSP enrollment growth rather than an artifact; watch. **District of
+Columbia** reshuffles within duals (other-full-dual 5,504 → 1,342 Feb–Jun while QMB-plus rises) with
+a stable total — no action; its 2025-09/10 swings (−22% / +80%) predate the latest-month KPI.
 
 ## ACA cost sharing by metal tier
 
