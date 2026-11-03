@@ -867,7 +867,7 @@ CT, DC, ID, ME, MA, MN, NV, NJ, NM, NY, PA, RI, VT, WA); 4 `figure_not_found` (G
 **Review status (2026-11-03):** approved — CA, CO (both rows), CT (OEP final), ID, ME, NJ, NM, NV, PA,
 RI, VT, WA. Pending — DC, MA, NY and CT's `enrolled_other` rows, and MN (chart label). All are plan
 year 2026, so the 2027 table still shows "Not yet reported" everywhere; they act only as YoY
-baselines. Dates not printed in a source are recorded in each row's `notes`.
+baselines. **2027 (approved 2026-11-03):** Kentucky's three Governor's Metrics rows (Summary sheet, 11/2/2026 refresh) — G8 Grand Total 67,770 (`component=N`, `includes_state_program=Medicaid`, 66 Medicaid in G5) is the table figure; G6 53,875 with APTC and G7 13,829 without are `component=Y` detail. ~98.5% of QHP are renewals (column E), so it is not comparable to an end-of-OEP total. MFA national rows (21.9M Oct 28; 22M Sep 29 — two MFA vintages for June 2026) stay `pending`. Dates not printed in a source are recorded in each row's `notes`.
 
 ## Employer coverage (ESI) — sources and vintages
 

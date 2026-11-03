@@ -58,8 +58,18 @@ class DisplayRule(unittest.TestCase):
         self.assertEqual(t['CO']['yoy']['prior'], 277228)
 
     def test_committed_csv_shows_no_2026_row_as_current(self):
+        rows, _, table = bd.load_mkt_state_reported(REGISTER)
+        current_2027 = {(r['state'], int(r['value'])) for r in rows
+                        if r['reviewer_status'] == 'approved' and r['plan_year'] == '2027'
+                        and r['component'] == 'N'}
+        for t in table:
+            if t['status'] == 'reported':
+                self.assertIn((t['st'], t['value']), current_2027)
+
+    def test_committed_kentucky_headline_is_grand_total_not_component(self):
         _, _, table = bd.load_mkt_state_reported(REGISTER)
-        self.assertEqual([t['st'] for t in table if t['status'] != 'none'], [])
+        ky = {t['st']: t for t in table}['KY']
+        self.assertEqual((ky['status'], ky['value'], ky['stateProg']), ('reported', 67770, 'Medicaid'))
 
 
 class DentalUnknown(unittest.TestCase):
