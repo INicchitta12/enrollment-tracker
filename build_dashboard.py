@@ -855,8 +855,12 @@ MKT_STATE_COLUMNS = [
     'state', 'marketplace', 'plan_year', 'measure_type', 'value', 'includes_dental',
     'includes_state_program', 'excludes_bhp', 'period_start', 'as_of_date',
     'published_date', 'days_into_oep', 'source_url', 'source_type', 'quote',
-    'retrieved_at', 'reviewer_status',
+    'retrieved_at', 'reviewer_status', 'doc_series', 'notes',
 ]
+# includes_dental: Y / N / U (unknown — the source does not say). A U row is
+# never year-over-year comparable unless both rows are U AND carry the same
+# non-blank doc_series (the same publication series, so the same unstated basis).
+MKT_DENTAL_FLAGS = {'Y', 'N', 'U'}
 MKT_MEASURES = {
     'oep_plan_selections_to_date': 'OEP plan selections to date',
     'oep_plan_selections_final': 'OEP plan selections (final)',
@@ -976,9 +980,10 @@ def validate_mkt_state_rows(rows, register):
             errs.append(f"{tag}: source_type {r['source_type']!r} not in {sorted(MKT_SOURCE_TYPES)}")
         if r['reviewer_status'] not in MKT_REVIEW:
             errs.append(f"{tag}: reviewer_status {r['reviewer_status']!r} not in {sorted(MKT_REVIEW)}")
-        for f in ('includes_dental', 'excludes_bhp'):
-            if r[f] not in ('Y', 'N'):
-                errs.append(f"{tag}: {f} must be Y or N, got {r[f]!r}")
+        if r['includes_dental'] not in MKT_DENTAL_FLAGS:
+            errs.append(f"{tag}: includes_dental must be Y, N or U, got {r['includes_dental']!r}")
+        if r['excludes_bhp'] not in ('Y', 'N'):
+            errs.append(f"{tag}: excludes_bhp must be Y or N, got {r['excludes_bhp']!r}")
         if not re.fullmatch(r'\d{4}', r['plan_year']):
             errs.append(f"{tag}: plan_year {r['plan_year']!r} is not a year")
         if not re.fullmatch(r'\d+', r['value']):
@@ -1007,11 +1012,21 @@ def _definition(r):
     return (r['measure_type'], r['includes_dental'], r['includes_state_program'], r['excludes_bhp'])
 
 
+def _yoy_comparable(cur, prior):
+    """Same measure and definition flags; an unknown dental basis (U) is only
+    comparable within the same document series."""
+    if _definition(cur) != _definition(prior):
+        return False
+    if 'U' in (cur['includes_dental'], prior['includes_dental']):
+        return bool(cur['doc_series']) and cur['doc_series'] == prior['doc_series']
+    return True
+
+
 def mkt_compare(cur, prior):
     """The ONLY place two state-reported figures are compared. Fails the build
     unless both are the same state, the same measure_type and the same
     definition flags — a different measure is never a year-over-year change."""
-    if cur['state'] != prior['state'] or _definition(cur) != _definition(prior):
+    if cur['state'] != prior['state'] or not _yoy_comparable(cur, prior):
         sys.exit("ERROR: refusing to compare unlike state-reported figures: "
                  f"{cur['state']} {_definition(cur)} vs {prior['state']} {_definition(prior)}")
     a, b = int(cur['value']), int(prior['value'])
@@ -1070,14 +1085,14 @@ def load_mkt_state_reported(register):
             # Candidates: same state AND same measure/definition only; anything
             # else is not like-for-like and is never passed to mkt_compare.
             cands = [p for p in approved if p['state'] == st and p['plan_year'] == prior_year
-                     and _definition(p) == _definition(cur) and p['days_into_oep']
+                     and _yoy_comparable(cur, p) and p['days_into_oep']
                      and abs(int(p['days_into_oep']) - d) <= MKT_SR_YOY_WINDOW_DAYS]
             if cands:
                 prior = min(cands, key=lambda p: (abs(int(p['days_into_oep']) - d), p['as_of_date']))
                 yoy = mkt_compare(cur, prior)
         table.append({**base, 'status': 'reported', 'value': int(cur['value']),
                       'measure': cur['measure_type'], 'measureLabel': MKT_MEASURES[cur['measure_type']],
-                      'dental': cur['includes_dental'] == 'Y', 'stateProg': cur['includes_state_program'],
+                      'dental': cur['includes_dental'], 'stateProg': cur['includes_state_program'],
                       'bhpExcluded': cur['excludes_bhp'] == 'Y',
                       'asOf': cur['as_of_date'], 'published': cur['published_date'],
                       'days': int(cur['days_into_oep']) if cur['days_into_oep'] else None,

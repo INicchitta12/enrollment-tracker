@@ -1765,7 +1765,8 @@ function renderMktSr(){
         + '<span class="sr-sub">Expected: '+srEsc(r.cadence)+(r.window?' &middot; OEP '+srEsc(r.window):'')+'</span></td>'
         + '<td style="color:var(--muted)">&mdash;</td></tr>';
     }
-    const flags = (r.dental?'<span class="sr-flag">incl. dental</span>':'')
+    const flags = (r.dental==='Y'?'<span class="sr-flag">incl. dental</span>':
+                   r.dental==='U'?'<span class="sr-flag">dental basis not stated</span>':'')
       + (r.stateProg?'<span class="sr-flag">incl. '+srEsc(r.stateProg)+'</span>':'')
       + (r.bhpExcluded?'':'<span class="sr-flag">incl. BHP</span>');
     let yoy = '<span class="sr-nolfl">no like-for-like comparison</span>';

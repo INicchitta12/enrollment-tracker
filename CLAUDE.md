@@ -730,7 +730,7 @@ person approves them after checking the quote against the source.
 | `plan_year` | coverage year the figure belongs to (`2027` for the 2027 OEP, which opens Nov 2026) |
 | `measure_type` | closed list: `oep_plan_selections_to_date`, `oep_plan_selections_final`, `effectuated`, `enrolled_other`, `new_consumers`, `returning_consumers`, `aptc_recipients` |
 | `value` | whole number exactly as published — no commas, `~`, or rounding by us |
-| `includes_dental` | `Y`/`N` — totals that mix dental (ID, NM) are `Y` |
+| `includes_dental` | `Y`/`N`/`U` — totals that mix dental (NM) are `Y`; `U` = the source does not say (CO, DC). A `U` row is year-over-year comparable **only** with another `U` row carrying the same non-blank `doc_series` (`_yoy_comparable`); it never matches `Y`/`N`. The table shows a "dental basis not stated" flag |
 | `includes_state_program` | name of a non-QHP state program folded into the figure (e.g. `ConnectorCare`), else blank |
 | `excludes_bhp` | `Y`/`N` — `N` if BHP enrollees (MinnesotaCare, NY Essential Plan, DC) are inside the figure |
 | `period_start` | for OEP measures, **the OEP start date for that plan year**; otherwise the period's first day |
@@ -742,6 +742,8 @@ person approves them after checking the quote against the source.
 | `quote` | the exact sentence or table cell — required |
 | `retrieved_at` | date we read it |
 | `reviewer_status` | `pending` / `approved` |
+| `doc_series` | publication series the figure comes from (e.g. `C4HCO annual Open Enrollment report`); needed for `U` rows to be compared |
+| `notes` | reviewer notes: rounding, dates not printed in the source, definition quirks (not rendered) |
 
 **Build fails** (`validate_mkt_state_rows`, `mkt_compare`, `guard_no_state_sums`) if: a row lacks
 `source_url` or `quote`; `measure_type`/`source_type`/`reviewer_status` is outside its list; dates or
@@ -755,7 +757,9 @@ broken by `MKT_HEADLINE_ORDER`, final selections first) — never a blend. The *
 filled only when an approved 2026 row has the **same measure and the same definition flags** and
 `days_into_oep` within **±3 days** (`MKT_SR_YOY_WINDOW_DAYS`); otherwise "no like-for-like
 comparison". Days into OEP compares like points even though windows moved (CT/MA open Oct 23, ID
-Oct 15). States with no approved 2027 row show **"Not yet reported"** with expected timing from the
+Oct 15). **Only `plan_year=2027` rows can be a state's current figure**; approved 2026 rows are
+year-over-year baselines only and never appear as the current figure (`tests/test_mkt_state_reported.py`,
+run with `python -m unittest discover -s tests`). States with no approved 2027 row show **"Not yet reported"** with expected timing from the
 register's `cadence` and `oep_2027_window`. Subtitle (keep verbatim): *"Figures as published by
 each state's marketplace; definitions vary by state; not comparable to CMS effectuated counts."*
 
@@ -826,12 +830,15 @@ measure from the CMS OEP plan-selection figure in the workbook (210,704).
   state labels them "directional".
 - **NM** (beWellnm) — 82,407 is health + dental; full state backfill makes trends non-comparable.
 - **NY** (NY State of Health) — QHP only (above).
-- **OR** (Explore Health) — new SBM for 2027 (above).
+- **OR** (Explore Health) — new SBM for 2027 (above). No Oregon-published 2026 figure; the register's
+  `last_known_value` is blank — 118,372 is CMS HC.gov, used only as the HC.gov-base subtraction.
 - **PA** (Pennie) — "start of OE" counts auto-renewals; release figures often rounded (a rounded
   figure is loaded as published and noted, never treated as exact).
 - **RI** (HealthSource RI) — report ~5 weeks after OE closes; new state subsidy (RIMAP) from Jan 2027.
-- **VT** (Vermont Health Connect) — "QHP & Reflective" includes reflective silver; direct-to-insurer
-  enrollment reported separately. OEP ends Dec 28.
+- **VT** (Vermont Health Connect) — use the coverage map's *Health Insurance Marketplace QHP* column
+  (Jan 2026 effectuated **30,430**). The adjacent *Direct from Insurance Companies — QHP & Reflective*
+  column (34,816; mostly small group) is **not** Marketplace — the register carried it in error until
+  Nov 2026. OEP ends Dec 28.
 - **VA** (Virginia's Insurance Marketplace) — medical vs. dental split; new state subsidy (Virginia
   Premium Savings) 2027; files on two hostnames.
 - **WA** (Washington Healthplanfinder) — figures rounded; no confirmed release index; Cascade Care
@@ -845,21 +852,19 @@ the host answered but no reachable document carries the figure. CO also carries
 `last_known_effectuated_value/_as_of/_source` (blank elsewhere). Never guess a URL; follow links
 from the landing page.
 
-**Check of 2026-11-03 (rerun, network open):** 13 `verified` (CO, DC, ID, ME, MA, MN, NV, NJ, NM, NY,
-PA, RI, WA); 3 `value_mismatch`; 4 `figure_not_found` (GA, IL, OR, VA); 2 `unreachable` (KY Aug
-workbook and MD executive report returned HTTP 403). Mismatches worth knowing:
-- **VT** — the register's 34,816 is the *Direct from Insurance Companies* column (mostly small
-  group), not Vermont Health Connect; VHC Marketplace QHP effectuated Jan 2026 is **30,430**.
-- **CT** — OE 2026 Summary Report v2 (May 2026) shows **157,175** active QHP, not 157,246.
-- **CA** — net OE profile shows **1,927,370**, CA-rounded to nearest 10; exact 1,927,371 not seen.
-- **OR** — 118,372 is CMS's HC.gov figure, not OHA's (checked against the workbook at build).
-- **PA** — 2026 OE closed **Jan 31** (extended), not Jan 15.
+**Check of 2026-11-03 (rerun, network open), with follow-ups the same day:** 16 `verified` (CA, CO,
+CT, DC, ID, ME, MA, MN, NV, NJ, NM, NY, PA, RI, VT, WA); 4 `figure_not_found` (GA, IL, OR, VA); 2
+`unreachable` (KY Aug workbook and MD executive report returned HTTP 403).
+- **CA** — exact 1,927,371 is in the 2026-02-26 release; the OE profile's 1,927,370 is source-rounded.
+- **CT** — 157,246 (Feb 19 release, OEP final) and 157,175 (May 2026 report v2, active QHP) are
+  loaded as separate measures.
+- **VT** — corrected to 30,430 (see per-state notes).
+- **PA** — 2026 OE closed **Jan 31** (extended; Pennie release Jan 7, 2026), so `days_into_oep` = 91.
 
-Every verified figure is loaded in `data/marketplace_state_reported.csv` as `pending` (all plan year
-2026). Dates not printed in the source document: ID OEP window (Oct 15–Dec 15, 2025) and NM close
-(Jan 15) are from the known OEP windows; ME/NJ `published_date` is the file's HTTP Last-Modified;
-MA and NY `published_date` is set to the as-of date (no publication date shown). The MN figure is a
-chart data label (rounded to the hundred). Reviewers should check these before approving.
+**Review status (2026-11-03):** approved — CA, CO (both rows), CT (OEP final), ID, ME, NJ, NM, NV, PA,
+RI, VT, WA. Pending — DC, MA, NY and CT's `enrolled_other` rows, and MN (chart label). All are plan
+year 2026, so the 2027 table still shows "Not yet reported" everywhere; they act only as YoY
+baselines. Dates not printed in a source are recorded in each row's `notes`.
 
 ## Employer coverage (ESI) — sources and vintages
 
