@@ -849,6 +849,10 @@ def load_esi_kff():
 MKT_SOURCES_CSV = ROOT / "config" / "marketplace_sources.csv"
 MKT_STATE_CSV = ROOT / "data" / "marketplace_state_reported.csv"
 MKT_NATCTX_CSV = ROOT / "data" / "marketplace_national_context.csv"
+MKT_NATCTX_COLUMNS = [
+    'source_org', 'publication', 'pub_date', 'url', 'measure', 'scope', 'period', 'value',
+    'comparison_value', 'comparison_period', 'pct_change', 'is_estimate', 'reviewer_status', 'notes',
+]
 MKT_SR_PLAN_YEAR = 2027          # the open enrollment the section reports
 MKT_SR_YOY_WINDOW_DAYS = 3       # prior-year point must be within ±3 days into OEP
 MKT_STATE_COLUMNS = [
@@ -1103,10 +1107,14 @@ def load_mkt_state_reported(register):
 def load_mkt_national_context(state_rows, national_oep):
     if not MKT_NATCTX_CSV.exists():
         sys.exit(f"ERROR: {MKT_NATCTX_CSV} not found")
-    _, rows = _read_csv_rows(MKT_NATCTX_CSV)
+    header, rows = _read_csv_rows(MKT_NATCTX_CSV)
+    if header != MKT_NATCTX_COLUMNS:
+        sys.exit(f"ERROR: {MKT_NATCTX_CSV.name} columns must be exactly {MKT_NATCTX_COLUMNS}, got {header}")
     errs = []
     for r in rows:
         tag = f"national context {r['measure']} ({r['period']})"
+        if r['reviewer_status'] not in MKT_REVIEW:
+            errs.append(f"{tag}: reviewer_status must be one of {sorted(MKT_REVIEW)}")
         if r['measure'] not in MKT_NATCTX_SCOPE:
             errs.append(f"{tag}: measure not mapped to a scope family in MKT_NATCTX_SCOPE")
         if not r['url'].startswith('https://') or not r['source_org'] or not r['pub_date']:
@@ -1126,11 +1134,14 @@ def load_mkt_national_context(state_rows, national_oep):
     if errs:
         sys.exit(f"ERROR: {MKT_NATCTX_CSV.name} failed validation:\n  " + "\n  ".join(errs))
 
+    # Every row is validated above; only reviewer-approved rows reach the page
+    # (same gate as the state-reported rows).
+    approved = [r for r in rows if r['reviewer_status'] == 'approved']
     num = lambda s: float(s) if s not in ('', None) else None
     out = []
     for key, label, note in MKT_NATCTX_GROUPS:
         items = []
-        for r in rows:
+        for r in approved:
             if MKT_NATCTX_SCOPE[r['measure']] != key:
                 continue
             items.append({

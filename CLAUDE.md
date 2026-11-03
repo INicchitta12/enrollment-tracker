@@ -765,6 +765,8 @@ each state's marketplace; definitions vary by state; not comparable to CMS effec
 
 ### National context card (`data/marketplace_national_context.csv`)
 
+**Same review gate as state rows:** the CSV carries `reviewer_status` (`pending`/`approved`); every row is validated, but only `approved` rows render (`load_mkt_national_context()`; `tests/test_mkt_national_context.py`). New rows — including the probe's — go in as `pending`. The Mark Farrah Associates June 2026 figure (21.9M, MFA's own broader individual-medical estimate vs KFF's 20.5M) is `pending`.
+
 Every `measure` maps to exactly one scope family in `MKT_NATCTX_SCOPE` (an unmapped measure stops the
 build): **individual market** (incl. off-exchange — KFF/Mark Farrah), **Marketplace effectuated**
 (CMS), **Marketplace OEP plan selections**, **projections** (CBO), program integrity, premiums &
