@@ -852,14 +852,19 @@ MKT_NATCTX_CSV = ROOT / "data" / "marketplace_national_context.csv"
 MKT_NATCTX_COLUMNS = [
     'source_org', 'publication', 'pub_date', 'url', 'measure', 'scope', 'period', 'value',
     'comparison_value', 'comparison_period', 'pct_change', 'is_estimate', 'reviewer_status', 'notes',
+    'review_notes',
 ]
+# `notes` on a national row is READER-FACING: it renders on the public card (source
+# quote and definition only). `review_notes` holds reasoning, cross-checks, doubts
+# and review history and is never emitted. The same column on state rows is also
+# never emitted (state `notes` are not rendered either).
 MKT_SR_PLAN_YEAR = 2027          # the open enrollment the section reports
 MKT_SR_YOY_WINDOW_DAYS = 3       # prior-year point must be within ±3 days into OEP
 MKT_STATE_COLUMNS = [
     'state', 'marketplace', 'plan_year', 'measure_type', 'component', 'value', 'includes_dental',
     'includes_state_program', 'excludes_bhp', 'period_start', 'as_of_date',
     'published_date', 'days_into_oep', 'source_url', 'source_type', 'quote',
-    'retrieved_at', 'reviewer_status', 'doc_series', 'notes',
+    'retrieved_at', 'reviewer_status', 'doc_series', 'notes', 'review_notes',
 ]
 # includes_dental: Y / N / U (unknown — the source does not say). A U row is
 # never year-over-year comparable unless both rows are U AND carry the same

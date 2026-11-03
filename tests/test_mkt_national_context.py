@@ -3,6 +3,7 @@
 Run: python -m unittest discover -s tests
 """
 import csv
+import re
 import sys
 import tempfile
 import unittest
@@ -80,6 +81,46 @@ class DisplayRule(unittest.TestCase):
         self.assertNotIn(21900000.0, values(g))
         _, rows = bd._read_csv_rows(bd.MKT_NATCTX_CSV)
         self.assertIn(('21900000', 'rejected'), {(r['value'], r['reviewer_status']) for r in rows})
+
+
+def _figure_forms(v):
+    """Ways a whole-number figure can be written in prose: 21900000, 21,900,000,
+    21.9M, 21.9 million (and 22M / 22 million for round millions)."""
+    n = int(float(v))
+    forms = {str(n), f'{n:,}'}
+    if n >= 1_000_000:
+        m = f'{n / 1_000_000:.2f}'.rstrip('0').rstrip('.')
+        forms |= {m + 'M', m + ' million', m + ' M'}
+    return forms
+
+
+class RenderedNotesAreReaderFacing(unittest.TestCase):
+    """National `notes` render on the public card; review text belongs in review_notes."""
+    WORDS = re.compile(r'rejected|pending|reviewer', re.I)
+
+    def rendered_notes(self):
+        g = bd.load_mkt_national_context([], NATIONAL_OEP)
+        return [i['notes'] for grp in g for i in grp['items']]
+
+    def test_no_review_vocabulary_in_rendered_notes(self):
+        for n in self.rendered_notes():
+            self.assertIsNone(self.WORDS.search(n), n)
+
+    def test_no_rejected_figure_in_rendered_notes(self):
+        _, rows = bd._read_csv_rows(bd.MKT_NATCTX_CSV)
+        forms = set()
+        for r in rows:
+            if r['reviewer_status'] == 'rejected' and r['value']:
+                forms |= _figure_forms(r['value'])
+        self.assertTrue(forms)          # the committed file has a rejected row
+        for n in self.rendered_notes():
+            for f in forms:
+                self.assertNotRegex(n, r'(?<![\d.,])' + re.escape(f) + r'(?![\d,])', f)
+
+    def test_review_notes_never_emitted(self):
+        g = bd.load_mkt_national_context([], NATIONAL_OEP)
+        self.assertTrue(all('review_notes' not in i for grp in g for i in grp['items']))
+        self.assertNotIn('Rejected 2026-11-03', (Path(bd.__file__).parent / 'index.html').read_text(encoding='utf-8'))
 
 
 if __name__ == '__main__':
