@@ -1,0 +1,49 @@
+date,state,status,note
+2026-11-03,CA,no_change,"Data-research page: OE profiles stop at PY2026; only 2027 rates/design docs, no enrollment figures"
+2026-11-03,CO,no_change,"Newest is Sept 2026 dashboard (already loaded as effectuated 234,540); page also lists Aug/Sep 'enrolled' 315,393/319,627 - sign-up count, not loaded per CLAUDE.md"
+2026-11-03,CT,no_change,Newest release Jul 15 2026 (2027 OEP dates Oct 23-Jan 15); no 2027 figures; dashboard JS-rendered
+2026-11-03,DC,no_change,Sep 22 2026 board meeting lists Board Enrollment Report (26-09-18) already the register's latest doc; no newer enrollment report; Oct 26 meeting has no enrollment data
+2026-11-03,GA,figure_not_found,Press page lists only PY2025 release (1.5M); no 2027 or 2026 figure posted
+2026-11-03,ID,no_change,Newest items Sep 24 2026; no enrollment figures
+2026-11-03,IL,no_change,Latest news: 2027 OEP begins Nov 1; no figures
+2026-11-03,KY,unreachable,Listing page OK (newest file: October 2026 Governor's Metrics xlsx) but the xlsx download returned HTTP 403; not retried with altered headers. No file in source-data/state-marketplace/ for KY
+2026-11-03,ME,no_change,2027 snapshot section 'COMING SOON' (biweekly Wednesdays); only 2026 images
+2026-11-03,MD,unreachable,Analytics page HTTP 403; no MD file in source-data/state-marketplace/
+2026-11-03,MA,unreachable,Weekly dashboard page HTTP 403
+2026-11-03,MN,no_change,News room index shows no dated items or 2027 figures
+2026-11-03,NV,no_change,"Newest release Oct 3 2026 (2027 plan preview); latest enrollment figure still Jan 22 2026 (104,286); end-of-OEP only"
+2026-11-03,NJ,no_change,Only 2026 OEP snapshots and 2026 Q1 carrier snapshot; no 2027 figures
+2026-11-03,NM,format_changed,Dashboards are embedded images dated Jan 2026; no readable newer figures
+2026-11-03,NY,unreachable,enrollmentdata page HTTP 403; register's Oct 2026 PDF already loaded
+2026-11-03,OR,figure_not_found,News page lists no items; no Explore Health 2027 figures
+2026-11-03,PA,no_change,Newest release Oct 22 2026 (OE starts Nov 1); no 2027 figures
+2026-11-03,RI,no_change,Newest release Oct 21 2026; no figures
+2026-11-03,VT,no_change,Landing page has 2027 OE dates only; no new coverage map
+2026-11-03,VA,figure_not_found,Landing page has OEP dates only; no enrollment figures
+2026-11-03,WA,figure_not_found,Landing page has only undated 'one in four' statement; no counts
+2026-11-03,US-CMS,no_change,"CMS newsroom: Oct 30 2026 fact sheet on 2027 plans/prices, no enrollment figures"
+2026-11-03,US-KFF/CBO/MFA,no_change,"KFF 9 Things (Oct 30 2026) CBO 13.1M, 19.2M Feb effectuated already in national context CSV; MFA June 2026 21.9M already present; no new MFA report found"
+2026-11-03,CA,no_change,"Data-research page: OE profiles stop at PY2026; only 2027 rates/subsidy-design/zip docs, no enrollment figures (OE dashboard link undated)"
+2026-11-03,CO,no_change,"Newest is Sept 2026 dashboard (effectuated 234,540 already loaded); page also lists Sep 2026 'enrolled' 319,627 - sign-up count, not loaded per CLAUDE.md; no 2027 figures"
+2026-11-03,CT,no_change,Newest release Jul 15 2026 (2027 OEP Oct 23-Jan 15); no 2027 figures
+2026-11-03,DC,no_change,"Newest enrollment report is Board Enrollment Report 2026-09-18 (Sep 22 meeting), already the register's latest; Oct 26 meeting has none"
+2026-11-03,GA,figure_not_found,Press page lists only PY2025 results (over 1.5M); no 2026 or 2027 figure
+2026-11-03,ID,no_change,Newest items Sep 24 2026 (2027 plan preview); no enrollment figures
+2026-11-03,IL,no_change,Latest news: 2027 OEP starts Nov 1; no enrollment figures
+2026-11-03,KY,new_data,"WebFetch downloaded October 2026 Governor's Metrics xlsx (refresh 11/2/2026): 2027 current enrollments QHP with APTC 53,875 (aptc_recipients) and QHP without APTC 13,829 (enrolled_other); no combined QHP total published, none summed; Medicaid rows ignored. Loaded pending. No KY file in source-data/state-marketplace/"
+2026-11-03,ME,no_change,2027 snapshot section 'COMING SOON'; only 2026 images (latest through Jan 15 2026); biweekly Wednesdays once live
+2026-11-03,MD,unreachable,Analytics page: WebFetch HTTP 403 and curl HTTP 403; no MD file in source-data/state-marketplace/
+2026-11-03,MA,unreachable,Weekly dashboard page: WebFetch HTTP 403 and curl HTTP 403
+2026-11-03,MN,no_change,News room index shows no dated items or 2027 figures
+2026-11-03,NV,no_change,"Newest release Oct 3 2026 (2027 plan preview); latest enrollment figure still Jan 22 2026 (104,286); end-of-OEP only"
+2026-11-03,NJ,no_change,"Only 2026 OEP snapshots (Week 6, 9, Final) and 2026 Q1 carrier snapshot; no 2027 figures"
+2026-11-03,NM,no_change,"Dashboards are images dated Jan 20 2026 (contact center, web traffic); no 2027 enrollment figures"
+2026-11-03,NY,unreachable,"enrollmentdata page: WebFetch HTTP 403 and curl HTTP 403; register's Oct 2026 PDF (QHP 267,854) already loaded"
+2026-11-03,OR,figure_not_found,News page lists no items; no Explore Health 2027 figures
+2026-11-03,PA,no_change,Newest release Oct 22 2026 (2027 OE starts Nov 1); no 2027 figures
+2026-11-03,RI,no_change,Newest release Oct 21 2026 (RIMAP/OE preview); no new figures
+2026-11-03,VT,no_change,Landing page has 2027 OE dates only (Nov 1 - Dec 28); no new coverage map
+2026-11-03,VA,figure_not_found,"Landing page has OEP dates (Nov 1 - Jan 29) and a 200,000 Virginia Premium Savings eligibility estimate (not enrollment); no enrollment figures"
+2026-11-03,WA,figure_not_found,Landing page has only undated 'one in four' statement; no counts or dated releases
+2026-11-03,US-CMS,no_change,CMS newsroom: Oct 30 2026 Plan Year 2027 plans/prices fact sheet; OEP Nov 1-Jan 15; no enrollment snapshot yet
+2026-11-03,US-KFF/CBO/MFA,no_change,"KFF Oct 30 '9 Things' (CBO 13.1M etc.) and MFA June 2026 21.9M already in national context CSV; searched MFA/CBO, no new verified figure (MFA 2Q brief fetched is Oct 2022); no national rows appended"

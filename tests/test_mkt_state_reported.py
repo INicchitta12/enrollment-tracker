@@ -17,7 +17,7 @@ REGISTER = bd.load_mkt_register()
 def row(**k):
     r = {c: '' for c in bd.MKT_STATE_COLUMNS}
     r.update(state='CO', marketplace='Connect for Health Colorado', plan_year='2026',
-             measure_type='oep_plan_selections_final', value='277228', includes_dental='N',
+             measure_type='oep_plan_selections_final', component='N', value='277228', includes_dental='N',
              excludes_bhp='Y', period_start='2025-11-01', as_of_date='2026-01-15',
              published_date='2026-04-23', days_into_oep='75', source_url='https://example.org/a.pdf',
              source_type='primary_state', quote='"x"', retrieved_at='2026-11-03',
@@ -58,8 +58,18 @@ class DisplayRule(unittest.TestCase):
         self.assertEqual(t['CO']['yoy']['prior'], 277228)
 
     def test_committed_csv_shows_no_2026_row_as_current(self):
+        rows, _, table = bd.load_mkt_state_reported(REGISTER)
+        current_2027 = {(r['state'], int(r['value'])) for r in rows
+                        if r['reviewer_status'] == 'approved' and r['plan_year'] == '2027'
+                        and r['component'] == 'N'}
+        for t in table:
+            if t['status'] == 'reported':
+                self.assertIn((t['st'], t['value']), current_2027)
+
+    def test_committed_kentucky_headline_is_grand_total_not_component(self):
         _, _, table = bd.load_mkt_state_reported(REGISTER)
-        self.assertEqual([t['st'] for t in table if t['status'] != 'none'], [])
+        ky = {t['st']: t for t in table}['KY']
+        self.assertEqual((ky['status'], ky['value'], ky['stateProg']), ('reported', 67770, 'Medicaid'))
 
 
 class DentalUnknown(unittest.TestCase):
@@ -85,6 +95,37 @@ class DentalUnknown(unittest.TestCase):
     def test_bad_dental_flag_fails_validation(self):
         with self.assertRaises(SystemExit):
             run([row(includes_dental='X')])
+
+
+class ComponentRows(unittest.TestCase):
+    """component=Y rows (subgroup counts) are detail only, never the current figure."""
+    SUB = dict(plan_year='2027', period_start='2026-11-01', as_of_date='2026-11-02',
+               published_date='2026-11-02', days_into_oep='', component='Y')
+
+    def test_state_with_only_component_rows_is_not_reported(self):
+        t = run([row(measure_type='aptc_recipients', value='53875', **self.SUB),
+                 row(measure_type='enrolled_other', value='13829', **self.SUB)])
+        self.assertEqual(t['CO']['status'], 'components_only')
+        self.assertNotIn('value', t['CO'])
+
+    def test_template_labels_components_only_as_subgroup_counts(self):
+        tpl = (Path(bd.__file__).parent / 'template.html').read_text(encoding='utf-8')
+        self.assertIn("r.status==='components_only'?' (subgroup counts only)'", tpl)
+
+    def test_total_row_beats_component_rows(self):
+        t = run([row(measure_type='aptc_recipients', value='53875', **self.SUB),
+                 row(measure_type='enrolled_other', value='13829', **self.SUB),
+                 row(measure_type='enrolled_other', value='67770', **{**self.SUB, 'component': 'N'})])
+        self.assertEqual(t['CO']['status'], 'reported')
+        self.assertEqual(t['CO']['value'], 67770)
+
+    def test_subgroup_measure_must_be_component(self):
+        with self.assertRaises(SystemExit):
+            run([row(measure_type='aptc_recipients', value='53875', **{**self.SUB, 'component': 'N'})])
+
+    def test_bad_component_flag_fails_validation(self):
+        with self.assertRaises(SystemExit):
+            run([row(component='')])
 
 
 if __name__ == '__main__':

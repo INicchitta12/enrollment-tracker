@@ -729,6 +729,7 @@ person approves them after checking the quote against the source.
 | `marketplace` | exchange name as published |
 | `plan_year` | coverage year the figure belongs to (`2027` for the 2027 OEP, which opens Nov 2026) |
 | `measure_type` | closed list: `oep_plan_selections_to_date`, `oep_plan_selections_final`, `effectuated`, `enrolled_other`, `new_consumers`, `returning_consumers`, `aptc_recipients` |
+| `component` | `Y`/`N` — `Y` = a subgroup count (with/without APTC, new vs returning, `aptc_recipients`); detail only, **never** a state's current figure. `aptc_recipients`, `new_consumers`, `returning_consumers` must be `Y` (build-checked). A state whose only approved 2027 rows are `Y` shows "Not yet reported (subgroup counts only)" |
 | `value` | whole number exactly as published — no commas, `~`, or rounding by us |
 | `includes_dental` | `Y`/`N`/`U` — totals that mix dental (NM) are `Y`; `U` = the source does not say (CO, DC). A `U` row is year-over-year comparable **only** with another `U` row carrying the same non-blank `doc_series` (`_yoy_comparable`); it never matches `Y`/`N`. The table shows a "dental basis not stated" flag |
 | `includes_state_program` | name of a non-QHP state program folded into the figure (e.g. `ConnectorCare`), else blank |
@@ -744,6 +745,7 @@ person approves them after checking the quote against the source.
 | `reviewer_status` | `pending` / `approved` |
 | `doc_series` | publication series the figure comes from (e.g. `C4HCO annual Open Enrollment report`); needed for `U` rows to be compared |
 | `notes` | reviewer notes: rounding, dates not printed in the source, definition quirks (not rendered) |
+| `review_notes` | reasoning, cross-checks, doubts, review history (never rendered; same column on the national file) |
 
 **Build fails** (`validate_mkt_state_rows`, `mkt_compare`, `guard_no_state_sums`) if: a row lacks
 `source_url` or `quote`; `measure_type`/`source_type`/`reviewer_status` is outside its list; dates or
@@ -752,7 +754,7 @@ figures with different measure types or definition flags are compared (`mkt_comp
 comparison path and exits on a mismatch); or a national-context figure equals a sum of state rows
 or is described as a sum of states. **No national total is ever formed by adding states.**
 
-**Table rules.** One figure per state: the approved 2027 row with the latest `as_of_date` (ties
+**Table rules.** One figure per state: the approved 2027 `component=N` row with the latest `as_of_date` (ties
 broken by `MKT_HEADLINE_ORDER`, final selections first) — never a blend. The **vs. 2026** column is
 filled only when an approved 2026 row has the **same measure and the same definition flags** and
 `days_into_oep` within **±3 days** (`MKT_SR_YOY_WINDOW_DAYS`); otherwise "no like-for-like
@@ -765,7 +767,7 @@ each state's marketplace; definitions vary by state; not comparable to CMS effec
 
 ### National context card (`data/marketplace_national_context.csv`)
 
-**Same review gate as state rows:** the CSV carries `reviewer_status` (`pending`/`approved`); every row is validated, but only `approved` rows render (`load_mkt_national_context()`; `tests/test_mkt_national_context.py`). New rows — including the probe's — go in as `pending`. The Mark Farrah Associates June 2026 figure (21.9M, MFA's own broader individual-medical estimate vs KFF's 20.5M) is `pending`.
+**Same review gate as state rows:** the CSV carries `reviewer_status` (`pending`/`approved`); every row is validated, but only `approved` rows render (`load_mkt_national_context()`; `tests/test_mkt_national_context.py`). New rows — including the probe's — go in as `pending`. National rows may also be `rejected` (`MKT_NATCTX_REVIEW`; not allowed for state rows): kept as history, never rendered. **The national `notes` column renders on the public card** (unlike state-row notes): it holds reader-facing text only (source quote and definition). Reasoning, cross-checks, doubts and review history go in **`review_notes`**, which is never emitted; `tests/test_mkt_national_context.py` fails if a rendered note mentions `rejected`/`pending`/`reviewer` or any figure from a rejected row. MFA June 2026: the Sep 29 brief's **22M** (on/off-exchange, carrier-reported, incl. territories, may include CHIP) is `approved` and shown beside KFF's 20.5M in the individual-market group; the Oct 28 brief's 21.9M (individual medical plans, NAIC statements + MFA estimates) is `rejected` as a duplicate same-firm, same-month figure (0.1M gap unexplained by MFA).
 
 Every `measure` maps to exactly one scope family in `MKT_NATCTX_SCOPE` (an unmapped measure stops the
 build): **individual market** (incl. off-exchange — KFF/Mark Farrah), **Marketplace effectuated**
@@ -866,7 +868,7 @@ CT, DC, ID, ME, MA, MN, NV, NJ, NM, NY, PA, RI, VT, WA); 4 `figure_not_found` (G
 **Review status (2026-11-03):** approved — CA, CO (both rows), CT (OEP final), ID, ME, NJ, NM, NV, PA,
 RI, VT, WA. Pending — DC, MA, NY and CT's `enrolled_other` rows, and MN (chart label). All are plan
 year 2026, so the 2027 table still shows "Not yet reported" everywhere; they act only as YoY
-baselines. Dates not printed in a source are recorded in each row's `notes`.
+baselines. **2027 (approved 2026-11-03):** Kentucky's three Governor's Metrics rows (Summary sheet, 11/2/2026 refresh) — G8 Grand Total 67,770 (`component=N`, `includes_state_program=Medicaid`, 66 Medicaid in G5) is the table figure; G6 53,875 with APTC and G7 13,829 without are `component=Y` detail. ~98.5% of QHP are renewals (column E), so it is not comparable to an end-of-OEP total. MFA national rows (21.9M Oct 28; 22M Sep 29 — two MFA vintages for June 2026) stay `pending`. Dates not printed in a source are recorded in each row's `notes`.
 
 ## Employer coverage (ESI) — sources and vintages
 
