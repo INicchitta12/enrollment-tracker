@@ -796,9 +796,13 @@ measure from the CMS OEP plan-selection figure in the workbook (210,704).
 
 - **CA** (Covered California) — OE dashboard excludes cancellations; filenames carry revision dates.
 - **CO** (Connect for Health Colorado) — OEP selections and the monthly dashboard are different
-  series; do not splice. The Sep 2026 dashboard reports **Medical Effectuations 234,540** (net of
-  terminations, premium paid); the register's earlier "319,627 Sep 2026" note is **not** in that
-  document.
+  series; do not splice. 2026 OEP: **277,228** "Total Connect for Health Colorado enrollments" (Final
+  2026 OE Report, Apr 2026; excludes Colorado Connect 9,263). The Sep 2026 dashboard PDF reports
+  **Medical Effectuations 234,540** (net of terminations, premium paid) — recorded in the register's
+  `last_known_effectuated_*` columns and as its own `effectuated` row. The register's old "319,627
+  Sep 2026" note was removed: it is **not** in that PDF. (It *is* on the metric-and-reports landing
+  page — "319,627 Coloradans enrolled in private health insurance, not including dental" — a
+  sign-up count not final until payment; not loaded.)
 - **CT** (Access Health CT) — Covered CT is a state program, not QHP; keep separate.
 - **DC** (DC Health Link) — selections vs. paid lives differ; DC runs a BHP-like program; some %
   rows in board reports don't reconcile.
@@ -835,15 +839,27 @@ measure from the CMS OEP plan-selection figure in the workbook (210,704).
 
 ### Source register verification (`config/marketplace_sources.csv`)
 
-`verify_status` ∈ `verified` / `value_mismatch` / `unreachable`, with `verify_detail` (what the page
-said, or the error) and `verify_checked_at`. **Check of 2026-11-03:** the cloud session's network
-allowlist blocked every state-marketplace host tried (hbex.ca.gov, hbex.coveredca.com,
-connectforhealthco.com, agency.accesshealthct.com, accesshealthct.com — DNS ENOTFOUND), so 21 rows
-are `unreachable` (18 not fetched after the block was established; their `verify_detail` says so).
-Only Colorado's S3-hosted PDF loaded: **`value_mismatch`** (neither 277,228 nor 319,627 appears; it
-reports Sep 2026 medical effectuations of 234,540). **No last-known figure was verified**, so none is
-loaded as a 2026 baseline; the CSV holds only the Colorado effectuated row (pending). Re-run the
-check from a session with these hosts allowed before loading 2026 baselines — never guess a URL.
+`verify_status` ∈ `verified` / `value_mismatch` / `figure_not_found` / `unreachable`, with
+`verify_detail` (what the document said, or the error) and `verify_checked_at`. `figure_not_found` =
+the host answered but no reachable document carries the figure. CO also carries
+`last_known_effectuated_value/_as_of/_source` (blank elsewhere). Never guess a URL; follow links
+from the landing page.
+
+**Check of 2026-11-03 (rerun, network open):** 13 `verified` (CO, DC, ID, ME, MA, MN, NV, NJ, NM, NY,
+PA, RI, WA); 3 `value_mismatch`; 4 `figure_not_found` (GA, IL, OR, VA); 2 `unreachable` (KY Aug
+workbook and MD executive report returned HTTP 403). Mismatches worth knowing:
+- **VT** — the register's 34,816 is the *Direct from Insurance Companies* column (mostly small
+  group), not Vermont Health Connect; VHC Marketplace QHP effectuated Jan 2026 is **30,430**.
+- **CT** — OE 2026 Summary Report v2 (May 2026) shows **157,175** active QHP, not 157,246.
+- **CA** — net OE profile shows **1,927,370**, CA-rounded to nearest 10; exact 1,927,371 not seen.
+- **OR** — 118,372 is CMS's HC.gov figure, not OHA's (checked against the workbook at build).
+- **PA** — 2026 OE closed **Jan 31** (extended), not Jan 15.
+
+Every verified figure is loaded in `data/marketplace_state_reported.csv` as `pending` (all plan year
+2026). Dates not printed in the source document: ID OEP window (Oct 15–Dec 15, 2025) and NM close
+(Jan 15) are from the known OEP windows; ME/NJ `published_date` is the file's HTTP Last-Modified;
+MA and NY `published_date` is set to the as-of date (no publication date shown). The MN figure is a
+chart data label (rounded to the hundred). Reviewers should check these before approving.
 
 ## Employer coverage (ESI) — sources and vintages
 
