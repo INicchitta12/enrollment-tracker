@@ -835,6 +835,303 @@ def load_esi_kff():
     return kff
 
 
+# ══ STATE-REPORTED MARKETPLACE ENROLLMENT (2027 OEP) + NATIONAL CONTEXT ══
+# State figures come from each state marketplace's own publications, one row per
+# published figure in data/marketplace_state_reported.csv (long format). They are
+# NOT CMS figures and are never combined with each other or with CMS counts:
+#   * every row must carry a source_url and the verbatim quote it was read from;
+#   * measure_type is a closed list — a state's "enrolled" is not another's
+#     "plan selections", so measures are never summed or compared across types;
+#   * no national total is ever built by adding states (national figures come
+#     only from data/marketplace_national_context.csv, as published);
+#   * only reviewer_status == "approved" rows reach the page.
+# Any violation stops the build (validate_*), like the CMS control-total checks.
+MKT_SOURCES_CSV = ROOT / "config" / "marketplace_sources.csv"
+MKT_STATE_CSV = ROOT / "data" / "marketplace_state_reported.csv"
+MKT_NATCTX_CSV = ROOT / "data" / "marketplace_national_context.csv"
+MKT_SR_PLAN_YEAR = 2027          # the open enrollment the section reports
+MKT_SR_YOY_WINDOW_DAYS = 3       # prior-year point must be within ±3 days into OEP
+MKT_STATE_COLUMNS = [
+    'state', 'marketplace', 'plan_year', 'measure_type', 'value', 'includes_dental',
+    'includes_state_program', 'excludes_bhp', 'period_start', 'as_of_date',
+    'published_date', 'days_into_oep', 'source_url', 'source_type', 'quote',
+    'retrieved_at', 'reviewer_status',
+]
+MKT_MEASURES = {
+    'oep_plan_selections_to_date': 'OEP plan selections to date',
+    'oep_plan_selections_final': 'OEP plan selections (final)',
+    'effectuated': 'Effectuated enrollment',
+    'enrolled_other': 'Enrolled (state definition)',
+    'new_consumers': 'New consumers',
+    'returning_consumers': 'Returning consumers',
+    'aptc_recipients': 'APTC recipients',
+}
+MKT_OEP_MEASURES = {'oep_plan_selections_to_date', 'oep_plan_selections_final'}
+MKT_SOURCE_TYPES = {'primary_state', 'secondary_aggregator', 'press'}
+MKT_REVIEW = {'pending', 'approved'}
+# Headline-figure preference when one state publishes several measures on the
+# same as-of date (the table shows one measure per state, never a blend).
+MKT_HEADLINE_ORDER = ['oep_plan_selections_final', 'oep_plan_selections_to_date',
+                      'effectuated', 'enrolled_other', 'new_consumers',
+                      'returning_consumers', 'aptc_recipients']
+
+# National context: every measure is assigned to exactly one scope family so
+# individual-market (incl. off-exchange) figures can never share an axis or a
+# group with Marketplace figures. An unmapped measure stops the build.
+MKT_NATCTX_SCOPE = {
+    'individual_market_enrollment': 'individual_market',
+    'individual_market_enrollment_yoy': 'individual_market',
+    'quarterly_reporter_change': 'individual_market',
+    'effectuated_enrollment': 'marketplace_effectuated',
+    'oep_plan_selections': 'plan_selections',
+    'marketplace_enrollment_projection': 'projection',
+    'coverage_cancelled_phantom_enrollees': 'program_integrity',
+    'benchmark_silver_premium_change': 'premiums_market',
+    'insurer_exits': 'premiums_market',
+    'share_2025_enrollees_uninsured': 'survey',
+}
+MKT_NATCTX_GROUPS = [
+    ('individual_market', 'Individual market (on- and off-exchange)',
+     'Insurer-filing data; includes off-exchange plans. Not a Marketplace count.'),
+    ('marketplace_effectuated', 'Marketplace · effectuated enrollment',
+     'Paid, in-force Marketplace coverage (CMS).'),
+    ('plan_selections', 'Marketplace · OEP plan selections',
+     'Selections at close of open enrollment — before non-payment and cancellations.'),
+    ('projection', 'Projections', 'Modelled, not observed.'),
+    ('program_integrity', 'Program integrity', ''),
+    ('premiums_market', 'Premiums & insurer participation', ''),
+    ('survey', 'Enrollee survey', 'Survey percentages, not counts.'),
+]
+# Units for display (the JS only formats; it never does arithmetic across rows).
+MKT_NATCTX_UNIT = {
+    'individual_market_enrollment': 'count', 'effectuated_enrollment': 'count',
+    'oep_plan_selections': 'count', 'marketplace_enrollment_projection': 'count',
+    'coverage_cancelled_phantom_enrollees': 'count',
+    'individual_market_enrollment_yoy': 'pct_only', 'quarterly_reporter_change': 'pct_only',
+    'benchmark_silver_premium_change': 'pct_only',
+    'insurer_exits': 'exits', 'share_2025_enrollees_uninsured': 'percent',
+}
+_ISO = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+# Oregon leaves HealthCare.gov for its own SBM (Explore Health) for plan year
+# 2027, so CMS's 2027 HealthCare.gov totals exclude Oregon. Any 2026 HC.gov base
+# used against 2027 must subtract Oregon's 2026 OEP plan selections from the
+# CMS-published HC.gov total (a subtraction from a published total, never a
+# re-sum of states). Cross-checked against the workbook in check_oregon_hcgov().
+MKT_HCGOV_2027_LEAVERS = {'Oregon': 118_372}
+
+
+def _read_csv_rows(path):
+    import csv
+    with open(path, newline='', encoding='utf-8') as f:
+        rdr = csv.DictReader(f)
+        return rdr.fieldnames or [], [{k: (v or '').strip() for k, v in r.items()} for r in rdr]
+
+
+def _date(s):
+    return pd.Timestamp(s).date() if s and _ISO.match(s) else None
+
+
+def check_oregon_hcgov(xl):
+    df = pd.read_excel(xl, sheet_name=MKT_SHEET)
+    df['State'] = df['State'].astype(str).map(normalize_dc)
+    oep = df[df['Reporting Period'] == 'OEP'].set_index('State')
+    for st, v in MKT_HCGOV_2027_LEAVERS.items():
+        got = to_int(oep.loc[st, MKT_COLS['total']])
+        plat = str(oep.loc[st, 'Platform']).strip()
+        if got != v or plat != 'HC.gov':
+            sys.exit(f"ERROR: {st} 2026 OEP in workbook is {got:,} on {plat!r}; "
+                     f"MKT_HCGOV_2027_LEAVERS expects {v:,} on HC.gov")
+
+
+def load_mkt_register():
+    if not MKT_SOURCES_CSV.exists():
+        sys.exit(f"ERROR: source register not found at {MKT_SOURCES_CSV}")
+    _, rows = _read_csv_rows(MKT_SOURCES_CSV)
+    reg = {}
+    for r in rows:
+        if r['state'] not in STATE_ABBR:
+            sys.exit(f"ERROR: {MKT_SOURCES_CSV.name}: unknown state code {r['state']!r}")
+        reg[r['state']] = r
+    return reg
+
+
+def validate_mkt_state_rows(rows, register):
+    """Row-level validation of marketplace_state_reported.csv. Returns a list of
+    errors (empty = clean). Applied to EVERY row, approved or not."""
+    errs, seen = [], set()
+    for i, r in enumerate(rows, start=2):          # line numbers incl. header
+        tag = f"line {i} ({r.get('state') or '?'})"
+        if not r['source_url']:
+            errs.append(f"{tag}: missing source_url")
+        elif not r['source_url'].startswith(('https://', 'http://')):
+            errs.append(f"{tag}: source_url is not a URL: {r['source_url']!r}")
+        if not r['quote']:
+            errs.append(f"{tag}: missing quote")
+        if r['measure_type'] not in MKT_MEASURES:
+            errs.append(f"{tag}: measure_type {r['measure_type']!r} not in {sorted(MKT_MEASURES)}")
+        if r['state'] in ('US', 'USA', 'United States', 'National') or r['state'] not in register:
+            errs.append(f"{tag}: state {r['state']!r} is not a state in {MKT_SOURCES_CSV.name} "
+                        "(national figures belong in marketplace_national_context.csv, as published)")
+        if r['source_type'] not in MKT_SOURCE_TYPES:
+            errs.append(f"{tag}: source_type {r['source_type']!r} not in {sorted(MKT_SOURCE_TYPES)}")
+        if r['reviewer_status'] not in MKT_REVIEW:
+            errs.append(f"{tag}: reviewer_status {r['reviewer_status']!r} not in {sorted(MKT_REVIEW)}")
+        for f in ('includes_dental', 'excludes_bhp'):
+            if r[f] not in ('Y', 'N'):
+                errs.append(f"{tag}: {f} must be Y or N, got {r[f]!r}")
+        if not re.fullmatch(r'\d{4}', r['plan_year']):
+            errs.append(f"{tag}: plan_year {r['plan_year']!r} is not a year")
+        if not re.fullmatch(r'\d+', r['value']):
+            errs.append(f"{tag}: value {r['value']!r} must be a whole number, no commas or '~'")
+        for f in ('period_start', 'as_of_date', 'published_date', 'retrieved_at'):
+            if not _date(r[f]):
+                errs.append(f"{tag}: {f} {r[f]!r} is not YYYY-MM-DD")
+        ps, ao = _date(r['period_start']), _date(r['as_of_date'])
+        if r['measure_type'] in MKT_OEP_MEASURES and not r['days_into_oep']:
+            errs.append(f"{tag}: OEP measure needs days_into_oep")
+        if r['days_into_oep']:
+            if not re.fullmatch(r'\d+', r['days_into_oep']):
+                errs.append(f"{tag}: days_into_oep {r['days_into_oep']!r} is not a whole number")
+            elif ps and ao and int(r['days_into_oep']) != (ao - ps).days:
+                errs.append(f"{tag}: days_into_oep {r['days_into_oep']} != as_of_date - period_start "
+                            f"({(ao - ps).days}); period_start must be the OEP start date")
+        key = (r['state'], r['plan_year'], r['measure_type'], r['as_of_date'],
+               r['includes_dental'], r['includes_state_program'], r['excludes_bhp'])
+        if key in seen:
+            errs.append(f"{tag}: duplicate figure {key}")
+        seen.add(key)
+    return errs
+
+
+def _definition(r):
+    return (r['measure_type'], r['includes_dental'], r['includes_state_program'], r['excludes_bhp'])
+
+
+def mkt_compare(cur, prior):
+    """The ONLY place two state-reported figures are compared. Fails the build
+    unless both are the same state, the same measure_type and the same
+    definition flags — a different measure is never a year-over-year change."""
+    if cur['state'] != prior['state'] or _definition(cur) != _definition(prior):
+        sys.exit("ERROR: refusing to compare unlike state-reported figures: "
+                 f"{cur['state']} {_definition(cur)} vs {prior['state']} {_definition(prior)}")
+    a, b = int(cur['value']), int(prior['value'])
+    return {'prior': b, 'priorAsOf': prior['as_of_date'], 'priorDays': int(prior['days_into_oep']),
+            'priorUrl': prior['source_url'], 'abs': a - b,
+            'pct': round((a / b - 1) * 100, 1) if b else None}
+
+
+def guard_no_state_sums(state_rows, natctx_rows):
+    """Fail if any national-context figure equals a sum of state-reported figures
+    (i.e. was built by adding states), or says it was."""
+    groups = {}
+    for r in state_rows:
+        if re.fullmatch(r'\d+', r['value']):
+            groups.setdefault((r['plan_year'], r['measure_type'], r['as_of_date']), []).append(int(r['value']))
+    sums = {k: sum(v) for k, v in groups.items() if len(v) > 1}
+    errs = []
+    for r in natctx_rows:
+        txt = f"{r['source_org']} {r['notes']}".lower()
+        if re.search(r'sum of (the )?states|summed (across|over) states|added (up )?states', txt):
+            errs.append(f"national context {r['measure']} ({r['period']}): described as a sum of states")
+        v = r['value'].replace(',', '')
+        if v.isdigit() and int(v) in sums.values():
+            errs.append(f"national context {r['measure']} ({r['period']}) = {v} equals a sum of "
+                        "state-reported figures — national totals must be published, not added up")
+    return errs
+
+
+def load_mkt_state_reported(register):
+    if not MKT_STATE_CSV.exists():
+        sys.exit(f"ERROR: {MKT_STATE_CSV} not found")
+    header, rows = _read_csv_rows(MKT_STATE_CSV)
+    if header != MKT_STATE_COLUMNS:
+        sys.exit(f"ERROR: {MKT_STATE_CSV.name} columns must be exactly {MKT_STATE_COLUMNS}, got {header}")
+    errs = validate_mkt_state_rows(rows, register)
+    if errs:
+        sys.exit(f"ERROR: {MKT_STATE_CSV.name} failed validation:\n  " + "\n  ".join(errs))
+
+    approved = [r for r in rows if r['reviewer_status'] == 'approved']
+    cur_year, prior_year = str(MKT_SR_PLAN_YEAR), str(MKT_SR_PLAN_YEAR - 1)
+    table = []
+    for st, reg in sorted(register.items(), key=lambda kv: STATE_ABBR[kv[0]]):
+        base = {'st': st, 'name': STATE_ABBR[st], 'marketplace': reg['marketplace'],
+                'window': reg['oep_2027_window'], 'cadence': reg['cadence'],
+                'defNote': reg['definition_notes']}
+        mine = [r for r in approved if r['state'] == st and r['plan_year'] == cur_year]
+        if not mine:
+            table.append({**base, 'status': 'none'})
+            continue
+        latest_date = max(r['as_of_date'] for r in mine)
+        cur = min((r for r in mine if r['as_of_date'] == latest_date),
+                  key=lambda r: MKT_HEADLINE_ORDER.index(r['measure_type']))
+        yoy = None
+        if cur['days_into_oep']:
+            d = int(cur['days_into_oep'])
+            # Candidates: same state AND same measure/definition only; anything
+            # else is not like-for-like and is never passed to mkt_compare.
+            cands = [p for p in approved if p['state'] == st and p['plan_year'] == prior_year
+                     and _definition(p) == _definition(cur) and p['days_into_oep']
+                     and abs(int(p['days_into_oep']) - d) <= MKT_SR_YOY_WINDOW_DAYS]
+            if cands:
+                prior = min(cands, key=lambda p: (abs(int(p['days_into_oep']) - d), p['as_of_date']))
+                yoy = mkt_compare(cur, prior)
+        table.append({**base, 'status': 'reported', 'value': int(cur['value']),
+                      'measure': cur['measure_type'], 'measureLabel': MKT_MEASURES[cur['measure_type']],
+                      'dental': cur['includes_dental'] == 'Y', 'stateProg': cur['includes_state_program'],
+                      'bhpExcluded': cur['excludes_bhp'] == 'Y',
+                      'asOf': cur['as_of_date'], 'published': cur['published_date'],
+                      'days': int(cur['days_into_oep']) if cur['days_into_oep'] else None,
+                      'url': cur['source_url'], 'sourceType': cur['source_type'], 'yoy': yoy})
+    return rows, approved, table
+
+
+def load_mkt_national_context(state_rows, national_oep):
+    if not MKT_NATCTX_CSV.exists():
+        sys.exit(f"ERROR: {MKT_NATCTX_CSV} not found")
+    _, rows = _read_csv_rows(MKT_NATCTX_CSV)
+    errs = []
+    for r in rows:
+        tag = f"national context {r['measure']} ({r['period']})"
+        if r['measure'] not in MKT_NATCTX_SCOPE:
+            errs.append(f"{tag}: measure not mapped to a scope family in MKT_NATCTX_SCOPE")
+        if not r['url'].startswith('https://') or not r['source_org'] or not r['pub_date']:
+            errs.append(f"{tag}: needs url, source_org and pub_date")
+        if r['is_estimate'] not in ('yes', 'no'):
+            errs.append(f"{tag}: is_estimate must be yes/no")
+        if r['measure'] == 'marketplace_enrollment_projection' and r['is_estimate'] != 'yes':
+            errs.append(f"{tag}: a projection must be flagged is_estimate=yes")
+    errs += guard_no_state_sums(state_rows, rows)
+    # Cross-check: the 2026 OEP national plan-selection total must be the CMS
+    # published national row already in the workbook, not a re-derivation.
+    for r in rows:
+        if r['measure'] == 'oep_plan_selections' and r['period'] == '2026 OEP':
+            if int(r['value']) != national_oep['total']:
+                errs.append(f"national context 2026 OEP plan selections {r['value']} != workbook "
+                            f"CMS national OEP {national_oep['total']}")
+    if errs:
+        sys.exit(f"ERROR: {MKT_NATCTX_CSV.name} failed validation:\n  " + "\n  ".join(errs))
+
+    num = lambda s: float(s) if s not in ('', None) else None
+    out = []
+    for key, label, note in MKT_NATCTX_GROUPS:
+        items = []
+        for r in rows:
+            if MKT_NATCTX_SCOPE[r['measure']] != key:
+                continue
+            items.append({
+                'measure': r['measure'], 'unit': MKT_NATCTX_UNIT[r['measure']],
+                'scope': r['scope'], 'period': r['period'], 'value': num(r['value']),
+                'cmpValue': num(r['comparison_value']), 'cmpPeriod': r['comparison_period'],
+                'pct': num(r['pct_change']),
+                'kind': ('projection' if key == 'projection' else
+                         'estimate' if r['is_estimate'] == 'yes' else 'reported'),
+                'source': r['source_org'], 'pub': r['publication'], 'pubDate': r['pub_date'],
+                'url': r['url'], 'notes': r['notes']})
+        if items:
+            out.append({'key': key, 'label': label, 'note': note, 'items': items})
+    return out
+
+
 def state_pills(prefix, fn, names):
     out = [f'<button class="state-pill active" onclick="{fn}(null)" id="{prefix}-btn-national">National</button>']
     for s in sorted(names):
@@ -886,6 +1183,10 @@ def main():
     esi_acs_states = [s for s in esi_acs if s != 'United States']
     esi_meps, esi_meps_year = load_esi_meps(esi_acs_states)
     esi_kff = load_esi_kff()
+    check_oregon_hcgov(xl)
+    mkt_register = load_mkt_register()
+    mkt_sr_rows, mkt_sr_approved, mkt_sr_table = load_mkt_state_reported(mkt_register)
+    mkt_natctx = load_mkt_national_context(mkt_sr_rows, mkt_nat)
 
     compact = lambda o: json.dumps(o, separators=(',', ':'))
     replacements = {
@@ -943,6 +1244,10 @@ def main():
         '__ESI_MEPS__': compact(esi_meps),
         '__ESI_MEPS_YEAR__': compact(esi_meps_year),
         '__ESI_KFF__': compact(esi_kff),
+        '__MKT_SR__': compact(mkt_sr_table),
+        '__MKT_SR_YEAR__': compact(MKT_SR_PLAN_YEAR),
+        '__MKT_SR_WINDOW__': compact(MKT_SR_YOY_WINDOW_DAYS),
+        '__MKT_NATCTX__': compact(mkt_natctx),
     }
 
     for st, sid in (('New York', 'NY'), ('Minnesota', 'MN'),
@@ -1001,6 +1306,12 @@ def main():
           f"({len(medicare['states'])} states + DC, territories excluded)  "
           f"{medicare['labels'][-1]} MA penetration {mc_now['ma']/mc_now['abtot']*100:.1f}% (of A&B)")
     print(f"  Marketplace OEP + {len(post_labels) - 1} months  ({len(mkt_oep)} states)")
+    _n_rep = sum(1 for t in mkt_sr_table if t['status'] == 'reported')
+    print(f"  Mkt state-reported {MKT_SR_PLAN_YEAR} OEP  {len(mkt_sr_rows)} rows "
+          f"({len(mkt_sr_approved)} approved, {len(mkt_sr_rows) - len(mkt_sr_approved)} pending); "
+          f"{_n_rep} of {len(mkt_sr_table)} register states shown with a figure")
+    print(f"  Mkt national context  {sum(len(g['items']) for g in mkt_natctx)} figures in "
+          f"{len(mkt_natctx)} scope groups (never co-plotted)")
     cs_states = [s for s in cost_sharing if s != 'United States']
     print(f"  Cost sharing {CS_BENEFIT_YEAR} plan-level avg  ({len(cs_states)} states + US)")
     print(f"  ESI ACS     {esi_acs_year} covered persons  ({len(esi_acs_states)} states + US)  "

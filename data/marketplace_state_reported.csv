@@ -1,0 +1,2 @@
+state,marketplace,plan_year,measure_type,value,includes_dental,includes_state_program,excludes_bhp,period_start,as_of_date,published_date,days_into_oep,source_url,source_type,quote,retrieved_at,reviewer_status
+CO,Connect for Health Colorado,2026,effectuated,234540,N,,Y,2026-09-01,2026-09-30,2026-10-08,,https://c4-media.s3.amazonaws.com/wp-content/uploads/2026/10/08131611/Marketplace-Dashboard-September-2026.pdf,primary_state,"[chart ""Medical Effectuations"", data label above Sep-2026] ""234,540""",2026-11-03,pending
