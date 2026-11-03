@@ -881,6 +881,9 @@ MKT_COMPONENT_MEASURES = {'aptc_recipients', 'new_consumers', 'returning_consume
 MKT_OEP_MEASURES = {'oep_plan_selections_to_date', 'oep_plan_selections_final'}
 MKT_SOURCE_TYPES = {'primary_state', 'secondary_aggregator', 'press'}
 MKT_REVIEW = {'pending', 'approved'}
+# National-context rows may also be 'rejected': kept in the file as history,
+# never rendered (e.g. a superseded or duplicate figure from the same publisher).
+MKT_NATCTX_REVIEW = MKT_REVIEW | {'rejected'}
 # Headline-figure preference when one state publishes several measures on the
 # same as-of date (the table shows one measure per state, never a blend).
 MKT_HEADLINE_ORDER = ['oep_plan_selections_final', 'oep_plan_selections_to_date',
@@ -1124,8 +1127,8 @@ def load_mkt_national_context(state_rows, national_oep):
     errs = []
     for r in rows:
         tag = f"national context {r['measure']} ({r['period']})"
-        if r['reviewer_status'] not in MKT_REVIEW:
-            errs.append(f"{tag}: reviewer_status must be one of {sorted(MKT_REVIEW)}")
+        if r['reviewer_status'] not in MKT_NATCTX_REVIEW:
+            errs.append(f"{tag}: reviewer_status must be one of {sorted(MKT_NATCTX_REVIEW)}")
         if r['measure'] not in MKT_NATCTX_SCOPE:
             errs.append(f"{tag}: measure not mapped to a scope family in MKT_NATCTX_SCOPE")
         if not r['url'].startswith('https://') or not r['source_org'] or not r['pub_date']:

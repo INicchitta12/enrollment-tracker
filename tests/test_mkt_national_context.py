@@ -61,11 +61,25 @@ class DisplayRule(unittest.TestCase):
         with self.assertRaises(SystemExit):
             run([row(reviewer_status='maybe')])
 
-    def test_committed_csv_hides_pending_mark_farrah_row(self):
+    def test_rejected_row_is_not_rendered(self):
+        self.assertEqual(run([row(reviewer_status='rejected')]), [])
+
+    def test_rejected_row_is_kept_and_still_validated(self):
+        with self.assertRaises(SystemExit):
+            run([row(reviewer_status='rejected', measure='unmapped_measure')])
+
+    def test_rejected_is_not_a_state_row_status(self):
+        self.assertNotIn('rejected', bd.MKT_REVIEW)
+
+    def test_committed_csv_shows_kff_and_mfa_sep29_only(self):
         g = bd.load_mkt_national_context([], NATIONAL_OEP)
-        srcs = [i['source'] for grp in g for i in grp['items']]
-        self.assertNotIn('Mark Farrah Associates', srcs)
-        self.assertIn(20500000.0, values(g))
+        ind = {i['source']: i for grp in g if grp['key'] == 'individual_market'
+               for i in grp['items'] if i['measure'] == 'individual_market_enrollment'}
+        self.assertEqual(ind['Mark Farrah Associates']['value'], 22000000.0)
+        self.assertEqual(ind['KFF (Mark Farrah Associates data)']['value'], 20500000.0)
+        self.assertNotIn(21900000.0, values(g))
+        _, rows = bd._read_csv_rows(bd.MKT_NATCTX_CSV)
+        self.assertIn(('21900000', 'rejected'), {(r['value'], r['reviewer_status']) for r in rows})
 
 
 if __name__ == '__main__':

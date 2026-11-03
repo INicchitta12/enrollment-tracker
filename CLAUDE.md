@@ -766,7 +766,7 @@ each state's marketplace; definitions vary by state; not comparable to CMS effec
 
 ### National context card (`data/marketplace_national_context.csv`)
 
-**Same review gate as state rows:** the CSV carries `reviewer_status` (`pending`/`approved`); every row is validated, but only `approved` rows render (`load_mkt_national_context()`; `tests/test_mkt_national_context.py`). New rows — including the probe's — go in as `pending`. The Mark Farrah Associates June 2026 figure (21.9M, MFA's own broader individual-medical estimate vs KFF's 20.5M) is `pending`.
+**Same review gate as state rows:** the CSV carries `reviewer_status` (`pending`/`approved`); every row is validated, but only `approved` rows render (`load_mkt_national_context()`; `tests/test_mkt_national_context.py`). New rows — including the probe's — go in as `pending`. National rows may also be `rejected` (`MKT_NATCTX_REVIEW`; not allowed for state rows): kept as history, never rendered. **The national `notes` column renders on the public card** (unlike state-row notes), so keep it reader-facing; put review history on a rejected row or in the PR. MFA June 2026: the Sep 29 brief's **22M** (on/off-exchange, carrier-reported, incl. territories, may include CHIP) is `approved` and shown beside KFF's 20.5M in the individual-market group; the Oct 28 brief's 21.9M (individual medical plans, NAIC statements + MFA estimates) is `rejected` as a duplicate same-firm, same-month figure (0.1M gap unexplained by MFA).
 
 Every `measure` maps to exactly one scope family in `MKT_NATCTX_SCOPE` (an unmapped measure stops the
 build): **individual market** (incl. off-exchange — KFF/Mark Farrah), **Marketplace effectuated**
