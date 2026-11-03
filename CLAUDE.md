@@ -35,6 +35,10 @@ data/esi_coverage_cps.csv      ESI covered persons, national, CPS ASEC 2017–20
 data/esi_coverage_acs.csv      ESI covered persons by state, ACS 2024 1-year (Census HI05; staged)
 data/esi_cost_meps.csv         MEPS-IC 2025 private-sector ESI rates + dollars by state (staged)
 data/esi_benchmark_kff.csv     KFF EHBS 2025 national benchmark (staged)
+data/marketplace_state_reported.csv  state-published Marketplace figures, long format (hand-curated; reviewer-gated)
+data/marketplace_national_context.csv published national Marketplace/individual-market context figures
+config/marketplace_sources.csv where each state marketplace publishes, cadence, definitions, verify status
+source-data/state-marketplace/ copies of state marketplace documents read for the CSV above
 source-data/                   large CMS PUF/Medicare zips + data dictionaries (extracted CSVs gitignored)
 template.html                  page markup, CSS, and chart JS with __PLACEHOLDER__ tokens
 build_dashboard.py             reads workbook + cost_sharing.csv + medicare.json + template -> writes index.html
@@ -703,6 +707,164 @@ care as `No Charge after deductible` (→ $0) or coinsurance (→ blank). The fo
 `build_cost_sharing.py`'s validation are: deductibles decrease Bronze→Platinum; Catastrophic
 deductible ≈ OOP max; Silver deductible ≫ Gold (no CSR leak); no missing/zero cell outside the
 documented Platinum/Catastrophic cases.
+
+## State-reported Marketplace enrollment (2027 OEP) and national context
+
+Marketplace tab, below the CMS grid (the panel scrolls; the CMS grid keeps a fixed height). Section
+**"2027 Open Enrollment: State-Reported"** (table) plus a **National Context** card. Loaded by
+`load_mkt_register()`, `load_mkt_state_reported()` and `load_mkt_national_context()` in
+`build_dashboard.py`; rendered by `renderMktSr()` / `renderMktNatCtx()` in `template.html` (display
+only — no arithmetic across rows in JS). The state selector **highlights** the selected state's row;
+it never filters.
+
+**Nothing reaches the dashboard without `reviewer_status=approved`.** Every row is validated
+regardless of status, but only approved rows are emitted. New rows always go in as `pending`; a
+person approves them after checking the quote against the source.
+
+### `data/marketplace_state_reported.csv` schema (long format; one published figure per row)
+
+| column | rule |
+|---|---|
+| `state` | two-letter code; must be a row of `config/marketplace_sources.csv`. **No `US`/national rows.** |
+| `marketplace` | exchange name as published |
+| `plan_year` | coverage year the figure belongs to (`2027` for the 2027 OEP, which opens Nov 2026) |
+| `measure_type` | closed list: `oep_plan_selections_to_date`, `oep_plan_selections_final`, `effectuated`, `enrolled_other`, `new_consumers`, `returning_consumers`, `aptc_recipients` |
+| `value` | whole number exactly as published — no commas, `~`, or rounding by us |
+| `includes_dental` | `Y`/`N`/`U` — totals that mix dental (NM) are `Y`; `U` = the source does not say (CO, DC). A `U` row is year-over-year comparable **only** with another `U` row carrying the same non-blank `doc_series` (`_yoy_comparable`); it never matches `Y`/`N`. The table shows a "dental basis not stated" flag |
+| `includes_state_program` | name of a non-QHP state program folded into the figure (e.g. `ConnectorCare`), else blank |
+| `excludes_bhp` | `Y`/`N` — `N` if BHP enrollees (MinnesotaCare, NY Essential Plan, DC) are inside the figure |
+| `period_start` | for OEP measures, **the OEP start date for that plan year**; otherwise the period's first day |
+| `as_of_date` | date the figure counts through |
+| `published_date` | date the state released it |
+| `days_into_oep` | required for OEP measures; must equal `as_of_date − period_start` (build-checked) |
+| `source_url` | the document read (not a landing page) — required |
+| `source_type` | `primary_state` / `secondary_aggregator` / `press` |
+| `quote` | the exact sentence or table cell — required |
+| `retrieved_at` | date we read it |
+| `reviewer_status` | `pending` / `approved` |
+| `doc_series` | publication series the figure comes from (e.g. `C4HCO annual Open Enrollment report`); needed for `U` rows to be compared |
+| `notes` | reviewer notes: rounding, dates not printed in the source, definition quirks (not rendered) |
+
+**Build fails** (`validate_mkt_state_rows`, `mkt_compare`, `guard_no_state_sums`) if: a row lacks
+`source_url` or `quote`; `measure_type`/`source_type`/`reviewer_status` is outside its list; dates or
+Y/N flags are malformed; `days_into_oep` disagrees with the dates; a figure is duplicated; two
+figures with different measure types or definition flags are compared (`mkt_compare` is the only
+comparison path and exits on a mismatch); or a national-context figure equals a sum of state rows
+or is described as a sum of states. **No national total is ever formed by adding states.**
+
+**Table rules.** One figure per state: the approved 2027 row with the latest `as_of_date` (ties
+broken by `MKT_HEADLINE_ORDER`, final selections first) — never a blend. The **vs. 2026** column is
+filled only when an approved 2026 row has the **same measure and the same definition flags** and
+`days_into_oep` within **±3 days** (`MKT_SR_YOY_WINDOW_DAYS`); otherwise "no like-for-like
+comparison". Days into OEP compares like points even though windows moved (CT/MA open Oct 23, ID
+Oct 15). **Only `plan_year=2027` rows can be a state's current figure**; approved 2026 rows are
+year-over-year baselines only and never appear as the current figure (`tests/test_mkt_state_reported.py`,
+run with `python -m unittest discover -s tests`). States with no approved 2027 row show **"Not yet reported"** with expected timing from the
+register's `cadence` and `oep_2027_window`. Subtitle (keep verbatim): *"Figures as published by
+each state's marketplace; definitions vary by state; not comparable to CMS effectuated counts."*
+
+### National context card (`data/marketplace_national_context.csv`)
+
+Every `measure` maps to exactly one scope family in `MKT_NATCTX_SCOPE` (an unmapped measure stops the
+build): **individual market** (incl. off-exchange — KFF/Mark Farrah), **Marketplace effectuated**
+(CMS), **Marketplace OEP plan selections**, **projections** (CBO), program integrity, premiums &
+insurers, enrollee survey. Each family renders as its own group with each figure's scope label,
+period, publisher, link and publication date; `is_estimate=yes` shows an **Estimate** badge and the
+projection family a **Projection** badge (a projection must be `is_estimate=yes`). There is **no
+chart**: individual-market figures are never on the same axis as Marketplace figures, and 20.5M
+(individual market, Jun 2026) must never be set against 19.2M (Marketplace effectuated, Feb 2026).
+The 2026 OEP national plan-selection figure (23,130,860) is cross-checked against the workbook's CMS
+`United States` OEP row; its source is labelled "(computed)" because KFF computed the % change, not
+because the total was summed.
+
+### Oregon leaves HealthCare.gov for 2027
+
+Oregon runs its own SBM (Explore Health) from the 2027 OEP, so CMS's 2027 HealthCare.gov totals
+exclude it. **Any 2026 HealthCare.gov base used against 2027 must subtract Oregon's 2026 OEP plan
+selections, 118,372** (`MKT_HCGOV_2027_LEAVERS`), from the CMS-published HC.gov total — a
+subtraction from a published total, never a re-sum of states. `check_oregon_hcgov()` asserts the
+workbook still shows Oregon at 118,372 on `HC.gov`. Oregon's 2027 state figure is an SBM figure on a
+new platform; there is no like-for-like 2026 state-reported figure (its 2026 number is CMS's).
+Same platform-change caveat applies to **Illinois** (first SBM year was 2026, so its 2026 YoY crossed
+platforms) and **Georgia** (Georgia Access, SBM since 2025).
+
+### New York: QHP vs. Essential Plan
+
+Only **QHP** enrollment is Marketplace. The Essential Plan was a §1332 program and from **July 2026 is
+a BHP** (see the BHP section) — it is never added to NY's Marketplace figure, and NY's "6.7M"
+NY State of Health headline includes Medicaid. NY rows must be QHP-only with `excludes_bhp=Y`. The
+register's 267,854 is QHP **enrolled** at 2026-10-04 (monthly issuer × county PDF), a different
+measure from the CMS OEP plan-selection figure in the workbook (210,704).
+
+### Per-state definition notes (from `config/marketplace_sources.csv`)
+
+- **CA** (Covered California) — OE dashboard excludes cancellations; filenames carry revision dates.
+- **CO** (Connect for Health Colorado) — OEP selections and the monthly dashboard are different
+  series; do not splice. 2026 OEP: **277,228** "Total Connect for Health Colorado enrollments" (Final
+  2026 OE Report, Apr 2026; excludes Colorado Connect 9,263). The Sep 2026 dashboard PDF reports
+  **Medical Effectuations 234,540** (net of terminations, premium paid) — recorded in the register's
+  `last_known_effectuated_*` columns and as its own `effectuated` row. The register's old "319,627
+  Sep 2026" note was removed: it is **not** in that PDF. (It *is* on the metric-and-reports landing
+  page — "319,627 Coloradans enrolled in private health insurance, not including dental" — a
+  sign-up count not final until payment; not loaded.)
+- **CT** (Access Health CT) — Covered CT is a state program, not QHP; keep separate.
+- **DC** (DC Health Link) — selections vs. paid lives differ; DC runs a BHP-like program; some %
+  rows in board reports don't reconcile.
+- **GA** (Georgia Access) — no data posted on its own site; only Insurance Commissioner via press.
+  Prefer CMS PUF/effectuated files; any press figure is `source_type=press`.
+- **ID** (Your Health Idaho) — totals mix medical and dental (144,244 = 120,426 medical + 23,818
+  dental); load medical with `includes_dental=N`. OEP runs Oct 15–Dec 15.
+- **IL** (Get Covered Illinois) — first SBM year 2026 (YoY crosses platforms); 448,568 mixes
+  effectuated and pending.
+- **KY** (kynect) — enrolled vs. effectuated both published; XLSX filename separators vary.
+- **ME** (CoverME.gov) — biweekly snapshots are images; 2027 section "coming soon" at 2026-11-03.
+- **MD** (Maryland Health Connection) — figures include young-adult subsidy and MD Premium
+  Assistance enrollees; "enrolled" = effectuated + new selections.
+- **MA** (Health Connector) — totals include **ConnectorCare** (`includes_state_program=ConnectorCare`);
+  dashboard is Tableau, fallback ACASignups (`secondary_aggregator`) or mass.gov releases.
+- **MN** (MNsure) — sign-ups vs. enrollees vs. effectuated differ; **MinnesotaCare (BHP) is separate**
+  and never included.
+- **NV** (Nevada Health Link) — health vs. dental reported separately; end-of-OEP only (withheld
+  mid-OEP in 2026) — expect nothing before late Jan 2027.
+- **NJ** (Get Covered New Jersey) — weekly snapshot PDFs; two metal tables with different totals;
+  state labels them "directional".
+- **NM** (beWellnm) — 82,407 is health + dental; full state backfill makes trends non-comparable.
+- **NY** (NY State of Health) — QHP only (above).
+- **OR** (Explore Health) — new SBM for 2027 (above). No Oregon-published 2026 figure; the register's
+  `last_known_value` is blank — 118,372 is CMS HC.gov, used only as the HC.gov-base subtraction.
+- **PA** (Pennie) — "start of OE" counts auto-renewals; release figures often rounded (a rounded
+  figure is loaded as published and noted, never treated as exact).
+- **RI** (HealthSource RI) — report ~5 weeks after OE closes; new state subsidy (RIMAP) from Jan 2027.
+- **VT** (Vermont Health Connect) — use the coverage map's *Health Insurance Marketplace QHP* column
+  (Jan 2026 effectuated **30,430**). The adjacent *Direct from Insurance Companies — QHP & Reflective*
+  column (34,816; mostly small group) is **not** Marketplace — the register carried it in error until
+  Nov 2026. OEP ends Dec 28.
+- **VA** (Virginia's Insurance Marketplace) — medical vs. dental split; new state subsidy (Virginia
+  Premium Savings) 2027; files on two hostnames.
+- **WA** (Washington Healthplanfinder) — figures rounded; no confirmed release index; Cascade Care
+  Savings is a state subsidy, not a separate program count.
+
+### Source register verification (`config/marketplace_sources.csv`)
+
+`verify_status` ∈ `verified` / `value_mismatch` / `figure_not_found` / `unreachable`, with
+`verify_detail` (what the document said, or the error) and `verify_checked_at`. `figure_not_found` =
+the host answered but no reachable document carries the figure. CO also carries
+`last_known_effectuated_value/_as_of/_source` (blank elsewhere). Never guess a URL; follow links
+from the landing page.
+
+**Check of 2026-11-03 (rerun, network open), with follow-ups the same day:** 16 `verified` (CA, CO,
+CT, DC, ID, ME, MA, MN, NV, NJ, NM, NY, PA, RI, VT, WA); 4 `figure_not_found` (GA, IL, OR, VA); 2
+`unreachable` (KY Aug workbook and MD executive report returned HTTP 403).
+- **CA** — exact 1,927,371 is in the 2026-02-26 release; the OE profile's 1,927,370 is source-rounded.
+- **CT** — 157,246 (Feb 19 release, OEP final) and 157,175 (May 2026 report v2, active QHP) are
+  loaded as separate measures.
+- **VT** — corrected to 30,430 (see per-state notes).
+- **PA** — 2026 OE closed **Jan 31** (extended; Pennie release Jan 7, 2026), so `days_into_oep` = 91.
+
+**Review status (2026-11-03):** approved — CA, CO (both rows), CT (OEP final), ID, ME, NJ, NM, NV, PA,
+RI, VT, WA. Pending — DC, MA, NY and CT's `enrolled_other` rows, and MN (chart label). All are plan
+year 2026, so the 2027 table still shows "Not yet reported" everywhere; they act only as YoY
+baselines. Dates not printed in a source are recorded in each row's `notes`.
 
 ## Employer coverage (ESI) — sources and vintages
 

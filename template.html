@@ -148,6 +148,45 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   .l-esi>.span-rows>.chart-wrap{height:340px;}
   .l-esi .chart-card-header{flex-wrap:wrap;}
 }
+/* ══ Marketplace: 2027 OEP state-reported section + national context ══
+   Appended below the CMS grid, so the Marketplace panel scrolls; the CMS grid
+   keeps a fixed height so its charts render exactly as before. */
+.panel.mkt-panel{overflow-y:auto;}
+.mkt-panel>*{flex-shrink:0;}
+.mkt-panel>.lower.l-mkt{flex:none;height:max(560px,calc(100vh - 250px));}
+.mkt-sr{display:grid;grid-template-columns:62fr 38fr;gap:9px;align-items:start;padding-bottom:6px;}
+.mkt-sr .chart-card{overflow:visible;}
+.sr-meta{font-size:9px;color:var(--muted);line-height:1.35;margin:2px 0 6px;}
+.sr-table{width:100%;border-collapse:collapse;font-size:10.5px;}
+.sr-table th{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:4px 6px;border-bottom:1px solid var(--border);white-space:nowrap;}
+.sr-table td{padding:5px 6px;border-bottom:1px solid var(--surface-2);vertical-align:top;}
+.sr-table td.num{font-family:var(--mono);font-weight:700;text-align:right;white-space:nowrap;}
+.sr-table th.num{text-align:right;}
+.sr-table tr.sel td{background:var(--mkt-light);}
+.sr-table tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--mkt);}
+.sr-st{font-weight:600;white-space:nowrap;}
+.sr-st small,.sr-sub{display:block;font-size:8.5px;color:var(--muted);font-weight:400;line-height:1.3;}
+.sr-none{color:var(--muted);font-style:italic;}
+.sr-nolfl{font-size:9px;color:var(--muted);font-style:italic;}
+.sr-flag{display:inline-block;font-size:8px;font-weight:700;color:#7A5A2A;background:#FFF4D6;border:1px solid #E8D080;border-radius:3px;padding:0 4px;margin:2px 3px 0 0;}
+.sr-table a{color:var(--mkt);}
+.nc-group{border-top:1px solid var(--border);padding:6px 0 4px;}
+.nc-group:first-of-type{border-top:none;}
+.nc-ghd{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mkt);}
+.nc-gnote{font-size:8.5px;color:var(--muted);margin:1px 0 3px;}
+.nc-item{display:flex;gap:10px;align-items:baseline;padding:3px 0;}
+.nc-val{font-family:var(--mono);font-size:14px;font-weight:700;min-width:84px;white-space:nowrap;}
+.nc-body{font-size:9.5px;line-height:1.35;min-width:0;}
+.nc-scope{font-weight:600;color:var(--text);}
+.nc-src{color:var(--muted);}
+.nc-src a{color:var(--mkt);}
+.nc-badge{display:inline-block;font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:3px;padding:0 4px;margin-left:4px;vertical-align:1px;}
+.nc-badge.estimate{background:#FFF4D6;color:#7A5A2A;border:1px solid #E8D080;}
+.nc-badge.projection{background:#F3E8FF;color:#5B2A86;border:1px solid #D6BCF0;}
+@media (max-width:900px){
+  .mkt-sr{grid-template-columns:minmax(0,1fr);}
+  .sr-table-wrap{overflow-x:auto;}
+}
 /* ESI accent on the shared strip/pill/peak primitives */
 .esi-panel .peak-strip{border-left-color:var(--esi);}
 .esi-panel .peak-hd{color:var(--esi);}
@@ -612,6 +651,24 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div class="cs-note" id="mp-cs-note"></div>
       </div>
     </div>
+
+    <!-- ══ 2027 OEP: state-reported (state marketplaces' own publications) ══ -->
+    <div class="mkt-sr" id="mkt-sr">
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">2027 Open Enrollment: <span>State-Reported</span></div></div>
+        <div class="chart-sub">Figures as published by each state&rsquo;s marketplace; definitions vary by state; not comparable to CMS effectuated counts.</div>
+        <div class="sr-meta" id="mkt-sr-meta"></div>
+        <div class="sr-table-wrap"><table class="sr-table">
+          <thead><tr><th>State</th><th class="num">Latest figure</th><th>Measure</th><th>As of</th><th class="num">Days into OE</th><th>vs. 2026, same point</th><th>Source</th></tr></thead>
+          <tbody id="mkt-sr-rows"></tbody>
+        </table></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><div class="card-accent-bar" style="background:var(--mkt)"></div><div class="chart-title">National Context <span>&middot; published figures</span></div></div>
+        <div class="chart-sub">Each figure carries its own scope. Individual-market (incl. off-exchange), Marketplace effectuated and plan-selection figures measure different populations &mdash; never compare across groups.</div>
+        <div id="mkt-nc"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ══ MEDICARE ══ -->
@@ -832,6 +889,12 @@ const POST_LABELS   = __POST_LABELS__;
 const POST_OEP      = __POST_OEP__;
 const YOY           = __YOY__;
 const COST_SHARING  = __COST_SHARING__;
+// State-reported 2027 OEP (approved rows only; one measure per state, never
+// summed or blended) and national context (grouped by scope; never co-plotted).
+const MKT_SR        = __MKT_SR__;
+const MKT_SR_YEAR   = __MKT_SR_YEAR__;
+const MKT_SR_WINDOW = __MKT_SR_WINDOW__;
+const MKT_NATCTX    = __MKT_NATCTX__;
 const CS_YEAR       = __CS_YEAR__;
 const BHP_LABELS    = __BHP_LABELS__;
 const BHP_SERIES    = __BHP_SERIES__;
@@ -1681,6 +1744,82 @@ function renderCostSharing(state){
     +'on-exchange plans; CSR variants excluded. Source: CMS '+CS_YEAR+' Plan Attributes &amp; Benefits PUFs.';
 }
 
+// ══ 2027 OEP state-reported table + national context card ══
+// Display only: every comparison (the YoY column) is computed and validated in
+// build_dashboard.py (mkt_compare); nothing here adds or compares rows.
+const srEsc = t => String(t==null?'':t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const srDate = iso => { if(!iso) return '—'; if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return srEsc(iso); const [y,m,d]=iso.split('-').map(Number);
+  return new Date(Date.UTC(y,m-1,d)).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}); };
+const srSrcType = {primary_state:'state marketplace', secondary_aggregator:'aggregator', press:'press'};
+function renderMktSr(){
+  const n = MKT_SR.filter(r=>r.status==='reported').length;
+  document.getElementById('mkt-sr-meta').innerHTML =
+    'Only reviewer-approved figures are shown ('+n+' of '+MKT_SR.length+' state marketplaces). '
+    + 'A year-over-year change appears only where a '+(MKT_SR_YEAR-1)+' figure of the <b>same measure and definition</b> '
+    + 'exists within &plusmn;'+MKT_SR_WINDOW+' days of the same point in open enrollment. No national total is formed from these rows.';
+  document.getElementById('mkt-sr-rows').innerHTML = MKT_SR.map(r=>{
+    const st = '<td class="sr-st">'+srEsc(r.name)+'<small>'+srEsc(r.marketplace)+'</small></td>';
+    if(r.status!=='reported'){
+      return '<tr data-state="'+srEsc(r.name)+'">'+st
+        + '<td colspan="5"><span class="sr-none">Not yet reported</span>'
+        + '<span class="sr-sub">Expected: '+srEsc(r.cadence)+(r.window?' &middot; OEP '+srEsc(r.window):'')+'</span></td>'
+        + '<td style="color:var(--muted)">&mdash;</td></tr>';
+    }
+    const flags = (r.dental==='Y'?'<span class="sr-flag">incl. dental</span>':
+                   r.dental==='U'?'<span class="sr-flag">dental basis not stated</span>':'')
+      + (r.stateProg?'<span class="sr-flag">incl. '+srEsc(r.stateProg)+'</span>':'')
+      + (r.bhpExcluded?'':'<span class="sr-flag">incl. BHP</span>');
+    let yoy = '<span class="sr-nolfl">no like-for-like comparison</span>';
+    if(r.yoy){
+      const y=r.yoy, sign=y.abs>0?'+':'';
+      yoy = '<span class="num" style="font-family:var(--mono);font-weight:700">'+sign+y.abs.toLocaleString()
+        + (y.pct!=null?' ('+sign+y.pct.toFixed(1)+'%)':'')+'</span>'
+        + '<span class="sr-sub">vs '+y.prior.toLocaleString()+' on '+srDate(y.priorAsOf)+' (day '+y.priorDays+') &middot; <a href="'+srEsc(y.priorUrl)+'" target="_blank" rel="noopener">source</a></span>';
+    }
+    return '<tr data-state="'+srEsc(r.name)+'">'+st
+      + '<td class="num">'+r.value.toLocaleString()+'</td>'
+      + '<td>'+srEsc(r.measureLabel)+'<br>'+flags+'<span class="sr-sub">'+srEsc(r.defNote)+'</span></td>'
+      + '<td style="white-space:nowrap">'+srDate(r.asOf)+'</td>'
+      + '<td class="num">'+(r.days!=null?r.days:'—')+'</td>'
+      + '<td>'+yoy+'</td>'
+      + '<td><a href="'+srEsc(r.url)+'" target="_blank" rel="noopener">link</a><span class="sr-sub">'+srEsc(srSrcType[r.sourceType]||r.sourceType)+'</span></td></tr>';
+  }).join('');
+}
+function highlightMktSr(state){
+  document.querySelectorAll('#mkt-sr-rows tr').forEach(tr=>tr.classList.toggle('sel', !!state && tr.dataset.state===state));
+}
+function ncValue(it){
+  const sgn = v => (v>0?'+':v<0?'−':'')+Math.abs(v);
+  if(it.unit==='count') return it.value!=null ? fmt(it.value) : '—';
+  if(it.unit==='pct_only') return it.pct!=null ? sgn(it.pct)+'%' : '—';
+  if(it.unit==='percent') return it.value!=null ? it.value+'%' : '—';
+  if(it.unit==='exits') return it.value!=null ? it.value+' exits' : '—';
+  return it.value!=null ? String(it.value) : '—';
+}
+function ncCompare(it){
+  const sgn = v => (v>0?'+':v<0?'−':'')+Math.abs(v);
+  if(it.unit==='exits') return it.cmpValue!=null ? it.cmpValue+' '+srEsc(it.cmpPeriod) : '';
+  if(it.unit==='count' && it.cmpValue!=null)
+    return 'vs '+fmt(it.cmpValue)+' ('+srEsc(it.cmpPeriod)+')'+(it.pct!=null?', '+sgn(it.pct)+'%':'');
+  if(it.unit==='pct_only' && it.cmpPeriod) return 'vs '+srEsc(it.cmpPeriod);
+  return '';
+}
+function renderMktNatCtx(){
+  document.getElementById('mkt-nc').innerHTML = MKT_NATCTX.map(g=>
+    '<div class="nc-group"><div class="nc-ghd">'+srEsc(g.label)+'</div>'
+    + (g.note?'<div class="nc-gnote">'+srEsc(g.note)+'</div>':'')
+    + g.items.map(it=>{
+        const badge = it.kind==='reported' ? '' : '<span class="nc-badge '+it.kind+'">'+(it.kind==='projection'?'Projection':'Estimate')+'</span>';
+        const cmp = ncCompare(it);
+        return '<div class="nc-item"><div class="nc-val">'+ncValue(it)+'</div><div class="nc-body">'
+          + '<span class="nc-scope">'+srEsc(it.scope)+'</span> &middot; '+srEsc(it.period)+badge
+          + (cmp?'<br>'+cmp:'')
+          + '<br><span class="nc-src">'+srEsc(it.source)+', <a href="'+srEsc(it.url)+'" target="_blank" rel="noopener">'+srEsc(it.pub)+'</a> ('+srDate(it.pubDate)+')'
+          + (it.notes?'. '+srEsc(it.notes):'')+'</span></div></div>';
+      }).join('')
+    + '</div>').join('');
+}
+
 function selectMktState(state){
   document.querySelectorAll('#panel-mkt .state-pill').forEach(b=>b.classList.remove('active'));
   const id = state ? 'mkt-btn-'+state.replace(/ /g,'-').replace(/\./g,'') : 'mkt-btn-national';
@@ -1689,6 +1828,7 @@ function selectMktState(state){
   const d = state ? MKT_OEP[state] : MKT_NAT_OEP;
   const loc = state || 'National';
   renderCostSharing(state);   // cost-sharing card is independent of OEP data
+  highlightMktSr(state);      // state-reported table: highlight, never filter
   if(!d) return;
 
   const lp = latestPost(POST_OEP[state||'United States']||[]);
@@ -2260,7 +2400,7 @@ document.getElementById('ftrDate').textContent='Generated '+new Date().toLocaleD
 // so the latest month shows on first load without waiting for a tab click.
 document.getElementById('hdrPeriod').textContent=META.mcaid.p;
 document.getElementById('ftrSrc').innerHTML='<span>'+META.mcaid.s+'</span>';
-requestAnimationFrame(()=>{ selectMcaidState(null); selectChipState(null); selectMktState(null); renderBhp(); selectMcareState(null); selectEsiState(null); });
+requestAnimationFrame(()=>{ renderMktSr(); renderMktNatCtx(); selectMcaidState(null); selectChipState(null); selectMktState(null); renderBhp(); selectMcareState(null); selectEsiState(null); });
 </script>
 </body>
 </html>
