@@ -856,7 +856,7 @@ MKT_NATCTX_COLUMNS = [
 MKT_SR_PLAN_YEAR = 2027          # the open enrollment the section reports
 MKT_SR_YOY_WINDOW_DAYS = 3       # prior-year point must be within ±3 days into OEP
 MKT_STATE_COLUMNS = [
-    'state', 'marketplace', 'plan_year', 'measure_type', 'value', 'includes_dental',
+    'state', 'marketplace', 'plan_year', 'measure_type', 'component', 'value', 'includes_dental',
     'includes_state_program', 'excludes_bhp', 'period_start', 'as_of_date',
     'published_date', 'days_into_oep', 'source_url', 'source_type', 'quote',
     'retrieved_at', 'reviewer_status', 'doc_series', 'notes',
@@ -874,6 +874,10 @@ MKT_MEASURES = {
     'returning_consumers': 'Returning consumers',
     'aptc_recipients': 'APTC recipients',
 }
+# component=Y marks a subgroup count (APTC / non-APTC split, new vs returning,
+# APTC recipients): kept for detail, never a state's current (headline) figure.
+# These measure types are always subgroups, so they must carry component=Y.
+MKT_COMPONENT_MEASURES = {'aptc_recipients', 'new_consumers', 'returning_consumers'}
 MKT_OEP_MEASURES = {'oep_plan_selections_to_date', 'oep_plan_selections_final'}
 MKT_SOURCE_TYPES = {'primary_state', 'secondary_aggregator', 'press'}
 MKT_REVIEW = {'pending', 'approved'}
@@ -986,6 +990,10 @@ def validate_mkt_state_rows(rows, register):
             errs.append(f"{tag}: reviewer_status {r['reviewer_status']!r} not in {sorted(MKT_REVIEW)}")
         if r['includes_dental'] not in MKT_DENTAL_FLAGS:
             errs.append(f"{tag}: includes_dental must be Y, N or U, got {r['includes_dental']!r}")
+        if r['component'] not in ('Y', 'N'):
+            errs.append(f"{tag}: component must be Y or N, got {r['component']!r}")
+        elif r['measure_type'] in MKT_COMPONENT_MEASURES and r['component'] != 'Y':
+            errs.append(f"{tag}: {r['measure_type']} is a subgroup count and must be component=Y")
         if r['excludes_bhp'] not in ('Y', 'N'):
             errs.append(f"{tag}: excludes_bhp must be Y or N, got {r['excludes_bhp']!r}")
         if not re.fullmatch(r'\d{4}', r['plan_year']):
@@ -1004,7 +1012,7 @@ def validate_mkt_state_rows(rows, register):
             elif ps and ao and int(r['days_into_oep']) != (ao - ps).days:
                 errs.append(f"{tag}: days_into_oep {r['days_into_oep']} != as_of_date - period_start "
                             f"({(ao - ps).days}); period_start must be the OEP start date")
-        key = (r['state'], r['plan_year'], r['measure_type'], r['as_of_date'],
+        key = (r['state'], r['plan_year'], r['measure_type'], r['component'], r['as_of_date'],
                r['includes_dental'], r['includes_state_program'], r['excludes_bhp'])
         if key in seen:
             errs.append(f"{tag}: duplicate figure {key}")
@@ -1076,9 +1084,11 @@ def load_mkt_state_reported(register):
         base = {'st': st, 'name': STATE_ABBR[st], 'marketplace': reg['marketplace'],
                 'window': reg['oep_2027_window'], 'cadence': reg['cadence'],
                 'defNote': reg['definition_notes']}
-        mine = [r for r in approved if r['state'] == st and r['plan_year'] == cur_year]
+        mine_all = [r for r in approved if r['state'] == st and r['plan_year'] == cur_year]
+        # Subgroup (component=Y) rows are detail only and never the headline figure.
+        mine = [r for r in mine_all if r['component'] == 'N']
         if not mine:
-            table.append({**base, 'status': 'none'})
+            table.append({**base, 'status': 'components_only' if mine_all else 'none'})
             continue
         latest_date = max(r['as_of_date'] for r in mine)
         cur = min((r for r in mine if r['as_of_date'] == latest_date),
@@ -1089,6 +1099,7 @@ def load_mkt_state_reported(register):
             # Candidates: same state AND same measure/definition only; anything
             # else is not like-for-like and is never passed to mkt_compare.
             cands = [p for p in approved if p['state'] == st and p['plan_year'] == prior_year
+                     and p['component'] == 'N'
                      and _yoy_comparable(cur, p) and p['days_into_oep']
                      and abs(int(p['days_into_oep']) - d) <= MKT_SR_YOY_WINDOW_DAYS]
             if cands:

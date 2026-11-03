@@ -729,6 +729,7 @@ person approves them after checking the quote against the source.
 | `marketplace` | exchange name as published |
 | `plan_year` | coverage year the figure belongs to (`2027` for the 2027 OEP, which opens Nov 2026) |
 | `measure_type` | closed list: `oep_plan_selections_to_date`, `oep_plan_selections_final`, `effectuated`, `enrolled_other`, `new_consumers`, `returning_consumers`, `aptc_recipients` |
+| `component` | `Y`/`N` — `Y` = a subgroup count (with/without APTC, new vs returning, `aptc_recipients`); detail only, **never** a state's current figure. `aptc_recipients`, `new_consumers`, `returning_consumers` must be `Y` (build-checked). A state whose only approved 2027 rows are `Y` shows "Not yet reported (subgroup counts only)" |
 | `value` | whole number exactly as published — no commas, `~`, or rounding by us |
 | `includes_dental` | `Y`/`N`/`U` — totals that mix dental (NM) are `Y`; `U` = the source does not say (CO, DC). A `U` row is year-over-year comparable **only** with another `U` row carrying the same non-blank `doc_series` (`_yoy_comparable`); it never matches `Y`/`N`. The table shows a "dental basis not stated" flag |
 | `includes_state_program` | name of a non-QHP state program folded into the figure (e.g. `ConnectorCare`), else blank |
@@ -752,7 +753,7 @@ figures with different measure types or definition flags are compared (`mkt_comp
 comparison path and exits on a mismatch); or a national-context figure equals a sum of state rows
 or is described as a sum of states. **No national total is ever formed by adding states.**
 
-**Table rules.** One figure per state: the approved 2027 row with the latest `as_of_date` (ties
+**Table rules.** One figure per state: the approved 2027 `component=N` row with the latest `as_of_date` (ties
 broken by `MKT_HEADLINE_ORDER`, final selections first) — never a blend. The **vs. 2026** column is
 filled only when an approved 2026 row has the **same measure and the same definition flags** and
 `days_into_oep` within **±3 days** (`MKT_SR_YOY_WINDOW_DAYS`); otherwise "no like-for-like

@@ -2016,7 +2016,7 @@ function renderMktSr(){
     const st = '<td class="sr-st">'+srEsc(r.name)+'<small>'+srEsc(r.marketplace)+'</small></td>';
     if(r.status!=='reported'){
       return '<tr data-state="'+srEsc(r.name)+'">'+st
-        + '<td colspan="5"><span class="sr-none">Not yet reported</span>'
+        + '<td colspan="5"><span class="sr-none">Not yet reported'+(r.status==='components_only'?' (subgroup counts only)':'')+'</span>'
         + '<span class="sr-sub">Expected: '+srEsc(r.cadence)+(r.window?' &middot; OEP '+srEsc(r.window):'')+'</span></td>'
         + '<td style="color:var(--muted)">&mdash;</td></tr>';
     }
