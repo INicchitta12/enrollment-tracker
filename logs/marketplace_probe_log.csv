@@ -96,3 +96,78 @@ date,state,status,note
 2026-11-09,US-CMS,no_change,CMS newsroom newest items Nov 4-5 2026 are Medicare rules; no 2027 open-enrollment snapshot
 2026-11-09,US-KFF/MFA,no_change,"KFF newest Nov 6 2026 (9 Things to Watch for 2027 OEP; Medicaid expansion map) with no new national enrollment figure; MFA list newest Nov 5 2026 (MA star ratings, not individual market), Oct 28 and Sep 29 already in file; no national rows appended"
 2026-11-09,US-CBO,unreachable,cbo.gov health-care page: WebFetch HTTP 403; curl HTTP 403 (no header changes)
+2026-11-12,CA,no_change,"hbex.ca.gov data-research: newest enrollment files are 2026 OE profiles (R20260319), Mar 2026 active member profile (R20260729), Jun 2026 transitioner profile; OE & Renewal dashboard covers 2026 OE only (final as of Jan 31); no 2027 counts"
+2026-11-12,CO,no_change,"Metric-and-reports page: newest item October 2026 dashboard (uploaded Nov 6, effectuated row already logged Nov 9); landing sign-up count 322,654 (Oct 2026) not loaded; no 2027 OEP figures"
+2026-11-12,CT,no_change,Newest release Jul 15 2026 (2027 OEP dates Oct 23 - Jan 15); no 2027 enrollment figures
+2026-11-12,DC,no_change,Newest enrollment report is Board Enrollment Report 26-09-18 (already loaded); Oct 26 2026 meeting lists no enrollment report
+2026-11-12,GA,figure_not_found,Press page undated; latest enrollment figure is PY2025 over 1.5 million; no 2026/2027 figures
+2026-11-12,ID,no_change,Newest news Sep 24 2026 (2027 plan preview Oct 1-14); no enrollment figures
+2026-11-12,IL,no_change,Newest news ~Oct 30 2026 (2027 OEP begins Nov 1) and ~Oct 14 (SEP for 9300 Medicaid disenrollees - not an enrollment figure); no totals
+2026-11-12,KY,no_change,Reports page lists workbooks through October 2026 (refresh 11/2/2026 already loaded); no November 2026 workbook; no KY file in source-data/state-marketplace
+2026-11-12,ME,no_change,2027 snapshots section still COMING SOON; newest snapshot image through Jan 15 2026
+2026-11-12,MD,unreachable,WebFetch HTTP 403 on analytics page; curl HTTP 403 (no header changes); no MD file in source-data/state-marketplace; ACASignups homepage has no MD 2027 post
+2026-11-12,MA,unreachable,WebFetch HTTP 403 on weekly dashboard page; curl HTTP 403 (no header changes); ACASignups homepage has no MA 2027 post
+2026-11-12,MN,no_change,news-room page lists no releases; RSS feed newest Oct 19 2026 (2027 plan preview; 211 plans - not enrollment); no 2027 counts
+2026-11-12,NV,no_change,Newest release Oct 3 2026 (2027 plan preview); no 2027 enrollment figures; end-of-OEP expected late Jan 2027
+2026-11-12,NJ,no_change,publicinfo page lists only 2026 and earlier snapshots (2026 Final Snapshot newest); no 2027 snapshot yet
+2026-11-12,NM,no_change,Dashboards page: embedded dashboards not captured as text; links only to 2025 OE data and PY26 monthly report; no 2027 data
+2026-11-12,NY,unreachable,WebFetch HTTP 403 on enrollmentdata page; curl HTTP 403 (no header changes); latest known file Oct 2026 already loaded
+2026-11-12,OR,figure_not_found,OHA news-releases page renders no entries; no Explore Health 2027 figures
+2026-11-12,PA,no_change,"Newest release Nov 10 2026 (2027 OE is here): no counts - only 'Four out of five Pennie enrollees qualify for financial savings'; Nov 6 release no figure"
+2026-11-12,RI,no_change,Newest release Oct 21 2026 (RIMAP/OE preview); no new figures
+2026-11-12,VT,no_change,Landing has 2027 OE dates/tools only; no new coverage map
+2026-11-12,VA,figure_not_found,"Landing has OEP dates (Nov 1 2026 - Jan 29 2027) and 200,000 Virginia Premium Savings eligibility estimate (not enrollment); no enrollment figures or reports"
+2026-11-12,WA,new_data,"Enrollment Reports & Data page lists 2026 Fall enrollment report XLSX (filename dated 10/15/2026): QHP enrollees 260,316 and APTC recipients 172,305, data collected Sept 30 2026; appended as pending"
+2026-11-12,US-CMS,no_change,CMS newsroom newest items Nov 9 2026 (Rural Health Transformation awards) and Nov 4-5 Medicare rules; no 2027 open-enrollment snapshot
+2026-11-12,US-KFF/MFA,no_change,"KFF ACA page newest Nov 6 2026 (9 Things to Watch, already in file; Medicaid expansion map), no new national enrollment figure; MFA list: only brief after Oct 28 is Nov 5 (MA star ratings) - read, no individual-market figure; no national rows appended"
+2026-11-12,US-CBO,unreachable,cbo.gov health-care page: WebFetch HTTP 403; curl HTTP 403 (no header changes)
+2026-11-16,CA,no_change,"hbex.ca.gov data-research: newest enrollment files are 2026 OE profiles (R20260319), Mar 2026 active member profile (R20260729), Jun 2026 transitioner profile (R20260825); OE & Renewal dashboard page now labelled 2027 OEP but its text carries no counts; no 2027 figures"
+2026-11-16,CO,no_change,"Metric-and-reports page: newest item October 2026 dashboard (effectuated 233,724 already appended Nov 9); landing sign-up count 322,654 (Oct 2026) not loaded; no 2027 OEP figures"
+2026-11-16,CT,no_change,Press releases page lists only three items; newest Jul 15 2026 (2027 OEP dates Oct 23 - Jan 15); no 2027 enrollment figures
+2026-11-16,DC,no_change,"Newest board meeting Oct 26 2026 lists no enrollment report; Sep 22 2026 meeting attaches Board Enrollment Report (26-09-18), already in file"
+2026-11-16,GA,figure_not_found,Press page undated; latest enrollment figure is PY2025; no 2026/2027 figures
+2026-11-16,ID,no_change,Newest news Sep 24 2026 (Get Ready for Open Enrollment); no enrollment figures
+2026-11-16,IL,no_change,Newest news ~Oct 30 2026 (2027 OEP begins Nov 1); no enrollment totals
+2026-11-16,KY,no_change,Reports page lists Governor's Metrics workbooks through October 2026 (11/2/2026 refresh already loaded); no November 2026 workbook; no KY file in source-data/state-marketplace
+2026-11-16,ME,no_change,2027 snapshots section still COMING SOON; newest snapshot image is PY2026 through Jan 15 2026
+2026-11-16,MD,unreachable,WebFetch HTTP 403 on analytics page; curl HTTP 403 (no header changes); no MD file in source-data/state-marketplace
+2026-11-16,MA,unreachable,WebFetch HTTP 403 on weekly dashboard page; curl HTTP 403 (no header changes)
+2026-11-16,MN,no_change,"news-room landing lists no releases; WebFetch of news index redirected to a bot-check page (perfdrive), curl HTTP 200 but page lists no dated releases; no 2027 counts"
+2026-11-16,NV,no_change,Newest release Oct 3 2026 (2027 plan preview); no 2027 enrollment figures; end-of-OEP expected late Jan 2027
+2026-11-16,NJ,no_change,publicinfo page lists only 2026 and earlier snapshots (2026 Final Snapshot newest); no 2027 snapshot yet
+2026-11-16,NM,no_change,Dashboards page: embedded dashboards not captured as text; links only to 2025 OE Tableau and PY26 monthly report (no data date stated); no 2027 data
+2026-11-16,NY,unreachable,WebFetch HTTP 403 on enrollmentdata page; curl HTTP 403 (no header changes); latest known file Oct 2026 already loaded
+2026-11-16,OR,figure_not_found,OHA news-releases page renders no entries; no Explore Health 2027 figures
+2026-11-16,PA,no_change,"Newest release Nov 10 2026 (2027 OE is here): no counts - only 'Four out of five Pennie enrollees qualify for financial savings'; Nov 6 release no figure"
+2026-11-16,RI,no_change,Newest release Oct 21 2026 (RIMAP/OE preview); no new figures
+2026-11-16,VT,unreachable,WebFetch HTTP 403 on info.healthconnect.vermont.gov; curl HTTP 403 (no header changes)
+2026-11-16,VA,figure_not_found,"Landing has OEP dates (Nov 1 2026 - Jan 29 2027) and 200,000 Virginia Premium Savings eligibility estimate (not enrollment); no enrollment figures or report links"
+2026-11-16,WA,no_change,"Enrollment Reports & Data page: newest file is 2026 Fall enrollment report XLSX (10/15/2026), already appended Nov 12; no 2027 OE report"
+2026-11-16,US-CMS,no_change,CMS newsroom newest items Nov 13 2026 (Medicaid work-requirement hold harmless) and Nov 12 (hospice/home health freeze); no 2027 open-enrollment snapshot
+2026-11-16,US-KFF/MFA,no_change,"KFF ACA page newest Nov 6 2026 (9 Things to Watch, already in file), no new national enrollment figure; MFA briefs after Oct 28: Nov 5 (MA star ratings, no individual-market figure) and Nov 13 (Decreases in Private Risk Enrollment: total private risk/commercial 67.8M at 2Q26 - not an individual-market figure; WebFetch saw only embedded images, text read via curl); no national rows appended"
+2026-11-16,US-CBO,unreachable,cbo.gov health-care page: WebFetch HTTP 403; curl HTTP 403 (no header changes)
+2026-11-19,CA,no_change,"hbex.ca.gov data-research: newest enrollment files are 2026 OE profiles (20260319), Mar 2026 active member profile (R20260729), Jun 2026 transitioner profile (R20260825_Rev2); 2027 items are product/rate files only; no 2027 enrollment counts"
+2026-11-19,CO,no_change,"Metric-and-reports page: newest item October 2026 dashboard (effectuated 233,724 already appended Nov 9); landing sign-up count 322,654 (Oct 2026) not loaded; no 2027 OEP figures"
+2026-11-19,CT,no_change,Press releases page lists three items; newest Jul 15 2026 (2027 OEP dates Oct 23 - Jan 15); no 2027 enrollment figures
+2026-11-19,DC,no_change,"Newest board meeting Oct 26 2026 lists no enrollment report; only Board Enrollment Report is under Sep 22 2026 meeting (26-09-18), already in file"
+2026-11-19,GA,figure_not_found,Press page undated; latest enrollment figure is PY2025 (over 1.5 million); no 2026/2027 figures
+2026-11-19,ID,no_change,Newest news Sep 24 2026 (Get Ready for Open Enrollment); no enrollment figures
+2026-11-19,IL,no_change,"Newest news ~Oct 30 2026 (2027 OEP begins Nov 1); only count on page is 9,300 SEP-eligible (not enrollment); no enrollment totals"
+2026-11-19,KY,no_change,"Reports page lists Governor's Metrics through October 2026; no November 2026 workbook. October workbook re-read: Report Refresh Date still 11/2/2026, G8 67,770 (already loaded); no KY file in source-data/state-marketplace"
+2026-11-19,ME,new_data,"2027 Plan Selection Snapshot image posted (through Nov 14 2026, Last-Modified Nov 18): 47,811 plan selections (text says 'Plan Year 2026' under a Plan Year 2027 chart) and 1,332 new consumers; appended as pending"
+2026-11-19,MD,unreachable,WebFetch HTTP 403 on analytics page; curl HTTP 403 (no header changes); no MD file in source-data/state-marketplace
+2026-11-19,MA,unreachable,WebFetch HTTP 403 on weekly dashboard page; curl HTTP 403 (no header changes)
+2026-11-19,MN,no_change,news-room and news/index.jsp pages (WebFetch) list no dated releases; no 2027 counts
+2026-11-19,NV,no_change,Newest release Oct 3 2026 (2027 plan preview); no 2027 enrollment figures; end-of-OEP expected late Jan 2027
+2026-11-19,NJ,no_change,publicinfo page lists only 2026 and earlier snapshots (2026 Final Snapshot newest); no 2027 snapshot yet
+2026-11-19,NM,no_change,Dashboards page: embedded dashboards not captured as text; links only to 2025 OE Tableau and PY26 monthly report (no data date stated); no 2027 data
+2026-11-19,NY,unreachable,WebFetch HTTP 403 on enrollmentdata page; curl HTTP 403 (no header changes); latest known file Oct 2026 already loaded
+2026-11-19,OR,figure_not_found,OHA news-releases page renders no entries; no Explore Health 2027 figures
+2026-11-19,PA,no_change,"Newest release Nov 10 2026 (2027 OE is here); Nov 6 release says only 'hundreds of thousands of Pennsylvanians seek' coverage; no counts"
+2026-11-19,RI,no_change,Newest release Oct 21 2026 (RIMAP/OE preview); no new figures
+2026-11-19,VT,unreachable,WebFetch HTTP 403 on info.healthconnect.vermont.gov; curl HTTP 403 (no header changes)
+2026-11-19,VA,figure_not_found,"Landing has OEP dates (Nov 1 2026 - Jan 29 2027) and 200,000 Virginia Premium Savings eligibility estimate (not enrollment); no enrollment figures or report links"
+2026-11-19,WA,no_change,"Enrollment Reports & Data page: newest file is 2026 Fall enrollment report XLSX (10/15/2026), already appended Nov 12; press-release category page renders no entries; no 2027 OE report"
+2026-11-19,US-CMS,no_change,CMS newsroom newest items Nov 17 2026 (Shared Savings Program results; 2027 Part A/B premiums) and Nov 16 (CRUSH proposed rule; improper payments); no 2027 open-enrollment snapshot
+2026-11-19,US-KFF/MFA,no_change,"KFF ACA page newest Nov 6 2026 (9 Things to Watch, already in file; Medicaid expansion map) and Nov 2 (HSAs); no new national enrollment figure. MFA briefs after Oct 28: Nov 13 (Decreases in Private Risk Enrollment; body is an image, page text has no individual-market figure) and Nov 5 (MA star ratings, MA enrollment only); no national rows appended"
+2026-11-19,US-CBO,unreachable,cbo.gov health-care page: WebFetch HTTP 403; curl HTTP 403 (no header changes)
