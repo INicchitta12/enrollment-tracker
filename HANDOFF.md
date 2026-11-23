@@ -226,8 +226,9 @@ The probe opens or updates one PR titled **"Marketplace probe: pending figures."
 open its `source_url`, find the `quote`, confirm the number, measure type and dates match. Edit
 `reviewer_status` from `pending` to `approved` (or `rejected` for national rows) in the PR, then merge.
 Only approved rows appear on the dashboard. **Pending at handoff:**
-- On the open probe PR: Maine's first 2027 snapshot (47,811 plan selections as of Nov 14, plus 1,332
-  new consumers) and Washington's Fall 2026 report (260,316 enrolled, 172,305 with APTC, Sep 30).
+- Merged to `main` but still pending (not shown on the dashboard): Maine's first 2027 snapshot
+  (47,811 plan selections as of Nov 14, plus 1,332 new consumers) and Washington's Fall 2026 report
+  (260,316 enrolled, 172,305 with APTC, Sep 30). Check their quotes and set them to `approved`.
 - Already on `main` as pending: Colorado October effectuated (233,724), Minnesota May effectuated
   (125,700, read from a chart label), and the 2026 `enrolled_other` rows for DC, MA, NY and CT. These
   are 2026 baselines only; approve them only if you want them available for year-over-year comparisons.
@@ -335,7 +336,7 @@ plans/PACE). KFF's 55% uses a different definition; don't present them as the sa
 
 ## 11. Open items at handoff
 
-- Review and merge the open probe PR (Maine 2027 and Washington rows pending; §6.3).
+- Approve or reject the pending Maine 2027 and Washington rows in `data/marketplace_state_reported.csv` (§6.3).
 - Recreate the probe under the new owner (§7); switch to Mondays on Feb 16, 2027.
 - Next CMS Medicaid/CHIP snapshot (August 2026 data) is due around end of November 2026.
 - ACS 2025 1-year: delayed by Census with no date; restage ESI by state when it lands.
