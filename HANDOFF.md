@@ -97,15 +97,84 @@ folder in the web uploader, type the path into the filename box (e.g. `source-da
 
 ### 5.1 The workbook (`data/Enrollment_Tracker.xlsx`)
 
-Sheet layouts are documented in `CLAUDE.md` → *Workbook sheets*. Keep the filename and sheet names.
-The `Mcaid` sheet has one row per state per month plus a `United States` row (16 columns: total,
-adult, renewal initiated/due/renewed/ex parte/form/disenrolled/ineligible/procedural/pending, and
-three share columns). `CHIP` has total CHIP, Medicaid child, and Medicaid and CHIP child.
+Keep the filename and sheet names; the build reads sheets by name. Column-level layouts are in
+`CLAUDE.md` → *Workbook sheets*. How each sheet is built:
 
-> **TODO for Isaac before handoff:** add the exact download path you use to populate each workbook
-> sheet each month (which CMS dataset/table, which columns map to which workbook columns, and how the
-> `United States` rows are built). Everything downstream of the workbook is documented; how the
-> workbook itself is assembled is the one step that lives only in Isaac's process.
+**Shared layout rules (all monthly sheets)**
+- Data are stacked in **monthly blocks**, newest block at the bottom. A new month is added by
+  appending a block; earlier blocks are never edited unless CMS revises them.
+- Each block has **51 rows (50 states + DC) followed by one `United States` row**. States are
+  written as full names but **ordered by postal abbreviation** (Alaska, Alabama, Arkansas, Arizona,
+  … Wisconsin, West Virginia, Wyoming), which is the order CMS's data downloads use. Order doesn't
+  affect the build, but keep it consistent.
+- `Reporting Period` is the **first day of the month** as a real Excel date (e.g. `2026-07-01`), except
+  the Marketplace OEP block, which uses the text `OEP`. Check the year: April 2026 once arrived as
+  `2025-04`.
+- The `United States` row is **Excel formulas**, not typed numbers: `=SUM(...)` over that block's 51
+  state rows, column by column. The build checks that national equals the sum of states, so never
+  type a national figure in. When you append a block, copy the previous block's US row and shift
+  its ranges.
+- Missing values are left blank or entered as `-`. Never enter 0 for a value that wasn't reported.
+
+**`Mcaid`** (16 columns; Dec 2025 onward)
+- Enrollment: `Total Medicaid Enrollment`, `Total Medicaid Adult Enrollment`.
+- Renewals: `…Renewal Initiated`, `…Renewal Due`, `…Renewed (Total)`, `…Ex Parte`, `…Renewal Form`,
+  `…Disenrolled at Renewal (Total)`, `…Determined Ineligible`, `…Procedural Reasons`, `…Pending Renewal`.
+- Three share columns are **formulas**, copied down: `Disenrolled Share` `=J/F` (disenrolled ÷
+  due), `Ineligible Share` `=L/J` and `Procedural Share` `=N/J` (each ÷ disenrolled).
+- Source: **[Q1, Q2 below]**. Check every new month against the CMS snapshot PDF's state tables.
+
+**`CHIP`** (5 columns; Dec 2025 onward)
+- `Total CHIP Enrollment` and `Medicaid and CHIP Child Enrollment` are entered as reported.
+- `Medicaid Child Enrollment` is a **formula**, `=E−C` (combined child minus CHIP), copied down. CMS
+  doesn't publish Medicaid child directly.
+- Source: **[Q1]**. Check: for every state, `Medicaid Child` should equal `Mcaid` Total − Adult for
+  the same month. The July 2026 upload failed this check.
+
+**`Mcaid Peak Baseline` and `CHIP Peak Baseline`** — one block dated March 2023, the pre-unwinding
+peak. Static; never updated monthly. Arizona's `Medicaid and CHIP Child` is 0 (not reported then).
+Source: **[Q5]**.
+
+**`BHP`** (3 columns; Jan 2026 onward) — blocks of **4 states (DC, MN, NY, OR) + a `United States`
+row** (`=SUM` of the four). States that haven't reported a month are entered as `-`, so the national
+total is meaningful only for months all four report (currently January only). Source: **[Q3]**.
+
+**`Marketplace (2)`** (18 columns) — the live Marketplace sheet. (`Marketplace` is an old copy;
+leave it, the build ignores it.)
+- **OEP block:** one row per state from CMS's 2026 **OEP State-Level Public Use File**: platform,
+  plan selections, new and re-enrollees, average premium before/after APTC, APTC counts and
+  averages, and metal-tier counts. Suppressed metal cells are `-`. The US row sums the
+  count columns.
+- **Monthly blocks (Jan–Aug 2026):** only `Number of Consumers with an Exchange Plan Selection` is
+  filled. Despite the column name, these are **effectuated** enrollment counts. Other columns are
+  blank. States CMS hasn't reported for a month are blank. Source: **[Q4]**.
+
+**`Marketplace Feb. Effec. Enroll`** (4 columns: State, Year, Month, Effectuated Enrollment) —
+January and February effectuated enrollment for 2025 and 2026, from CMS's effectuated enrollment
+data. Uses **two-letter state codes**, with the `United States` row first in each block. Source:
+**[Q4]**.
+
+**Questions only Isaac can answer (fill in before handoff):**
+
+> **Q1. Medicaid and CHIP enrollment columns:** which download do you copy from each month, the
+> data.medicaid.gov *State Medicaid and CHIP Applications, Eligibility Determinations, and
+> Enrollment Data* file, or the state tables in the snapshot PDF? Which month's vintage?
+>
+> **Q2. Renewal columns** (initiated through pending): which CMS dataset or file are these from,
+> and where is it posted?
+>
+> **Q3. BHP:** where do the monthly DC, MN, NY and OR figures come from?
+>
+> **Q4. Marketplace monthly and February effectuated figures:** which file (e.g. data.cms.gov
+> *Monthly Effectuated Enrollment*), and where did the April 2026 national 19,200,000 come from?
+> The build excludes it as a rounded placeholder.
+>
+> **Q5. Peak baselines (March 2023):** which file and vintage did you pull these from? Is that
+> recorded anywhere?
+>
+> **Q6. Your monthly routine:** any manual steps not listed here? For example, renaming state
+> abbreviations to full names, sorting, deleting footnote rows, or how long after CMS posts you
+> usually update.
 
 Known workbook traps (all caught before, all documented in `CLAUDE.md`): April 2026 rows arrived
 mislabeled `2025-04`; the July 2026 upload first keyed Total Medicaid + CHIP into the `Medicaid and
@@ -261,7 +330,7 @@ plans/PACE). KFF's 55% uses a different definition; don't present them as the sa
 
 - Review and merge the open probe PR (Maine 2027 and Washington rows pending; §6.3).
 - Recreate the probe under the new owner (§7); switch to Mondays on Feb 16, 2027.
-- Fill in §5.1 (how the workbook is assembled each month).
+- Answer Q1–Q6 in §5.1 (where each workbook sheet's data comes from).
 - Next CMS Medicaid/CHIP snapshot (August 2026 data) is due around end of November 2026.
 - ACS 2025 1-year: delayed by Census with no date; restage ESI by state when it lands.
 - Watch items in CLAUDE.md: Alabama (procedural elevated), Arkansas (procedural climbing), Virginia
