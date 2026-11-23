@@ -164,7 +164,8 @@ the same CMS monthly effectuated enrollment dataset (https://data.cms.gov/summar
 21,776,626; Jan 2026 20,191,459; Feb 2026 19,169,147.
 
 **National totals:** for Medicaid, CHIP, BHP and Marketplace, the `United States` row is the sum of
-the 50 states + DC. CMS's own national figures aren't used. (Medicare works the same way, but
+the 50 states + DC. CMS's own national figures aren't used, except in `Marketplace Feb. Effec. Enroll`,
+whose `United States` rows are typed values taken from the CMS file. (Medicare works the same way, but
 `build_medicare.py` does the summing because it must drop the territories.)
 
 **Monthly routine (Medicaid, CHIP):**
