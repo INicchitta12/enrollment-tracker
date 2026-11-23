@@ -143,7 +143,10 @@ total is meaningful only for months all four report (currently January only). So
 - **Minnesota** (MinnesotaCare): MN DHS enrollment report, https://www.dhs.state.mn.us/main/idcplg?IdcService=GET_DYNAMIC_CONVERSION&RevisionSelectionMethod=LatestReleased&dDocName=DHS16_141529
 - **New York** (Essential Plan; BHP from July 2026): NY State of Health monthly enrollment data, https://info.nystateofhealth.ny.gov/enrollmentdata
 - **Oregon** (OHP Bridge): OHA Medicaid enrollment reports, https://www.oregon.gov/oha/hpa/analytics/pages/medicaid-enrollment.aspx
-- **DC:** no ongoing source. The sheet holds a single January 2026 figure (15,722) and `-` for later months; see the open question below.
+- **DC:** no ongoing monthly source. The single January 2026 figure (15,722) comes from CMS's
+  *Health Insurance Exchanges 2026 Open Enrollment Report*, Table 1 (Basic Health Program and Essential
+  Plan Expansion Enrollment), https://www.cms.gov/files/document/health-insurance-exchanges-2026-open-enrollment-report.pdf. Per its footnote 4, DC's figure is as of 1/31/2026. Later months
+  are `-`. Check for an updated figure in each year's CMS OEP report (published in spring).
 
 **`Marketplace (2)`** (18 columns) — the live Marketplace sheet. (`Marketplace` is an old copy;
 leave it, the build ignores it.)
@@ -175,8 +178,10 @@ whose `United States` rows are typed values taken from the CMS file. (Medicare w
 3. Download the snapshot PDF from medicaid.gov and give both files to Claude with prompt §6.1. Claude
    confirms the numbers match the PDF and updates the Data Notes register.
 
-**Open question:** where did DC's January 2026 BHP figure (15,722) come from? If there's no
-ongoing source, note it on the BHP tab or drop DC.
+**BHP January total mixes as-of dates.** The national January 2026 total (1,851,053) adds DC's
+CMS figure (as of 1/31/2026) to the three state-reported January figures. CMS's report dates
+Minnesota and Oregon as of 1/15/2026 and New York as of 1/31/2026. That mix is small, but disclose it
+if the national BHP total is cited.
 
 Known workbook traps (all caught before, all documented in `CLAUDE.md`): April 2026 rows arrived
 mislabeled `2025-04`; the July 2026 upload first keyed Total Medicaid + CHIP into the `Medicaid and
@@ -221,8 +226,9 @@ The probe opens or updates one PR titled **"Marketplace probe: pending figures."
 open its `source_url`, find the `quote`, confirm the number, measure type and dates match. Edit
 `reviewer_status` from `pending` to `approved` (or `rejected` for national rows) in the PR, then merge.
 Only approved rows appear on the dashboard. **Pending at handoff:**
-- On the open probe PR: Maine's first 2027 snapshot (47,811 plan selections as of Nov 14, plus 1,332
-  new consumers) and Washington's Fall 2026 report (260,316 enrolled, 172,305 with APTC, Sep 30).
+- Merged to `main` but still pending (not shown on the dashboard): Maine's first 2027 snapshot
+  (47,811 plan selections as of Nov 14, plus 1,332 new consumers) and Washington's Fall 2026 report
+  (260,316 enrolled, 172,305 with APTC, Sep 30). Check their quotes and set them to `approved`.
 - Already on `main` as pending: Colorado October effectuated (233,724), Minnesota May effectuated
   (125,700, read from a chart label), and the 2026 `enrolled_other` rows for DC, MA, NY and CT. These
   are 2026 baselines only; approve them only if you want them available for year-over-year comparisons.
@@ -330,9 +336,8 @@ plans/PACE). KFF's 55% uses a different definition; don't present them as the sa
 
 ## 11. Open items at handoff
 
-- Review and merge the open probe PR (Maine 2027 and Washington rows pending; §6.3).
+- Approve or reject the pending Maine 2027 and Washington rows in `data/marketplace_state_reported.csv` (§6.3).
 - Recreate the probe under the new owner (§7); switch to Mondays on Feb 16, 2027.
-- DC BHP: confirm the source of the January 2026 figure, or drop DC (§5.1).
 - Next CMS Medicaid/CHIP snapshot (August 2026 data) is due around end of November 2026.
 - ACS 2025 1-year: delayed by Census with no date; restage ESI by state when it lands.
 - Watch items in CLAUDE.md: Alabama (procedural elevated), Arkansas (procedural climbing), Virginia
