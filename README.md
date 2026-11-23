@@ -4,7 +4,7 @@ Interactive dashboard tracking enrollment trends across **Medicaid**, **CHIP & M
 Child**, the **Basic Health Program (BHP)**, the **ACA Marketplace**, **Medicare**, and
 **employer (ESI) coverage**.
 
-**Live site:** `https://<username>.github.io/<repo-name>/`
+**Live site:** `https://inicchitta12.github.io/enrollment-tracker/` · **New owner:** start with [`HANDOFF.md`](HANDOFF.md)
 
 ---
 

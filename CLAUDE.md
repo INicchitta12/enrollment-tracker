@@ -1,5 +1,8 @@
 # Enrollment Tracker — project context
 
+> **New owner? Read `HANDOFF.md` first** — access, update calendar, source downloads, ready-to-paste
+> prompts, the Marketplace probe, and the figures currently cited in advocacy materials.
+
 Single-page dashboard tracking Medicaid, Basic Health Program (BHP), and ACA Marketplace
 enrollment. Published via GitHub Pages. Audience is internal policy analysts; the output
 supports advocacy materials, so **figures must be defensible and conservatively sourced**.
